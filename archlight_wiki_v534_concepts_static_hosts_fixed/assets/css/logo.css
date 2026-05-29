@@ -1,0 +1,58 @@
+
+#logo-zone{position:relative;overflow:hidden;}
+#logo-zone::before{
+  content:'';position:absolute;inset:0 0 0 auto;width:72%;pointer-events:none;
+  background:radial-gradient(ellipse at 0% 50%,rgba(200,155,40,.09),transparent 68%);
+  opacity:.75;
+}
+#logo-canvas{
+  position:relative;z-index:1;
+  transform-origin:50% 50%;
+  animation:alLogoNavDrift 5.8s ease-in-out infinite;
+}
+#logo-zone:hover #logo-canvas{animation-duration:2.8s;}
+.logo-name{position:relative;z-index:1;}
+.logo-sub{position:relative;z-index:1;}
+
+.hero-logo{isolation:isolate;}
+.hero-logo::after{
+  content:'';position:absolute;inset:-34px;border-radius:50%;z-index:-1;pointer-events:none;
+  background:
+    conic-gradient(from 90deg,transparent,rgba(245,204,80,.22),transparent 34%,rgba(80,180,220,.1),transparent 68%,rgba(245,204,80,.18),transparent),
+    radial-gradient(circle,rgba(245,204,80,.14),transparent 68%);
+  filter:blur(.2px);
+  opacity:.65;
+  animation:alLogoHeroAura 9s linear infinite;
+}
+#hero-logo-cv{
+  transform-origin:50% 50%;
+  animation:alLogoHeroFloat 4.8s ease-in-out infinite, alLogoHeroPulse 6.4s ease-in-out infinite;
+}
+
+.ulc-logo-wrap{isolation:isolate;}
+.ulc-logo-wrap::after{
+  content:'';position:absolute;inset:-18px;border-radius:50%;z-index:0;pointer-events:none;
+  background:conic-gradient(from 180deg,transparent 0 12%,rgba(245,204,80,.2) 18%,transparent 28%,rgba(80,180,220,.08) 50%,transparent 64%,rgba(245,204,80,.16) 76%,transparent 100%);
+  animation:alLoginLogoOrbit 12s linear infinite;
+  opacity:.7;
+}
+#ulc-logo-canvas{position:relative;z-index:3;}
+
+@keyframes alLogoNavDrift{
+  0%,100%{transform:translateY(0) rotate(0deg) scale(1)}
+  50%{transform:translateY(-2px) rotate(-1.5deg) scale(1.035)}
+}
+@keyframes alLogoHeroFloat{
+  0%,100%{transform:translateY(0) scale(1)}
+  50%{transform:translateY(-10px) scale(1.025)}
+}
+@keyframes alLogoHeroPulse{
+  0%,100%{filter:drop-shadow(0 0 20px rgba(200,155,40,.62)) drop-shadow(0 0 48px rgba(200,155,40,.18))}
+  50%{filter:drop-shadow(0 0 30px rgba(245,204,80,.78)) drop-shadow(0 0 76px rgba(200,155,40,.28))}
+}
+@keyframes alLogoHeroAura{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes alLoginLogoOrbit{from{transform:rotate(0deg) scale(.98)}to{transform:rotate(360deg) scale(.98)}}
+
+@media (prefers-reduced-motion: reduce){
+  #logo-canvas,#hero-logo-cv,.hero-logo::after,.ulc-logo-wrap::after{animation:none!important;}
+}

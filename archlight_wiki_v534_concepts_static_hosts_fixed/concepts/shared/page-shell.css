@@ -1,0 +1,17 @@
+
+@import url("../../assets/css/unlocks-tasks.css");
+@import url("../../assets/css/page-template-core.css");
+
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body.concept-guide-page{
+  min-height:100vh;
+  margin:0;
+  color:var(--ut-text,#f4fbff);
+  background:
+    radial-gradient(circle at 12% 0%,rgba(255,218,104,.08),transparent 32%),
+    radial-gradient(circle at 88% 8%,rgba(109,234,255,.07),transparent 34%),
+    var(--ut-bg,#030913);
+  font-family:Lora,Georgia,'Times New Roman',serif;
+}
+

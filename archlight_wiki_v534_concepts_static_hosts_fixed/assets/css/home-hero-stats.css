@@ -1,0 +1,295 @@
+#pg-home .home-hero-stats{
+  --hhs-teal:#76eadc;
+  --hhs-gold:#d9b45e;
+  --hhs-gold-soft:#f0d98b;
+  width:min(1120px,calc(100vw - 58px));
+  margin:34px auto 0;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr)) minmax(300px,.92fr);
+  gap:14px;
+  align-items:stretch;
+  position:relative;
+  z-index:3;
+  isolation:isolate;
+}
+#pg-home .home-hero-stats::before{
+  content:"";
+  position:absolute;
+  inset:-22px -20px;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse 38% 70% at 20% 45%,rgba(118,234,220,.055),transparent 72%),
+    radial-gradient(ellipse 34% 70% at 86% 44%,rgba(255,202,73,.12),transparent 78%);
+  opacity:.95;
+}
+#pg-home .home-hero-stats::after{content:none!important;}
+#pg-home .hhs-card:not(.hhs-card--anniversary){
+  min-height:124px;
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:flex-start;
+  padding:24px 26px 21px;
+  border:1px solid rgba(118,234,220,.30);
+  border-radius:15px;
+  background:
+    radial-gradient(circle at 10% 2%,rgba(118,234,220,.12),transparent 32%),
+    linear-gradient(180deg,rgba(10,25,39,.94),rgba(5,11,20,.985));
+  box-shadow:0 18px 42px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.045);
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+#pg-home .hhs-card:not(.hhs-card--anniversary)::before{
+  content:"";
+  position:absolute;
+  left:22px;
+  top:18px;
+  width:36px;
+  height:36px;
+  background:linear-gradient(135deg,rgba(240,217,139,.11),rgba(118,234,220,.06));
+  border:1px solid rgba(240,217,139,.10);
+  transform:rotate(45deg);
+  opacity:.52;
+  pointer-events:none;
+}
+#pg-home .hhs-card:not(.hhs-card--anniversary):hover{
+  transform:translateY(-2px);
+  border-color:rgba(132,245,229,.48);
+  box-shadow:0 22px 48px rgba(0,0,0,.36),0 0 20px rgba(111,238,219,.10);
+}
+#pg-home .hhs-facet{display:none!important;}
+#pg-home .hhs-value{
+  position:relative;
+  z-index:2;
+  font-family:"Cinzel Decorative","Cinzel",Georgia,serif;
+  font-size:clamp(38px,3vw,56px);
+  line-height:.88;
+  font-weight:950;
+  letter-spacing:.035em;
+  color:#fff0ad;
+  text-shadow:0 2px 0 rgba(0,0,0,.72),0 0 16px rgba(255,216,95,.12);
+}
+#pg-home .hhs-label{
+  position:relative;
+  z-index:2;
+  margin-top:18px;
+  color:#f0f8f7;
+  font:950 11px/1.1 "Cinzel",serif;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  text-shadow:0 1px 0 rgba(0,0,0,.75);
+}
+#pg-home .hhs-card.hhs-card--anniversary{
+  box-sizing:border-box!important;
+  min-height:124px!important;
+  position:relative!important;
+  display:block!important;
+  isolation:isolate!important;
+  align-self:stretch!important;
+  border:0!important;
+  background:transparent!important;
+  overflow:visible!important;
+  cursor:pointer!important;
+  filter:drop-shadow(0 18px 30px rgba(0,0,0,.42));
+  transition:transform .18s ease,filter .18s ease!important;
+}
+#pg-home .hhs-card.hhs-card--anniversary:hover{
+  transform:translateY(-3px)!important;
+  filter:drop-shadow(0 22px 34px rgba(0,0,0,.50)) drop-shadow(0 0 18px rgba(255,195,62,.20));
+}
+#pg-home .hhs-anniv-relic{
+  position:absolute!important;
+  inset:0!important;
+  overflow:hidden!important;
+  display:grid!important;
+  grid-template-columns:92px minmax(0,1fr)!important;
+  gap:15px!important;
+  align-items:center!important;
+  padding:16px 20px!important;
+  border:1px solid rgba(255,225,116,.62)!important;
+  border-radius:16px!important;
+  background:
+    radial-gradient(circle at 48px 50%,rgba(255,237,150,.24),transparent 38%),
+    radial-gradient(ellipse 76% 82% at 100% 0%,rgba(116,232,222,.075),transparent 70%),
+    linear-gradient(135deg,rgba(33,20,8,.98) 0%,rgba(74,43,12,.98) 48%,rgba(8,17,25,.985) 100%)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,251,219,.24),
+    inset 0 0 0 1px rgba(255,226,121,.08),
+    inset 0 -18px 28px rgba(0,0,0,.34),
+    0 0 24px rgba(255,168,42,.14)!important;
+  transform:translateZ(0)!important;
+  transition:border-color .18s ease,box-shadow .18s ease,filter .18s ease!important;
+  animation:hhsAnnivPanelBreath 5.4s ease-in-out infinite!important;
+}
+#pg-home .hhs-card.hhs-card--anniversary:hover .hhs-anniv-relic{
+  border-color:rgba(255,238,151,.88)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,251,219,.34),
+    inset 0 0 0 1px rgba(255,226,121,.16),
+    inset 0 -18px 28px rgba(0,0,0,.31),
+    0 0 36px rgba(255,185,54,.30)!important;
+  filter:brightness(1.06) saturate(1.08)!important;
+}
+#pg-home .hhs-anniv-relic::before{
+  content:""!important;
+  position:absolute!important;
+  inset:9px!important;
+  border:1px solid rgba(255,233,145,.18)!important;
+  border-radius:11px!important;
+  background:radial-gradient(circle at 48px 50%,rgba(255,252,214,.10),transparent 34%)!important;
+  pointer-events:none!important;
+}
+#pg-home .hhs-anniv-relic::after{
+  content:""!important;
+  position:absolute!important;
+  left:14px!important;right:14px!important;top:13px!important;height:1px!important;
+  background:linear-gradient(90deg,transparent,rgba(255,238,151,.44),rgba(118,234,220,.16),transparent)!important;
+  opacity:.62!important;
+  pointer-events:none!important;
+}
+#pg-home .hhs-anniv-glow{
+  position:absolute!important;
+  left:62px!important;
+  top:50%!important;
+  width:106px!important;
+  height:106px!important;
+  transform:translate(-50%,-50%)!important;
+  border-radius:50%!important;
+  background:radial-gradient(circle at center,rgba(255,250,211,.46),rgba(255,192,44,.22) 44%,transparent 74%)!important;
+  filter:blur(8px)!important;
+  opacity:.74!important;
+  animation:hhsAnnivGlow 3.8s ease-in-out infinite!important;
+  z-index:2!important;
+}
+#pg-home .hhs-anniv-number{
+  position:relative!important;
+  left:auto!important;
+  top:auto!important;
+  transform:none!important;
+  grid-column:1!important;
+  grid-row:1!important;
+  justify-self:center!important;
+  align-self:center!important;
+  display:block!important;
+  z-index:6!important;
+  width:82px!important;
+  min-width:82px!important;
+  text-align:center!important;
+  font-family:"Arial Black",Arial,"Helvetica Neue",sans-serif!important;
+  font-size:64px!important;
+  line-height:.82!important;
+  font-weight:900!important;
+  letter-spacing:-.095em!important;
+  font-variant-numeric:tabular-nums!important;
+  color:#fff8cf!important;
+  -webkit-text-fill-color:#fff8cf!important;
+  -webkit-text-stroke:1.1px rgba(36,18,2,.96)!important;
+  text-shadow:
+    0 2px 0 #4b2704,
+    0 5px 12px rgba(0,0,0,.96),
+    0 0 18px rgba(255,238,154,.74),
+    0 0 30px rgba(255,139,25,.32)!important;
+  animation:hhsAnnivNumberLift 3.9s ease-in-out infinite!important;
+}
+#pg-home .hhs-anniv-label{
+  position:relative!important;
+  left:auto!important;
+  bottom:auto!important;
+  transform:none!important;
+  grid-column:2!important;
+  grid-row:1!important;
+  z-index:6!important;
+  justify-self:start!important;
+  align-self:center!important;
+  display:grid!important;
+  gap:7px!important;
+  min-width:0!important;
+  max-width:170px!important;
+  white-space:normal!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#fff3bd!important;
+  font:950 16px/1.08 "Cinzel",serif!important;
+  letter-spacing:.075em!important;
+  text-transform:uppercase!important;
+  text-shadow:0 2px 0 rgba(0,0,0,.92),0 0 14px rgba(255,210,76,.30)!important;
+}
+#pg-home .hhs-anniv-label::before{
+  content:"Anniversary"!important;
+  color:#93fff0!important;
+  font:950 8.5px/1 "Cinzel",serif!important;
+  letter-spacing:.24em!important;
+  text-shadow:0 1px 0 rgba(0,0,0,.92),0 0 8px rgba(118,234,220,.28)!important;
+}
+#pg-home .hhs-anniv-label::after{
+  content:"Since 2015"!important;
+  justify-self:start!important;
+  padding:5px 8px 4px!important;
+  border:1px solid rgba(255,225,126,.34)!important;
+  background:rgba(0,0,0,.24)!important;
+  color:#ecfbf8!important;
+  font:850 8px/1 "Open Sans",Arial,sans-serif!important;
+  letter-spacing:.16em!important;
+}
+#pg-home .hhs-anniv-star,
+#pg-home .hhs-anniv-dust{
+  position:absolute!important;
+  left:62px!important;
+  top:50%!important;
+  z-index:7!important;
+  pointer-events:none!important;
+}
+#pg-home .hhs-anniv-star{
+  width:14px!important;
+  height:14px!important;
+  opacity:0;
+  transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(45deg) scale(var(--s,1));
+  background:transparent!important;
+  clip-path:none!important;
+  filter:drop-shadow(0 0 5px rgba(255,255,230,.86)) drop-shadow(0 0 13px rgba(255,136,26,.56));
+}
+#pg-home .hhs-anniv-star::before,
+#pg-home .hhs-anniv-star::after{
+  content:""!important;
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  transform:translate(-50%,-50%)!important;
+  background:linear-gradient(90deg,transparent,#fffdf0 18%,#ffe68d 50%,#fffdf0 82%,transparent)!important;
+  border-radius:999px!important;
+}
+#pg-home .hhs-anniv-star::before{width:14px!important;height:2px!important;}
+#pg-home .hhs-anniv-star::after{width:2px!important;height:14px!important;}
+#pg-home .hhs-anniv-dust{
+  width:4px!important;
+  height:4px!important;
+  border-radius:50%!important;
+  background:radial-gradient(circle,#fff 0 16%,#ffe58a 44%,#ff8b1b 72%,transparent 84%)!important;
+  box-shadow:0 0 9px rgba(255,255,220,.84),0 0 16px rgba(255,105,18,.50)!important;
+  opacity:0;
+}
+#pg-home .hhs-anniv-star.s1{--x:-45px;--y:-39px;--s:1.00;animation:hhsAnnivSparkFly 2.10s ease-out infinite .02s!important;}
+#pg-home .hhs-anniv-star.s2{--x:38px;--y:-42px;--s:.92;animation:hhsAnnivSparkFly 2.25s ease-out infinite .20s!important;}
+#pg-home .hhs-anniv-star.s3{--x:-57px;--y:2px;--s:.74;animation:hhsAnnivSparkFly 2.42s ease-out infinite .48s!important;}
+#pg-home .hhs-anniv-star.s4{--x:55px;--y:4px;--s:.76;animation:hhsAnnivSparkFly 2.52s ease-out infinite .76s!important;}
+#pg-home .hhs-anniv-star.s5{--x:-16px;--y:-58px;--s:.64;animation:hhsAnnivSparkFly 2.74s ease-out infinite 1.02s!important;}
+#pg-home .hhs-anniv-star.s6{--x:18px;--y:51px;--s:.62;animation:hhsAnnivSparkFly 2.86s ease-out infinite 1.36s!important;}
+#pg-home .hhs-anniv-star.s7{--x:76px;--y:-29px;--s:.58;animation:hhsAnnivSparkFly 2.68s ease-out infinite .62s!important;}
+#pg-home .hhs-anniv-star.s8{--x:96px;--y:24px;--s:.50;animation:hhsAnnivSparkFly 2.90s ease-out infinite 1.18s!important;}
+#pg-home .hhs-anniv-dust.d1{--x:-34px;--y:-16px;animation:hhsAnnivEmber 2.80s ease-in-out infinite .18s!important;}
+#pg-home .hhs-anniv-dust.d2{--x:72px;--y:-15px;animation:hhsAnnivEmber 3.15s ease-in-out infinite 1.05s!important;}
+#pg-home .hhs-anniv-dust.d3{--x:28px;--y:33px;animation:hhsAnnivEmber 3.00s ease-in-out infinite .72s!important;}
+#pg-home .hhs-anniv-dust.d4{--x:105px;--y:-2px;animation:hhsAnnivEmber 3.35s ease-in-out infinite 1.52s!important;}
+@keyframes hhsAnnivPanelBreath{0%,100%{filter:saturate(1.02) brightness(1)}50%{filter:saturate(1.12) brightness(1.05)}}
+@keyframes hhsAnnivGlow{0%,100%{opacity:.58;transform:translate(-50%,-50%) scale(.92)}50%{opacity:.86;transform:translate(-50%,-50%) scale(1.08)}}
+@keyframes hhsAnnivNumberLift{0%,100%{transform:translateY(0) scale(1)}47%{transform:translateY(-2px) scale(1.018)}66%{transform:translateY(0) scale(1.004)}}
+@keyframes hhsAnnivSparkFly{0%{opacity:0;transform:translate(calc(-50% + var(--x) * .46),calc(-50% + var(--y) * .58 + 10px)) rotate(45deg) scale(.16)}9%{opacity:.95}38%{opacity:1}72%{opacity:.45}100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y) - 16px)) rotate(45deg) scale(var(--s))}}
+@keyframes hhsAnnivEmber{0%,100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y) + 16px)) scale(.24)}28%{opacity:.95}72%{opacity:.28;transform:translate(calc(-50% + var(--x) + 12px),calc(-50% + var(--y) - 18px)) scale(1.05)}}
+@media (max-width:1100px){#pg-home .home-hero-stats{grid-template-columns:repeat(2,minmax(0,1fr));width:min(760px,calc(100vw - 44px));}#pg-home .hhs-card.hhs-card--anniversary{min-height:134px!important}}
+@media (max-width:620px){#pg-home .home-hero-stats{grid-template-columns:1fr;width:calc(100vw - 30px);gap:12px;}#pg-home .hhs-card:not(.hhs-card--anniversary){min-height:112px;padding:22px 24px;}#pg-home .hhs-card.hhs-card--anniversary{min-height:132px!important}#pg-home .hhs-anniv-relic{grid-template-columns:86px 1fr!important;gap:12px!important;padding:16px!important}#pg-home .hhs-anniv-glow,#pg-home .hhs-anniv-star,#pg-home .hhs-anniv-dust{left:56px!important}#pg-home .hhs-anniv-number{font-size:56px!important;width:72px!important;min-width:72px!important}#pg-home .hhs-anniv-label{font-size:14px!important;letter-spacing:.07em!important;max-width:190px!important}}
+@media (prefers-reduced-motion:reduce){#pg-home .hhs-card,#pg-home .hhs-anniv-relic,#pg-home .hhs-anniv-glow,#pg-home .hhs-anniv-number,#pg-home .hhs-anniv-star,#pg-home .hhs-anniv-dust{animation:none!important;transition:none!important}}

@@ -1,0 +1,22 @@
+# Dependencies and local tooling
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local archives and temporary exports
+*.zip
+*.7z
+*.rar
+*_FULL_BODY_CONTENT.txt
+V*_*.txt
+
+# Optional generated output. Uncomment if the repo should track source only.
+# dist/

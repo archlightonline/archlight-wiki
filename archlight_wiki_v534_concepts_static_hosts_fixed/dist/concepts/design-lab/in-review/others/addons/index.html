@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&amp;family=Cinzel:wght@400;500;600;700;900&amp;family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&amp;family=JetBrains+Mono:wght@300;400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<title>Design Lab - Addons Collection</title>
+<link href="../../../../shared/page-shell.css" rel="stylesheet"/>
+<link href="../../../../shared/article-content.css" rel="stylesheet"/>
+<link href="../../../../shared/tables.css" rel="stylesheet"/>
+<link href="../../../../shared/media-viewer.css" rel="stylesheet"/>
+<link href="../../../../shared/custom-blocks.css" rel="stylesheet"/>
+<link href="../../shared/category-content-polish.css" rel="stylesheet"/>
+<link href="addons-concept.css" rel="stylesheet"/>
+</head>
+<body class="concept-guide-page addon-page others-page">
+<article class="ut-page shell-matched addon-v2" data-page="addons" data-template="custom">
+  <div class="ut-shell addon-shell">
+    <section class="ut-hero addon-hero">
+      <div>
+        <div class="ut-kicker">Others Category</div>
+        <h1 class="ut-title">Addons</h1>
+        <p class="ut-lead">Cosmetic outfits, mounts, wings, auras, shaders, titles, and visual effects organized as a current Archlight reference. Scan where each cosmetic came from, how it behaves on Abaldar and Legacy, and whether it is visual, cross-server, heirloom, or bonus-enabled where applicable.</p>
+      </div>
+      <div class="ut-hero-tools addon-hero-tools">
+        <div class="ut-statgrid addon-statgrid" aria-label="Addon collection summary">
+          <div class="ut-stat addon-stat"><span>Entries</span><b data-addon-total>0</b></div>
+          <div class="ut-stat addon-stat"><span>Groups</span><b data-addon-category-count>0</b></div>
+          <div class="ut-stat addon-stat"><span>Power Sources</span><b data-addon-bonus-count>0</b></div>
+        </div>
+        <div class="ut-toolbar addon-toolbar">
+          <a class="ut-action primary" href="../../../../index.html">Back to Concepts</a>
+          <span class="ut-chip">Custom Page Template</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="ut-board addon-board">
+      <main class="ut-main addon-main">
+        <section class="ut-panel ut-section addon-section addon-overview" id="addon-overview">
+          <div class="ut-section-head addon-section-head">
+            <div class="ut-num">01</div>
+            <div class="ut-section-titleblock"><h2>Overview & Sources</h2><small>Where cosmetics come from and why they matter</small></div>
+          </div>
+          <div class="ut-body addon-overview-body">
+            <article class="addon-overview-feature">
+              <span class="addon-kicker">Cosmetic Power Layer</span>
+              <h3>Cosmetics are collection items, identity pieces, and a world-behavior reference.</h3>
+              <p>Archlight currently centers cosmetics around Abaldar and Legacy. Abaldar treats cosmetics as visual heirloom/carry-over rewards without gameplay bonuses, while Legacy keeps long-term cosmetics, merged Ildar/Dracona history, heirlooms, and bonus-enabled cosmetics where that system applies. Each card now separates acquisition from current world behavior so players can understand both the source and the practical meaning.</p>
+            </article>
+            
+            <article class="addon-world-guide" aria-label="Current world behavior guide">
+              <div><b>Abaldar</b><span>Visual heirloom/carry-over. Race cosmetics can be visual on Abaldar.</span></div>
+              <div><b>Legacy</b><span>Long-term home for merged Ildar/Dracona cosmetics, heirlooms, and bonus-enabled cosmetics.</span></div>
+              <div><b>Cross-server</b><span>Shown only when the source supports Abaldar ↔ Legacy behavior.</span></div>
+            </article>
+            <div class="addon-source-grid" data-addon-sources></div>
+          </div>
+        </section>
+
+        <section class="ut-panel ut-section addon-section addon-codex-section" id="addon-codex">
+          <div class="ut-section-head addon-section-head">
+            <div class="ut-num">02</div>
+            <div class="ut-section-titleblock"><h2>Collection Codex</h2><small>Choose a cosmetic type, scan entries, and filter only when needed</small></div>
+          </div>
+          <div class="ut-body addon-codex-body">
+            <div class="addon-codex-toolbar">
+              <label class="addon-search"><span>⌕</span><input type="search" data-addon-search placeholder="Search name, tier, bonus, source..."/></label>
+              <div class="addon-quick-filters" data-addon-filters></div>
+            </div>
+            <div class="addon-codex-layout">
+              <aside class="addon-menu-panel">
+                <div class="addon-menu-title"><span>☰</span><b>Cosmetic Types</b></div>
+                <nav class="addon-menu" data-addon-menu aria-label="Addon collection groups"></nav>
+              </aside>
+              <section class="addon-entry-panel">
+                <header class="addon-entry-header" data-addon-selected-summary></header>
+                <div class="addon-entry-grid" data-addon-entries></div>
+              </section>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <aside class="ut-side addon-side">
+        <div class="ut-side-card addon-side-card">
+          <h3>Page Sections</h3>
+          <nav class="ut-section-nav">
+            <button class="ut-navlink active" data-section-target="addon-overview" type="button"><b>01</b><span>Overview & Sources</span></button>
+            <button class="ut-navlink" data-section-target="addon-codex" type="button"><b>02</b><span>Entries Codex</span></button>
+          </nav>
+        </div>
+      </aside>
+    </div>
+  </div>
+</article>
+<div class="aw-lightbox" aria-hidden="true"><button class="aw-lightbox-close" type="button" aria-label="Close media preview">×</button><figure><img alt=""/><figcaption class="aw-lightbox-caption"></figcaption></figure></div>
+<script defer src="../../../../shared/page-shell.js"></script>
+<script defer src="addons-concept.js"></script>
+</body>
+</html>

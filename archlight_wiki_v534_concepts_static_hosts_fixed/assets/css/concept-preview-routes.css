@@ -1,0 +1,34 @@
+.pg.concept-preview-route {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  margin: 0;
+}
+.concept-preview-shell {
+  width: 100%;
+  min-height: calc(100vh - 54px);
+  padding: 0;
+  margin: 0;
+  background: transparent;
+}
+.concept-preview-frame {
+  display: block;
+  width: 100%;
+  min-height: calc(100vh - 54px);
+  height: calc(100vh - 54px);
+  border: 0;
+  background: transparent;
+}
+#main > .pg.concept-preview-route.on {
+  display: block;
+}
+body.concept-preview-active .content,
+body.concept-preview-active main#main {
+  max-width: none;
+}
+body.concept-preview-active .site-footer {
+  margin-top: 0;
+}
+.apx-card[data-concept-preview="true"] .apx-chip:last-child::after {
+  content: " · Full width";
+}

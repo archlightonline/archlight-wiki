@@ -1,0 +1,977 @@
+
+.profile-page .role-chip,
+.profile-page .rank-stars-badge,
+#contrib-sec .role-chip,
+#contrib-sec .rank-stars-badge{
+  cursor:help;
+  outline:none;
+  position:relative;
+  overflow:visible!important;
+  border-radius:999px!important;
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease,filter .16s ease;
+}
+.profile-page .role-chip:hover,
+.profile-page .role-chip:focus-visible,
+.profile-page .rank-stars-badge:hover,
+.profile-page .rank-stars-badge:focus-visible,
+#contrib-sec .role-chip:hover,
+#contrib-sec .role-chip:focus-visible,
+#contrib-sec .rank-stars-badge:hover,
+#contrib-sec .rank-stars-badge:focus-visible{
+  transform:translateY(-2px);
+  filter:brightness(1.08);
+  border-color:color-mix(in srgb,var(--role-color,#ffe08a) 64%,rgba(255,255,255,.18));
+  box-shadow:0 14px 30px rgba(0,0,0,.28),0 0 24px color-mix(in srgb,var(--role-color,#ffe08a) 22%,transparent),inset 0 1px 0 rgba(255,255,255,.10);
+}
+.profile-page .role-chip[data-role-help]::after,
+.profile-page .rank-stars-badge[data-role-help]::after,
+#contrib-sec .role-chip[data-role-help]::after,
+#contrib-sec .rank-stars-badge[data-role-help]::after{
+  content:attr(data-role-help);
+  position:absolute;
+  left:50%;
+  bottom:calc(100% + 9px);
+  z-index:60;
+  width:max-content;
+  max-width:280px;
+  padding:8px 10px;
+  border:1px solid color-mix(in srgb,var(--role-color,#ffe08a) 48%,rgba(255,255,255,.14));
+  border-radius:10px;
+  background:linear-gradient(180deg,rgba(9,18,30,.98),rgba(3,8,15,.98));
+  color:#f4fbff;
+  font:800 11px/1.35 'Lora',serif;
+  letter-spacing:0;
+  text-transform:none;
+  box-shadow:0 16px 34px rgba(0,0,0,.42),0 0 18px color-mix(in srgb,var(--role-color,#ffe08a) 14%,transparent);
+  pointer-events:none;
+  opacity:0;
+  transform:translate(-50%,6px);
+  transition:opacity .14s ease,transform .14s ease;
+}
+.profile-page .role-chip[data-role-help]::before,
+.profile-page .rank-stars-badge[data-role-help]::before,
+#contrib-sec .role-chip[data-role-help]::before,
+#contrib-sec .rank-stars-badge[data-role-help]::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:calc(100% + 4px);
+  z-index:61;
+  width:8px;
+  height:8px;
+  background:rgba(9,18,30,.98);
+  border-right:1px solid color-mix(in srgb,var(--role-color,#ffe08a) 42%,rgba(255,255,255,.12));
+  border-bottom:1px solid color-mix(in srgb,var(--role-color,#ffe08a) 42%,rgba(255,255,255,.12));
+  pointer-events:none;
+  opacity:0;
+  transform:translate(-50%,6px) rotate(45deg);
+  transition:opacity .14s ease,transform .14s ease;
+}
+.profile-page .role-chip[data-role-help]:hover::after,
+.profile-page .role-chip[data-role-help]:focus-visible::after,
+.profile-page .rank-stars-badge[data-role-help]:hover::after,
+.profile-page .rank-stars-badge[data-role-help]:focus-visible::after,
+#contrib-sec .role-chip[data-role-help]:hover::after,
+#contrib-sec .role-chip[data-role-help]:focus-visible::after,
+#contrib-sec .rank-stars-badge[data-role-help]:hover::after,
+#contrib-sec .rank-stars-badge[data-role-help]:focus-visible::after{opacity:1;transform:translate(-50%,0);}
+.profile-page .role-chip[data-role-help]:hover::before,
+.profile-page .role-chip[data-role-help]:focus-visible::before,
+.profile-page .rank-stars-badge[data-role-help]:hover::before,
+.profile-page .rank-stars-badge[data-role-help]:focus-visible::before,
+#contrib-sec .role-chip[data-role-help]:hover::before,
+#contrib-sec .role-chip[data-role-help]:focus-visible::before,
+#contrib-sec .rank-stars-badge[data-role-help]:hover::before,
+#contrib-sec .rank-stars-badge[data-role-help]:focus-visible::before{opacity:1;transform:translate(-50%,0) rotate(45deg);}
+
+
+.profile-page .rank-stars-badge,
+#contrib-sec .rank-stars-badge{
+  min-width:max-content!important;
+  max-width:none!important;
+  width:auto!important;
+  padding:7px 12px!important;
+  flex:0 0 auto!important;
+  flex-wrap:nowrap!important;
+}
+.profile-page .rank-stars-badge__label,
+#contrib-sec .rank-stars-badge__label,
+#contrib-sec .role-card-stars .rank-stars-badge__label,
+#contrib-sec .contrib-row .rank-stars-badge__label{
+  max-width:none!important;
+  min-width:max-content!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:nowrap!important;
+  font-family:'Cinzel',serif!important;
+  letter-spacing:.06em!important;
+}
+#contrib-sec .role-card,
+#contrib-sec .contrib-row,
+#contrib-sec .role-card-head{overflow:visible!important;}
+#contrib-sec .role-card-head{align-items:flex-start!important;gap:14px!important;}
+#contrib-sec .role-card-stars{flex:0 0 auto!important;min-width:max-content!important;max-width:none!important;}
+#contrib-sec .contrib-tier-grid{grid-template-columns:repeat(auto-fit,minmax(315px,1fr))!important;}
+
+
+.profile-page .role-chip--earned,
+#contrib-sec .role-chip--earned,
+.profile-page .profile-earned-role{
+  border-color:color-mix(in srgb,var(--role-color,#ffe08a) 54%,rgba(255,255,255,.10))!important;
+  background:radial-gradient(circle at 0 0,color-mix(in srgb,var(--role-color,#ffe08a) 20%,transparent),transparent 42%),linear-gradient(180deg,color-mix(in srgb,var(--role-color,#ffe08a) 12%,rgba(9,20,32,.94)),rgba(4,10,18,.92))!important;
+}
+.profile-page .role-chip--staff,
+#contrib-sec .role-chip--staff,
+.profile-page .profile-main-role{
+  border-style:solid!important;
+  background:linear-gradient(180deg,rgba(8,20,32,.92),rgba(4,10,18,.90))!important;
+}
+.profile-page .role-chip--staff.role-wiki_admin,
+.profile-page .role-chip--staff.role-admin,
+#contrib-sec .role-chip--staff.role-wiki_admin,
+#contrib-sec .role-chip--staff.role-admin,
+.profile-page .profile-main-role.role-wiki_admin,
+.profile-page .profile-main-role.role-admin{
+  color:#1d1305!important;
+  border-color:rgba(255,236,164,.70)!important;
+  background:linear-gradient(135deg,#9a6c18,#f7d46a 45%,#fff2b0 56%,#b6781b)!important;
+  box-shadow:0 0 20px rgba(255,211,106,.18),inset 0 1px 0 rgba(255,255,255,.38)!important;
+}
+.profile-page .role-chip--staff.role-editor,
+#contrib-sec .role-chip--staff.role-editor,
+.profile-page .profile-main-role.role-editor{
+  color:#eaf8ff!important;
+  border-color:rgba(132,201,255,.62)!important;
+  background:linear-gradient(135deg,rgba(42,93,138,.95),rgba(14,31,55,.96))!important;
+  box-shadow:0 0 18px rgba(132,201,255,.14),inset 0 1px 0 rgba(255,255,255,.13)!important;
+}
+.profile-page .role-chip--staff.role-contributor,
+.profile-page .role-chip--staff.role-contributor_staff,
+#contrib-sec .role-chip--staff.role-contributor,
+#contrib-sec .role-chip--staff.role-contributor_staff{
+  opacity:.88!important;
+  color:#d7f6f1!important;
+  border-color:rgba(101,234,220,.30)!important;
+}
+
+
+.profile-page .profile-title,
+#contrib-sec .contributor-staff-name{position:relative;overflow:visible!important;}
+.profile-page .profile-title[data-staff-role="wiki_admin"],
+.profile-page .profile-title[data-staff-role="admin"],
+#contrib-sec .contributor-staff-name[data-staff-role="wiki_admin"],
+#contrib-sec .contributor-staff-name[data-staff-role="admin"]{
+  color:#ffe39a!important;
+  text-shadow:0 0 18px rgba(255,211,106,.32),0 1px 0 rgba(0,0,0,.9)!important;
+}
+.profile-page .profile-title[data-staff-role="editor"],
+#contrib-sec .contributor-staff-name[data-staff-role="editor"]{
+  color:#e8f5ff!important;
+  text-shadow:0 0 15px rgba(115,183,255,.28),0 1px 0 rgba(0,0,0,.88)!important;
+}
+.profile-page .profile-title[data-earned-tier="6"],
+#contrib-sec .contributor-staff-name[data-earned-tier="6"]{
+  color:#fff0b8!important;
+  text-shadow:0 0 18px rgba(255,179,106,.34),0 0 26px rgba(255,218,104,.14),0 1px 0 rgba(0,0,0,.9)!important;
+}
+.profile-page .profile-title::before,
+.profile-page .profile-title::after,
+#contrib-sec .contributor-staff-name::before,
+#contrib-sec .contributor-staff-name::after{
+  content:none!important;
+  display:none!important;
+}
+
+
+#profile-popover{width:min(520px,calc(100vw - 22px))!important;}
+#profile-popover .profile-pop-head{grid-template-columns:64px minmax(0,1fr)!important;}
+#profile-popover .profile-pop-head b{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.16!important;}
+#profile-popover .profile-pop-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;align-items:stretch!important;}
+#profile-popover .profile-pop-stats span{overflow:visible!important;min-width:0!important;}
+#profile-popover .profile-pop-stats span:nth-child(3){grid-column:1/-1!important;}
+#profile-popover .profile-pop-stats b{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.12!important;word-break:normal!important;}
+#profile-popover .profile-pop-stats em{font-size:11px!important;color:#d8e7ef!important;}
+
+@media(max-width:760px){
+  .profile-page .role-chip[data-role-help]::after,
+  .profile-page .rank-stars-badge[data-role-help]::after,
+  #contrib-sec .role-chip[data-role-help]::after,
+  #contrib-sec .rank-stars-badge[data-role-help]::after,
+  .profile-page .role-chip[data-role-help]::before,
+  .profile-page .rank-stars-badge[data-role-help]::before,
+  #contrib-sec .role-chip[data-role-help]::before,
+  #contrib-sec .rank-stars-badge[data-role-help]::before{display:none;}
+  .profile-page .profile-title::after,#contrib-sec .contributor-staff-name::after{display:inline-flex;width:max-content;margin:.45em 0 0 .35em;}
+  #profile-popover .profile-pop-stats{grid-template-columns:1fr!important;}
+}
+
+
+.profile-page .role-chip--staff.role-wiki_admin,
+.profile-page .role-chip--staff.role-admin,
+.profile-page .role-chip--staff.role-wiki_editor,
+.profile-page .role-chip--staff.role-editor,
+#contrib-sec .role-chip--staff.role-wiki_admin,
+#contrib-sec .role-chip--staff.role-admin,
+#contrib-sec .role-chip--staff.role-wiki_editor,
+#contrib-sec .role-chip--staff.role-editor,
+#profile-popover .role-chip--staff.role-wiki_admin,
+#profile-popover .role-chip--staff.role-admin,
+#profile-popover .role-chip--staff.role-wiki_editor,
+#profile-popover .role-chip--staff.role-editor{
+  isolation:isolate;
+  letter-spacing:.075em!important;
+  border-width:1px!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.035) inset,0 10px 22px rgba(0,0,0,.18),0 0 18px color-mix(in srgb,var(--role-color,#ffe08a) 14%,transparent)!important;
+}
+.profile-page .role-chip--staff.role-wiki_admin .role-chip__frame,
+.profile-page .role-chip--staff.role-admin .role-chip__frame,
+#contrib-sec .role-chip--staff.role-wiki_admin .role-chip__frame,
+#contrib-sec .role-chip--staff.role-admin .role-chip__frame,
+#profile-popover .role-chip--staff.role-wiki_admin .role-chip__frame,
+#profile-popover .role-chip--staff.role-admin .role-chip__frame{
+  border-radius:999px;
+  background:rgba(30,18,2,.22);
+  box-shadow:inset 0 0 0 1px rgba(79,43,4,.18),0 0 10px rgba(255,225,130,.20);
+}
+.profile-page .role-chip--staff.role-wiki_editor .role-chip__frame,
+.profile-page .role-chip--staff.role-editor .role-chip__frame,
+#contrib-sec .role-chip--staff.role-wiki_editor .role-chip__frame,
+#contrib-sec .role-chip--staff.role-editor .role-chip__frame,
+#profile-popover .role-chip--staff.role-wiki_editor .role-chip__frame,
+#profile-popover .role-chip--staff.role-editor .role-chip__frame{
+  border-radius:999px;
+  background:rgba(125,190,255,.12);
+  box-shadow:inset 0 0 0 1px rgba(175,220,255,.13),0 0 10px rgba(115,183,255,.20);
+}
+.profile-page .role-chip--staff.role-wiki_admin .role-chip__label,
+.profile-page .role-chip--staff.role-admin .role-chip__label,
+#contrib-sec .role-chip--staff.role-wiki_admin .role-chip__label,
+#contrib-sec .role-chip--staff.role-admin .role-chip__label,
+#profile-popover .role-chip--staff.role-wiki_admin .role-chip__label,
+#profile-popover .role-chip--staff.role-admin .role-chip__label{
+  color:#201302!important;
+  text-shadow:0 1px 0 rgba(255,246,198,.35)!important;
+}
+.profile-page .role-chip--staff.role-wiki_editor .role-chip__label,
+.profile-page .role-chip--staff.role-editor .role-chip__label,
+#contrib-sec .role-chip--staff.role-wiki_editor .role-chip__label,
+#contrib-sec .role-chip--staff.role-editor .role-chip__label,
+#profile-popover .role-chip--staff.role-wiki_editor .role-chip__label,
+#profile-popover .role-chip--staff.role-editor .role-chip__label{
+  color:#f2fbff!important;
+  text-shadow:0 0 8px rgba(115,183,255,.26)!important;
+}
+.profile-page .role-chip--staff.role-wiki_admin:hover,
+.profile-page .role-chip--staff.role-admin:hover,
+.profile-page .role-chip--staff.role-wiki_editor:hover,
+.profile-page .role-chip--staff.role-editor:hover,
+#contrib-sec .role-chip--staff.role-wiki_admin:hover,
+#contrib-sec .role-chip--staff.role-admin:hover,
+#contrib-sec .role-chip--staff.role-wiki_editor:hover,
+#contrib-sec .role-chip--staff.role-editor:hover,
+#profile-popover .role-chip--staff.role-wiki_admin:hover,
+#profile-popover .role-chip--staff.role-admin:hover,
+#profile-popover .role-chip--staff.role-wiki_editor:hover,
+#profile-popover .role-chip--staff.role-editor:hover{
+  transform:translateY(-2px);
+  filter:brightness(1.06) saturate(1.05);
+}
+
+#nav-user-chip.staff-admin .nuc-identity,
+#nav-user-chip.staff-wiki_admin .nuc-identity,
+#nav-user-chip.role-admin .nuc-identity,
+#nav-user-chip.role-wiki_admin .nuc-identity{
+  color:#fff6ca!important;
+  border-color:rgba(255,232,133,.72)!important;
+  background:linear-gradient(135deg,rgba(83,53,9,.98),rgba(151,102,21,.96) 38%,rgba(53,34,8,.98))!important;
+  text-shadow:0 1px 0 rgba(0,0,0,.86),0 0 10px rgba(255,218,104,.28)!important;
+  box-shadow:0 0 0 1px rgba(255,246,190,.08) inset,0 0 18px rgba(255,211,106,.18)!important;
+}
+#nav-user-chip.staff-admin .nuc-identity i,
+#nav-user-chip.staff-wiki_admin .nuc-identity i,
+#nav-user-chip.role-admin .nuc-identity i,
+#nav-user-chip.role-wiki_admin .nuc-identity i{color:#ffd66f!important;text-shadow:0 0 9px rgba(255,211,106,.48)!important;}
+.profile-page .role-chip--staff.role-wiki_admin,
+.profile-page .role-chip--staff.role-admin,
+#contrib-sec .role-chip--staff.role-wiki_admin,
+#contrib-sec .role-chip--staff.role-admin,
+#profile-popover .role-chip--staff.role-wiki_admin,
+#profile-popover .role-chip--staff.role-admin{
+  color:#fff6ca!important;
+  border-color:rgba(255,232,133,.72)!important;
+  background:linear-gradient(135deg,rgba(83,53,9,.98),rgba(151,102,21,.96) 38%,rgba(53,34,8,.98))!important;
+  text-shadow:0 1px 0 rgba(0,0,0,.86),0 0 10px rgba(255,218,104,.22)!important;
+}
+.profile-page .role-chip--staff.role-wiki_admin .role-chip__label,
+.profile-page .role-chip--staff.role-admin .role-chip__label,
+#contrib-sec .role-chip--staff.role-wiki_admin .role-chip__label,
+#contrib-sec .role-chip--staff.role-admin .role-chip__label,
+#profile-popover .role-chip--staff.role-wiki_admin .role-chip__label,
+#profile-popover .role-chip--staff.role-admin .role-chip__label{color:#fff6ca!important;text-shadow:0 1px 0 rgba(0,0,0,.9),0 0 10px rgba(255,218,104,.28)!important;}
+.profile-page .role-chip--staff.role-wiki_admin .role-chip__frame,
+.profile-page .role-chip--staff.role-admin .role-chip__frame,
+#contrib-sec .role-chip--staff.role-wiki_admin .role-chip__frame,
+#contrib-sec .role-chip--staff.role-admin .role-chip__frame,
+#profile-popover .role-chip--staff.role-wiki_admin .role-chip__frame,
+#profile-popover .role-chip--staff.role-admin .role-chip__frame{background:rgba(255,218,104,.13)!important;border:1px solid rgba(255,232,133,.18)!important;}
+
+.profile-panel--rank-map{
+  position:relative;
+  overflow:hidden;
+  border-color:color-mix(in srgb,var(--profile-role-color,#65eadc) 24%,rgba(255,232,111,.16))!important;
+  background:radial-gradient(circle at 8% 0%,rgba(255,232,111,.085),transparent 34%),linear-gradient(180deg,rgba(12,23,36,.96),rgba(5,11,20,.98))!important;
+}
+.profile-panel--rank-map::before{content:"";position:absolute;left:22px;right:22px;top:0;height:2px;background:linear-gradient(90deg,transparent,rgba(255,232,111,.55),rgba(126,238,221,.32),transparent);opacity:.75;}
+.profile-panel--rank-map h2 i{color:#ffe783;text-shadow:0 0 14px rgba(255,218,104,.38);}
+.profile-rank-summary{padding:9px 12px;border:1px solid rgba(255,232,111,.18);background:rgba(255,232,111,.045);}
+.profile-rank-nodes{gap:10px!important;}
+.profile-rank-node{min-height:142px!important;padding:17px 13px 13px!important;border-radius:0!important;}
+.profile-rank-node__badge{border-radius:0!important;background:linear-gradient(180deg,color-mix(in srgb,var(--rank-color,#ffe08a) 18%,rgba(15,22,33,.96)),rgba(3,8,14,.96))!important;}
+.profile-rank-node.is-current{transform:translateY(-2px);background:radial-gradient(circle at 50% 0%,color-mix(in srgb,var(--rank-color,#ffe08a) 18%,transparent),transparent 40%),linear-gradient(180deg,rgba(18,29,42,.98),rgba(6,12,21,.98))!important;}
+.profile-rank-node.is-current::after{border-radius:0!important;background:rgba(255,232,111,.11)!important;}
+.profile-rank-foot{border-radius:0!important;border-color:rgba(255,232,111,.16)!important;background:linear-gradient(90deg,rgba(255,232,111,.055),rgba(126,238,221,.035),rgba(3,9,16,.56))!important;}
+
+.profile-season-bonus{margin-top:16px;display:grid;grid-template-columns:48px minmax(0,1fr);gap:13px;align-items:center;padding:15px 16px;border:1px solid rgba(126,238,221,.18);background:linear-gradient(90deg,rgba(126,238,221,.055),rgba(255,232,111,.035),rgba(3,9,16,.54));}
+.profile-season-bonus.is-eligible{border-color:rgba(255,232,111,.34);background:radial-gradient(circle at 0% 0%,rgba(255,232,111,.12),transparent 38%),linear-gradient(90deg,rgba(255,232,111,.075),rgba(126,238,221,.045),rgba(3,9,16,.60));}
+.profile-season-bonus__mark{width:48px;height:48px;display:grid;place-items:center;border:1px solid rgba(255,232,111,.28);background:rgba(0,0,0,.18);font-size:22px;box-shadow:0 0 18px rgba(255,218,104,.10);}
+.profile-season-bonus__copy{min-width:0;}.profile-season-bonus__copy span{display:block;color:#8effef;font:950 10px/1 Cinzel,serif;letter-spacing:.14em;text-transform:uppercase;}.profile-season-bonus__copy b{display:block;margin-top:4px;color:#fff1a8;font:950 14px/1.2 Cinzel,serif;letter-spacing:.06em;text-transform:uppercase;}.profile-season-bonus__copy p{margin:7px 0 0;color:#dce8ef;font:800 13.5px/1.45 Lora,serif;}.profile-season-bonus__copy strong{color:#ffe783;}
+
+#pg-home .hero-runes-row .hrune{position:relative;isolation:isolate;cursor:default;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease;}
+#pg-home .hero-runes-row .hrune::before{content:"";position:absolute;inset:8px;border:1px solid rgba(255,232,111,.0);background:linear-gradient(110deg,transparent 0%,rgba(255,232,111,.10) 42%,rgba(126,238,221,.10) 52%,transparent 66%);opacity:0;transform:translateX(-28%);transition:opacity .18s ease,transform .26s ease;pointer-events:none;z-index:-1;}
+#pg-home .hero-runes-row .hrune:hover{transform:translateY(-4px);border-color:rgba(255,232,111,.34)!important;box-shadow:0 18px 46px rgba(0,0,0,.34),0 0 30px rgba(255,218,104,.10),inset 0 1px 0 rgba(255,255,255,.08)!important;background:radial-gradient(circle at 50% 0%,rgba(255,232,111,.10),transparent 44%),linear-gradient(180deg,rgba(12,24,37,.98),rgba(5,10,18,.98))!important;}
+#pg-home .hero-runes-row .hrune:hover::before{opacity:1;transform:translateX(0);}
+#pg-home .hero-runes-row .hrune:hover .hrune-n{color:#fff0a8;text-shadow:0 0 18px rgba(255,218,104,.36);}
+#pg-home .hero-runes-row .hrune:hover .hrune-l{color:#f6fbff;}
+
+#pg-home .hero-runes-row .hrune{
+  overflow:hidden;
+  transform:translateZ(0);
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease;
+}
+#pg-home .hero-runes-row .hrune::before{content:none!important;}
+#pg-home .hero-runes-row .hrune::after{
+  content:"";
+  position:absolute;
+  left:18px;
+  right:18px;
+  bottom:10px;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,224,122,.62),rgba(126,238,221,.34),transparent);
+  opacity:0;
+  transform:scaleX(.35);
+  transition:opacity .18s ease,transform .22s ease;
+  pointer-events:none;
+}
+#pg-home .hero-runes-row .hrune:hover{
+  transform:translateY(-2px)!important;
+  border-color:rgba(255,224,122,.40)!important;
+  background:linear-gradient(180deg,rgba(13,24,37,.98),rgba(6,12,22,.98))!important;
+  box-shadow:0 14px 34px rgba(0,0,0,.30),0 0 0 1px rgba(255,224,122,.06) inset,0 0 18px rgba(255,218,104,.08)!important;
+}
+#pg-home .hero-runes-row .hrune:hover::after{opacity:1;transform:scaleX(1);}
+#pg-home .hero-runes-row .hrune:hover .hrune-n{color:#ffe27a!important;text-shadow:0 0 12px rgba(255,218,104,.22)!important;}
+#pg-home .hero-runes-row .hrune:hover .hrune-l{color:#eaf7ff!important;}
+
+
+#profile-popover{
+  width:min(560px,calc(100vw - 24px))!important;
+}
+#profile-popover .profile-popover-inner{
+  overflow:visible!important;
+  padding:20px!important;
+  border-radius:18px!important;
+}
+#profile-popover .profile-pop-head{
+  display:grid!important;
+  grid-template-columns:96px minmax(0,1fr)!important;
+  gap:18px!important;
+  align-items:start!important;
+  padding-bottom:18px!important;
+}
+#profile-popover .profile-pop-avatar,
+#profile-popover .profile-pop-avatar--wiki_admin,
+#profile-popover .profile-pop-avatar--admin{
+  width:88px!important;
+  height:88px!important;
+  margin:6px 0 0 4px!important;
+  border-radius:20px!important;
+  flex:0 0 88px!important;
+}
+#profile-popover .profile-pop-avatar--wiki_admin,
+#profile-popover .profile-pop-avatar--admin{
+  box-shadow:0 0 0 4px rgba(255,211,106,.14),0 0 30px rgba(255,211,106,.24),0 14px 34px rgba(0,0,0,.34)!important;
+}
+#profile-popover .profile-pop-avatar i{top:-16px!important;}
+#profile-popover .profile-pop-main{min-width:0!important;max-width:100%!important;}
+#profile-popover .profile-pop-name-row{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  align-items:center!important;
+  gap:8px!important;
+}
+#profile-popover .profile-pop-name-row b{
+  flex:1 1 220px!important;
+  min-width:0!important;
+  max-width:100%!important;
+  font-size:20px!important;
+  line-height:1.12!important;
+  overflow-wrap:anywhere!important;
+}
+#profile-popover .profile-pop-name-row > .role-chip{
+  flex:0 0 auto!important;
+  max-width:100%!important;
+}
+#profile-popover .profile-pop-starline{
+  width:max-content!important;
+  max-width:100%!important;
+  margin-top:8px!important;
+  padding:7px 10px!important;
+  border-radius:10px!important;
+  background:rgba(255,224,122,.055)!important;
+  border:1px solid rgba(255,224,122,.16)!important;
+}
+#profile-popover .profile-pop-roleline{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:8px!important;
+  align-items:center!important;
+  margin-top:10px!important;
+  padding:10px!important;
+  border-radius:14px!important;
+  overflow:visible!important;
+}
+#profile-popover .role-chip,
+#profile-popover .rank-stars-badge{
+  flex:0 1 auto!important;
+  max-width:100%!important;
+  min-height:30px!important;
+  border-radius:10px!important;
+  white-space:nowrap!important;
+}
+#profile-popover .rank-stars-badge__label,
+#profile-popover .role-chip__label{
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  max-width:150px!important;
+}
+#profile-popover .profile-pop-stats{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:10px!important;
+}
+#profile-popover .profile-pop-stats span{
+  min-height:74px!important;
+  border-radius:14px!important;
+}
+#profile-popover .profile-pop-stats span:nth-child(3){grid-column:auto!important;}
+#profile-popover .profile-pop-section{border-radius:14px!important;}
+#profile-popover .profile-pop-actions button,
+#profile-popover .profile-upload-btn,
+#profile-popover .profile-url-row input,
+#profile-popover .profile-url-row button{border-radius:12px!important;}
+
+.profile-page .profile-hero{
+  border-radius:22px!important;
+  overflow:visible!important;
+}
+.profile-page .profile-main-role,
+.profile-page .profile-earned-role,
+.profile-page .role-chip,
+.profile-page .rank-stars-badge{
+  border-radius:12px!important;
+}
+.profile-page .profile-grid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  gap:22px!important;
+}
+.profile-page .profile-panel{
+  border-radius:22px!important;
+  overflow:visible!important;
+}
+.profile-page .profile-panel--rank-map{
+  padding:28px!important;
+  overflow:visible!important;
+  border-radius:24px!important;
+  border-color:rgba(255,224,122,.28)!important;
+  background:
+    radial-gradient(circle at 8% 0%,rgba(255,224,122,.14),transparent 36%),
+    radial-gradient(circle at 100% 8%,rgba(101,234,220,.08),transparent 34%),
+    linear-gradient(180deg,rgba(12,24,38,.98),rgba(4,10,18,.98))!important;
+}
+.profile-panel--rank-map::before{border-radius:999px!important;}
+.profile-panel--rank-map .profile-panel-heading-row{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:16px!important;
+  margin-bottom:22px!important;
+  padding-bottom:18px!important;
+  border-bottom:1px solid rgba(255,224,122,.15)!important;
+}
+.profile-panel--rank-map h2{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  margin:0!important;
+  font-size:19px!important;
+  line-height:1.2!important;
+}
+.profile-rank-summary{
+  min-width:220px!important;
+  padding:11px 13px!important;
+  border-radius:16px!important;
+  text-align:right!important;
+}
+.profile-rank-road{
+  padding:0!important;
+  overflow:visible!important;
+}
+.profile-rank-track{display:none!important;}
+.profile-rank-nodes{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(230px,1fr))!important;
+  gap:14px!important;
+  margin:0!important;
+  overflow:visible!important;
+}
+.profile-rank-node{
+  min-width:0!important;
+  min-height:172px!important;
+  display:grid!important;
+  grid-template-columns:54px minmax(0,1fr)!important;
+  grid-template-areas:"badge body" "desc desc"!important;
+  gap:12px!important;
+  align-items:start!important;
+  justify-items:stretch!important;
+  padding:17px!important;
+  border-radius:18px!important;
+  text-align:left!important;
+  overflow:visible!important;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--rank-color,#ffe08a) 9%,rgba(8,18,29,.97)),rgba(3,9,17,.97))!important;
+}
+.profile-rank-node__badge{
+  grid-area:badge!important;
+  width:52px!important;
+  height:52px!important;
+  margin:0!important;
+  border-radius:16px!important;
+}
+.profile-rank-node__body{
+  grid-area:body!important;
+  min-width:0!important;
+  text-align:left!important;
+}
+.profile-rank-node__body b{
+  display:block!important;
+  font-size:13.5px!important;
+  line-height:1.2!important;
+  color:#fff6cf!important;
+  overflow-wrap:anywhere!important;
+}
+.profile-rank-node__body span{
+  display:block!important;
+  margin-top:5px!important;
+  font-size:12px!important;
+  line-height:1.35!important;
+  color:#e3eef4!important;
+}
+.profile-rank-node__body small{
+  display:inline-flex!important;
+  max-width:100%!important;
+  margin-top:8px!important;
+  border-radius:999px!important;
+  white-space:normal!important;
+}
+.profile-rank-node p{
+  grid-area:desc!important;
+  margin:0!important;
+  font-size:12.7px!important;
+  line-height:1.48!important;
+  color:#cbdbe3!important;
+  text-align:left!important;
+}
+.profile-rank-node.is-current{
+  transform:none!important;
+  box-shadow:0 0 28px color-mix(in srgb,var(--rank-color,#ffe08a) 18%,transparent),0 16px 36px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.09)!important;
+}
+.profile-rank-node.is-current::after{
+  top:10px!important;
+  right:10px!important;
+  transform:none!important;
+  border-radius:999px!important;
+}
+.profile-rank-foot{
+  margin-top:18px!important;
+  padding:14px 16px!important;
+  border-radius:16px!important;
+}
+@media(max-width:1180px){
+  .profile-rank-nodes{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .profile-panel--rank-map .profile-panel-heading-row{align-items:flex-start!important;}
+}
+@media(max-width:760px){
+  #profile-popover .profile-pop-head{grid-template-columns:1fr!important;}
+  #profile-popover .profile-pop-avatar,#profile-popover .profile-pop-avatar--wiki_admin,#profile-popover .profile-pop-avatar--admin{margin:6px auto 0!important;}
+  #profile-popover .profile-pop-stats{grid-template-columns:1fr!important;}
+  .profile-panel--rank-map .profile-panel-heading-row{display:grid!important;}
+  .profile-rank-summary{text-align:left!important;min-width:0!important;width:100%!important;}
+  .profile-rank-nodes{grid-template-columns:1fr!important;}
+}
+
+#profile-popover{
+  width:min(590px,calc(100vw - 24px))!important;
+  color:#f5fbff!important;
+}
+#profile-popover .profile-popover-inner{
+  overflow:visible!important;
+  padding:22px!important;
+  border-radius:22px!important;
+  border:1px solid color-mix(in srgb,var(--profile-role-color,#ffd36a) 44%,rgba(255,255,255,.12))!important;
+  background:
+    radial-gradient(circle at 10% 0%,color-mix(in srgb,var(--profile-role-color,#ffd36a) 14%,transparent),transparent 36%),
+    linear-gradient(180deg,rgba(9,18,30,.995),rgba(3,8,15,.995))!important;
+  box-shadow:0 28px 70px rgba(0,0,0,.58),inset 0 1px 0 rgba(255,255,255,.07)!important;
+}
+#profile-popover .profile-pop-head{
+  display:grid!important;
+  grid-template-columns:92px minmax(0,1fr)!important;
+  gap:18px!important;
+  align-items:start!important;
+  padding:0 0 18px!important;
+  border-bottom:1px solid rgba(255,255,255,.10)!important;
+}
+#profile-popover .profile-pop-avatar,
+#profile-popover .profile-pop-avatar--wiki_admin,
+#profile-popover .profile-pop-avatar--admin{
+  width:82px!important;
+  height:82px!important;
+  margin:4px 0 0 4px!important;
+  border-radius:18px!important;
+  overflow:visible!important;
+}
+#profile-popover .profile-pop-avatar img,
+#profile-popover .profile-pop-avatar > span{
+  border-radius:14px!important;
+  overflow:hidden!important;
+}
+#profile-popover .profile-pop-main{display:grid!important;gap:10px!important;min-width:0!important;}
+#profile-popover .profile-pop-name-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:10px!important;
+  align-items:start!important;
+}
+#profile-popover .profile-pop-name-row b{
+  min-width:0!important;
+  margin-top:2px!important;
+  color:#fff2bd!important;
+  font:900 21px/1.12 'Open Sans',Arial,sans-serif!important;
+  letter-spacing:.045em!important;
+  text-transform:uppercase!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:anywhere!important;
+  text-shadow:0 1px 0 rgba(0,0,0,.78),0 0 16px rgba(255,218,104,.12)!important;
+}
+#profile-popover .profile-pop-name-row > .role-chip{max-width:180px!important;justify-self:end!important;}
+#profile-popover .profile-pop-starline{
+  width:100%!important;
+  max-width:100%!important;
+  display:grid!important;
+  grid-template-columns:auto max-content minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:8px!important;
+  margin:0!important;
+  padding:9px 11px!important;
+  border:1px solid rgba(255,218,104,.24)!important;
+  border-left:3px solid rgba(255,218,104,.60)!important;
+  border-radius:14px!important;
+  background:linear-gradient(90deg,rgba(255,218,104,.10),rgba(126,238,221,.035),rgba(255,255,255,.018))!important;
+}
+#profile-popover .profile-pop-starline span{font-size:13px!important;color:#ffdf75!important;text-shadow:0 0 12px rgba(255,218,104,.38)!important;}
+#profile-popover .profile-pop-starline strong{
+  color:#ffe58d!important;
+  font:900 18px/1 'Open Sans',Arial,sans-serif!important;
+  letter-spacing:0!important;
+  white-space:nowrap!important;
+}
+#profile-popover .profile-pop-starline em{
+  min-width:0!important;
+  color:#e8f2f7!important;
+  font:700 12px/1.25 'Open Sans',Arial,sans-serif!important;
+  font-style:normal!important;
+  white-space:normal!important;
+}
+#profile-popover .profile-pop-roleline{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:8px!important;
+  align-items:center!important;
+  margin:0!important;
+  padding:11px!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  border-radius:16px!important;
+  background:rgba(255,255,255,.025)!important;
+}
+#profile-popover .role-group{display:flex!important;flex-wrap:wrap!important;gap:8px!important;min-width:0!important;}
+#profile-popover .role-chip,
+#profile-popover .rank-stars-badge{
+  max-width:100%!important;
+  min-height:30px!important;
+  padding:6px 10px!important;
+  border-radius:12px!important;
+  font:900 10.5px/1 'Open Sans',Arial,sans-serif!important;
+  letter-spacing:.07em!important;
+  text-transform:uppercase!important;
+  white-space:nowrap!important;
+}
+#profile-popover .role-chip__label,
+#profile-popover .rank-stars-badge__label{
+  max-width:190px!important;
+  color:inherit!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+#profile-popover .rank-stars-badge__stars i{font-size:10px!important;}
+#profile-popover .profile-pop-stats{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:11px!important;
+  margin:18px 0!important;
+}
+#profile-popover .profile-pop-stats span{
+  display:grid!important;
+  align-content:start!important;
+  gap:7px!important;
+  min-height:86px!important;
+  min-width:0!important;
+  padding:14px 13px!important;
+  border:1px solid rgba(126,238,221,.13)!important;
+  border-radius:16px!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.052),rgba(255,255,255,.018))!important;
+}
+#profile-popover .profile-pop-stats b{
+  display:block!important;
+  color:#ffe58d!important;
+  font:900 20px/1.08 'Open Sans',Arial,sans-serif!important;
+  letter-spacing:0!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  word-break:normal!important;
+}
+#profile-popover .profile-pop-stats em{
+  display:block!important;
+  color:#e5f0f6!important;
+  font:700 12px/1.32 'Open Sans',Arial,sans-serif!important;
+  font-style:normal!important;
+}
+#profile-popover .profile-pop-section{
+  border-radius:16px!important;
+  border-color:rgba(126,238,221,.16)!important;
+  background:rgba(126,238,221,.035)!important;
+}
+#profile-popover .profile-pop-section strong,
+#profile-popover .profile-pop-section p,
+#profile-popover .profile-upload-btn,
+#profile-popover .profile-url-row input,
+#profile-popover .profile-url-row button,
+#profile-popover .profile-pop-actions button{font-family:'Open Sans',Arial,sans-serif!important;}
+
+.profile-page .profile-panel--rank-map{
+  position:relative!important;
+  padding:30px!important;
+  border-radius:24px!important;
+  overflow:visible!important;
+  border-color:rgba(255,224,122,.30)!important;
+  background:
+    radial-gradient(circle at 8% 0%,rgba(255,224,122,.15),transparent 36%),
+    radial-gradient(circle at 96% 12%,rgba(101,234,220,.08),transparent 34%),
+    linear-gradient(180deg,rgba(11,23,37,.99),rgba(4,10,18,.99))!important;
+  box-shadow:0 24px 62px rgba(0,0,0,.34),0 0 34px rgba(255,224,122,.07),inset 0 1px 0 rgba(255,255,255,.065)!important;
+}
+.profile-page .profile-panel--rank-map .profile-panel-heading-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:16px!important;
+  margin:0 0 22px!important;
+  padding:0 0 18px!important;
+  border-bottom:1px solid rgba(255,224,122,.15)!important;
+}
+.profile-page .profile-panel--rank-map h2{
+  margin:0!important;
+  color:#fff2b8!important;
+  font:900 21px/1.2 'Open Sans',Arial,sans-serif!important;
+  letter-spacing:.045em!important;
+  text-transform:uppercase!important;
+}
+.profile-page .profile-rank-summary{
+  min-width:250px!important;
+  padding:12px 14px!important;
+  border:1px solid rgba(255,224,122,.22)!important;
+  border-radius:16px!important;
+  background:linear-gradient(180deg,rgba(255,224,122,.075),rgba(0,0,0,.16))!important;
+  text-align:right!important;
+}
+.profile-page .profile-rank-summary span,
+.profile-page .profile-rank-summary strong{font-family:'Open Sans',Arial,sans-serif!important;}
+.profile-page .profile-rank-summary span{display:block!important;color:#e8f4f8!important;font-size:12px!important;line-height:1.3!important;font-weight:700!important;}
+.profile-page .profile-rank-summary strong{display:block!important;margin-top:4px!important;color:#ffe68a!important;font-size:15px!important;line-height:1.2!important;font-weight:900!important;}
+.profile-page .profile-rank-track{display:none!important;}
+.profile-page .profile-rank-nodes{
+  display:grid!important;
+  grid-template-columns:repeat(auto-fit,minmax(245px,1fr))!important;
+  gap:14px!important;
+  margin:0!important;
+  overflow:visible!important;
+}
+.profile-page .profile-rank-node{
+  position:relative!important;
+  min-width:0!important;
+  min-height:170px!important;
+  display:grid!important;
+  grid-template-columns:58px minmax(0,1fr)!important;
+  grid-template-areas:"badge body" "desc desc"!important;
+  align-items:start!important;
+  justify-items:stretch!important;
+  gap:12px!important;
+  padding:18px!important;
+  border:1px solid color-mix(in srgb,var(--rank-color,#ffe08a) 24%,rgba(255,255,255,.08))!important;
+  border-radius:18px!important;
+  background:
+    linear-gradient(180deg,color-mix(in srgb,var(--rank-color,#ffe08a) 10%,rgba(9,18,30,.98)),rgba(3,9,17,.98))!important;
+  text-align:left!important;
+  overflow:hidden!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045)!important;
+}
+.profile-page .profile-rank-node::before{
+  content:""!important;
+  position:absolute!important;
+  inset:0 auto 0 0!important;
+  width:3px!important;
+  background:linear-gradient(180deg,var(--rank-color,#ffe08a),transparent)!important;
+  opacity:.70!important;
+}
+.profile-page .profile-rank-node__badge{
+  grid-area:badge!important;
+  width:54px!important;
+  height:54px!important;
+  margin:0!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid color-mix(in srgb,var(--rank-color,#ffe08a) 50%,rgba(255,255,255,.10))!important;
+  border-radius:16px!important;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--rank-color,#ffe08a) 20%,rgba(10,18,28,.98)),rgba(3,8,14,.98))!important;
+}
+.profile-page .profile-rank-node__badge span{color:#fff3bd!important;font:900 18px/1 'Open Sans',Arial,sans-serif!important;}
+.profile-page .profile-rank-node__body{grid-area:body!important;min-width:0!important;text-align:left!important;}
+.profile-page .profile-rank-node__body b{
+  display:block!important;
+  color:#fff6cf!important;
+  font:900 15px/1.2 'Open Sans',Arial,sans-serif!important;
+  letter-spacing:.01em!important;
+}
+.profile-page .profile-rank-node__body span{
+  display:block!important;
+  margin-top:5px!important;
+  color:#edf7fb!important;
+  font:700 12.5px/1.35 'Open Sans',Arial,sans-serif!important;
+}
+.profile-page .profile-rank-node__body small{
+  display:inline-flex!important;
+  align-items:center!important;
+  max-width:100%!important;
+  margin-top:9px!important;
+  padding:5px 8px!important;
+  border:1px solid color-mix(in srgb,var(--rank-color,#ffe08a) 26%,rgba(255,255,255,.08))!important;
+  border-radius:999px!important;
+  color:#ffeaa7!important;
+  background:rgba(0,0,0,.22)!important;
+  font:800 11px/1.2 'Open Sans',Arial,sans-serif!important;
+  white-space:normal!important;
+}
+.profile-page .profile-rank-node p{
+  grid-area:desc!important;
+  margin:0!important;
+  color:#d6e5eb!important;
+  font:600 13px/1.48 'Open Sans',Arial,sans-serif!important;
+  text-align:left!important;
+}
+.profile-page .profile-rank-node.is-current{
+  transform:none!important;
+  border-color:color-mix(in srgb,var(--rank-color,#ffe08a) 64%,rgba(255,255,255,.16))!important;
+  box-shadow:0 0 28px color-mix(in srgb,var(--rank-color,#ffe08a) 18%,transparent),0 16px 36px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.09)!important;
+}
+.profile-page .profile-rank-node.is-current::after{
+  top:10px!important;
+  right:10px!important;
+  border-radius:999px!important;
+  font-family:'Open Sans',Arial,sans-serif!important;
+}
+.profile-page .profile-rank-node.is-locked{opacity:.76!important;filter:saturate(.82)!important;}
+.profile-page .profile-rank-foot{
+  display:flex!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  margin-top:18px!important;
+  padding:14px 16px!important;
+  border:1px solid rgba(255,224,122,.16)!important;
+  border-radius:16px!important;
+  background:linear-gradient(90deg,rgba(255,224,122,.06),rgba(126,238,221,.03),rgba(0,0,0,.10))!important;
+  color:#e9f4f8!important;
+  font:700 13px/1.4 'Open Sans',Arial,sans-serif!important;
+}
+.profile-page .profile-rank-foot strong{color:#ffe58a!important;font-weight:900!important;}
+@media(max-width:760px){
+  #profile-popover .profile-pop-head{grid-template-columns:1fr!important;}
+  #profile-popover .profile-pop-avatar,#profile-popover .profile-pop-avatar--wiki_admin,#profile-popover .profile-pop-avatar--admin{margin:4px auto 0!important;}
+  #profile-popover .profile-pop-name-row{grid-template-columns:1fr!important;}
+  #profile-popover .profile-pop-name-row > .role-chip{justify-self:start!important;}
+  #profile-popover .profile-pop-stats{grid-template-columns:1fr!important;}
+  .profile-page .profile-panel--rank-map .profile-panel-heading-row{grid-template-columns:1fr!important;}
+  .profile-page .profile-rank-summary{min-width:0!important;text-align:left!important;}
+  .profile-page .profile-rank-foot{display:grid!important;}
+}
+
+
+.profile-page .role-chip[data-role-help]::before,
+.profile-page .role-chip[data-role-help]::after,
+.profile-page .rank-stars-badge[data-role-help]::before,
+.profile-page .rank-stars-badge[data-role-help]::after,
+.profile-page .profile-main-role[data-role-help]::before,
+.profile-page .profile-main-role[data-role-help]::after,
+.profile-page .profile-earned-role[data-role-help]::before,
+.profile-page .profile-earned-role[data-role-help]::after{
+  display:none!important;
+  content:none!important;
+}
+.profile-page .role-chip[data-role-help],
+.profile-page .rank-stars-badge[data-role-help],
+.profile-page .profile-main-role[data-role-help],
+.profile-page .profile-earned-role[data-role-help]{
+  cursor:help!important;
+  overflow:visible!important;
+}
+#contrib-floating-hint{
+  position:fixed!important;
+  z-index:2147483647!important;
+  pointer-events:none!important;
+  display:block!important;
+  box-sizing:border-box!important;
+  min-width:220px!important;
+  max-width:min(360px,calc(100vw - 28px))!important;
+  width:max-content!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  padding:10px 12px!important;
+  border-radius:10px!important;
+  border:1px solid rgba(255,226,138,.38)!important;
+  background:linear-gradient(180deg,rgba(9,18,30,.992),rgba(3,8,15,.992))!important;
+  color:#f5fbff!important;
+  box-shadow:0 18px 42px rgba(0,0,0,.56),0 0 22px rgba(255,226,138,.14)!important;
+  font:800 12px/1.45 'Lora',serif!important;
+  letter-spacing:.01em!important;
+  text-transform:none!important;
+}

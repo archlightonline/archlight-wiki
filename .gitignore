@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output (must never be committed — see AUDIT §7: dist/ was a 68MB committed artifact)
+dist/
+dist-server/
+*.tsbuildinfo
+
+# Local database (PGlite data dir) — dev/test only
+.pglite/
+*.pglite
+
+# Secrets / env — never commit credentials (see AUDIT §5)
+.env
+.env.local
+.env.*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*

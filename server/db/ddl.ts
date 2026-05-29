@@ -1,0 +1,81 @@
+/**
+ * Authoritative, idempotent schema DDL for the wiki database.
+ *
+ * Why raw DDL instead of `drizzle-kit push`? It must run identically against two
+ * drivers — embedded PGlite (local dev/test) and node-postgres (production) — and
+ * be re-runnable per test suite. Plain `CREATE ... IF NOT EXISTS` is the most
+ * predictable, driver-agnostic way to do that. This mirrors ./schema.ts exactly;
+ * `pnpm db:push` (scripts/db-push.mjs) and the test harness both apply it.
+ *
+ * Roles/status use TEXT + CHECK rather than native enum types so the statements
+ * stay idempotent and portable.
+ */
+export const DDL_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS users (
+    id            serial PRIMARY KEY,
+    username      text NOT NULL,
+    email         text NOT NULL,
+    password_hash text NOT NULL,
+    role          text NOT NULL DEFAULT 'viewer' CHECK (role IN ('admin','editor','viewer')),
+    display_name  text,
+    avatar_url    text,
+    created_at    timestamptz NOT NULL DEFAULT now(),
+    updated_at    timestamptz NOT NULL DEFAULT now(),
+    last_login_at timestamptz,
+    is_active     boolean NOT NULL DEFAULT true
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS users_username_uq ON users (lower(username))`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS users_email_uq ON users (lower(email))`,
+
+  `CREATE TABLE IF NOT EXISTS pages (
+    id           serial PRIMARY KEY,
+    slug         text NOT NULL,
+    title        text NOT NULL,
+    category     text,
+    subcategory  text,
+    content      text NOT NULL DEFAULT '',
+    created_by   integer REFERENCES users(id),
+    updated_by   integer REFERENCES users(id),
+    created_at   timestamptz NOT NULL DEFAULT now(),
+    updated_at   timestamptz NOT NULL DEFAULT now(),
+    is_published boolean NOT NULL DEFAULT true,
+    is_protected boolean NOT NULL DEFAULT false
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS pages_slug_uq ON pages (slug)`,
+  `CREATE INDEX IF NOT EXISTS pages_category_idx ON pages (category)`,
+  // PostgreSQL full-text search (tsvector) over title + content.
+  `CREATE INDEX IF NOT EXISTS pages_search_index ON pages
+    USING gin (to_tsvector('english', coalesce(title, '') || ' ' || coalesce(content, '')))`,
+
+  `CREATE TABLE IF NOT EXISTS page_revisions (
+    id           serial PRIMARY KEY,
+    page_id      integer NOT NULL REFERENCES pages(id) ON DELETE CASCADE,
+    content      text NOT NULL,
+    edited_by    integer REFERENCES users(id),
+    edit_summary text,
+    created_at   timestamptz NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS page_revisions_page_idx ON page_revisions (page_id)`,
+
+  `CREATE TABLE IF NOT EXISTS page_tags (
+    id      serial PRIMARY KEY,
+    page_id integer NOT NULL REFERENCES pages(id) ON DELETE CASCADE,
+    tag     text NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS page_tags_page_idx ON page_tags (page_id)`,
+  `CREATE INDEX IF NOT EXISTS page_tags_tag_idx ON page_tags (tag)`,
+
+  `CREATE TABLE IF NOT EXISTS contributions (
+    id               serial PRIMARY KEY,
+    page_id          integer REFERENCES pages(id) ON DELETE CASCADE,
+    contributor_id   integer NOT NULL REFERENCES users(id),
+    proposed_content text NOT NULL,
+    status           text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
+    reviewed_by      integer REFERENCES users(id),
+    review_note      text,
+    created_at       timestamptz NOT NULL DEFAULT now(),
+    reviewed_at      timestamptz
+  )`,
+  `CREATE INDEX IF NOT EXISTS contributions_status_idx ON contributions (status)`,
+  `CREATE INDEX IF NOT EXISTS contributions_page_idx ON contributions (page_id)`,
+];

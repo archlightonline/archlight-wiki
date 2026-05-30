@@ -6,6 +6,7 @@ import superjson from 'superjson';
 import { BrowserRouter } from 'react-router-dom';
 import { trpc } from './lib/trpc';
 import App from './App';
+import { AuthModalProvider } from './wiki-components/AuthModal';
 import './index.css';
 
 function Root() {
@@ -32,7 +33,9 @@ function Root() {
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <App />
+          <AuthModalProvider>
+            <App />
+          </AuthModalProvider>
         </BrowserRouter>
       </QueryClientProvider>
     </trpc.Provider>

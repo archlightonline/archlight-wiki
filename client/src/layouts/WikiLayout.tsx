@@ -6,9 +6,11 @@ import { NavItem } from '../components/NavItem';
 import { BrandLogo } from '../components/BrandLogo';
 import { WorldsSelector } from '../components/WorldsSelector';
 import { SIDEBAR_GROUPS, navRoute } from '../lib/nav';
+import { useAuthModal } from '../wiki-components/AuthModal';
 
 export function WikiLayout() {
   const { user, isAdmin } = useAuth();
+  const { open: openAuth } = useAuthModal();
   const [mobOpen, setMobOpen] = useState(false);
   const location = useLocation();
 
@@ -68,10 +70,17 @@ export function WikiLayout() {
           </a>
         </div>
 
-        <Link className="top-contribute" to="/browse">
-          <span aria-hidden="true">✦</span>
-          <span>Contribute</span>
-        </Link>
+        {user ? (
+          <Link className="top-contribute" to="/browse">
+            <span aria-hidden="true">✦</span>
+            <span>Contribute</span>
+          </Link>
+        ) : (
+          <button type="button" className="top-contribute" onClick={() => openAuth('login')}>
+            <span aria-hidden="true">✦</span>
+            <span>Contribute</span>
+          </button>
+        )}
 
         <SearchBar />
         <WorldsSelector />
@@ -91,9 +100,9 @@ export function WikiLayout() {
               </span>
             </Link>
           ) : (
-            <Link className="tbtn top-login" to="/login">
+            <button type="button" className="tbtn top-login" onClick={() => openAuth('login')}>
               🔐 Login
-            </Link>
+            </button>
           )}
           <Link className="tbtn top-updates" to="/category/Updates">
             🧾 Updates

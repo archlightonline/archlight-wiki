@@ -121,8 +121,19 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
   color: var(--tx1); text-decoration: none; transition: all 0.16s;
 }
 .top-social-link:hover { border-color: var(--rim3); color: var(--tx0); text-decoration: none; background: rgba(200, 160, 50, 0.07); }
-.top-social-link.discord { border-color: rgba(88, 101, 242, 0.4); }
-.top-social-link.discord:hover { border-color: rgba(88, 101, 242, 0.7); background: rgba(88, 101, 242, 0.12); }
+/* Discord button — distinct glowing green box to draw attention. */
+.discord-btn {
+  border: 1px solid rgba(59, 165, 93, 0.7);
+  box-shadow: 0 0 8px rgba(59, 165, 93, 0.3), inset 0 0 8px rgba(59, 165, 93, 0.05);
+  background: rgba(59, 165, 93, 0.08);
+  margin-right: 6px; /* keep the glow from bleeding into adjacent topbar items */
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.discord-btn:hover {
+  border-color: rgba(59, 165, 93, 1);
+  background: rgba(59, 165, 93, 0.12); /* override .top-social-link:hover gold bg */
+  box-shadow: 0 0 14px rgba(59, 165, 93, 0.5), inset 0 0 10px rgba(59, 165, 93, 0.1);
+}
 .top-social-icon { font-size: 15px; line-height: 1; }
 .top-social-copy { display: flex; flex-direction: column; line-height: 1.1; }
 .top-social-copy b { font-family: var(--font-label); font-size: 11px; color: var(--tx0); letter-spacing: 0.04em; }

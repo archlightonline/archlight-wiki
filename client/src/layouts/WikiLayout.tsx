@@ -50,7 +50,7 @@ export function WikiLayout() {
 
         <div className="top-social">
           <a
-            className="top-social-link discord"
+            className="top-social-link discord-btn"
             href="https://discord.com"
             target="_blank"
             rel="noopener noreferrer"

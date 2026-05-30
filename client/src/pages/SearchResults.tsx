@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { trpc } from '../lib/trpc';
 import { Breadcrumb } from '../components/Breadcrumb';
-import { Loading } from '../components/ui';
+import { EmptyState, PageListSkeleton } from '../components/ui';
 
 export function SearchResults() {
   const [params, setParams] = useSearchParams();
@@ -34,11 +34,12 @@ export function SearchResults() {
 
       {q && (
         <div className="toolbar">
-          <button className={`tab${!category ? ' active' : ''}`} onClick={() => setCategory(undefined)}>
+          <button type="button" className={`tab${!category ? ' active' : ''}`} onClick={() => setCategory(undefined)}>
             All
           </button>
           {categories.data?.map((c) => (
             <button
+              type="button"
               key={c.category}
               className={`tab${category === c.category ? ' active' : ''}`}
               onClick={() => setCategory(c.category)}
@@ -49,14 +50,24 @@ export function SearchResults() {
         </div>
       )}
 
-      {results.isLoading && <Loading />}
+      {!q && (
+        <EmptyState
+          icon="⌕"
+          title="Search the wiki"
+          body="Enter a page title, system, quest, item, or patch note in the search field above."
+        />
+      )}
+      {results.isLoading && <PageListSkeleton count={5} />}
       {results.data && results.data.length === 0 && q && (
-        <div className="empty-state">
-          <div className="big" aria-hidden="true">
-            ∅
-          </div>
-          <p className="muted">No pages matched “{q}”.</p>
-        </div>
+        <EmptyState
+          icon="∅"
+          title="No matching pages"
+          body={`Nothing matched "${q}". Try a shorter phrase or browse by category.`}
+        >
+          <Link className="btn" to="/browse">
+            Browse all pages
+          </Link>
+        </EmptyState>
       )}
 
       {results.data?.map((r) => (

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { SearchBar } from '../components/SearchBar';
 import { NavItem } from '../components/NavItem';
@@ -10,11 +10,31 @@ import { SIDEBAR_GROUPS, navRoute } from '../lib/nav';
 export function WikiLayout() {
   const { user, isAdmin } = useAuth();
   const [mobOpen, setMobOpen] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    setMobOpen(false);
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    if (!mobOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [mobOpen]);
 
   return (
     <div className="app">
       <header className="topbar">
-        <button className="mob-menu-btn" onClick={() => setMobOpen((o) => !o)} aria-label="Toggle menu">
+        <button
+          className="mob-menu-btn"
+          onClick={() => setMobOpen((o) => !o)}
+          aria-label="Toggle navigation menu"
+          aria-controls="wiki-sidebar"
+          aria-expanded={mobOpen}
+        >
           ☰
         </button>
 
@@ -27,7 +47,13 @@ export function WikiLayout() {
         </Link>
 
         <div className="top-social">
-          <a className="top-social-link discord" href="https://discord.com" target="_blank" rel="noopener noreferrer">
+          <a
+            className="top-social-link discord"
+            href="https://discord.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open Archlight Discord"
+          >
             <span className="top-social-icon" aria-hidden="true">💬</span>
             <span className="top-social-copy">
               <b>Discord</b>
@@ -65,20 +91,20 @@ export function WikiLayout() {
               </span>
             </Link>
           ) : (
-            <Link className="tbtn" to="/login">
+            <Link className="tbtn top-login" to="/login">
               🔐 Login
             </Link>
           )}
-          <Link className="tbtn" to="/category/Updates">
+          <Link className="tbtn top-updates" to="/category/Updates">
             🧾 Updates
           </Link>
-          <Link className="tbtn play" to="/browse">
+          <Link className="tbtn play top-play" to="/browse" aria-label="Browse pages and play guides">
             ▶ Play
           </Link>
         </div>
       </header>
 
-      <aside className={`sidebar${mobOpen ? ' open' : ''}`} onClick={() => setMobOpen(false)}>
+      <aside id="wiki-sidebar" className={`sidebar${mobOpen ? ' open' : ''}`} onClick={() => setMobOpen(false)}>
         {SIDEBAR_GROUPS.filter((g) => !g.adminOnly || isAdmin).map((group) => (
           <div key={group.label}>
             <div className="group-label">{group.label}</div>
@@ -88,6 +114,12 @@ export function WikiLayout() {
           </div>
         ))}
       </aside>
+      <button
+        className={`sidebar-backdrop${mobOpen ? ' open' : ''}`}
+        type="button"
+        aria-label="Close navigation menu"
+        onClick={() => setMobOpen(false)}
+      />
 
       <main className="main">
         <Outlet />

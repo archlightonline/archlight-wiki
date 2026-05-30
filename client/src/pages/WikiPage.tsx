@@ -4,7 +4,7 @@ import { Markdown } from '../components/Markdown';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { useAuth } from '../lib/auth';
 import { fmtDateTime } from '../lib/format';
-import { Loading } from '../components/ui';
+import { EmptyState, PageDetailSkeleton } from '../components/ui';
 import { NotFound } from './NotFound';
 
 export function WikiPage() {
@@ -12,7 +12,7 @@ export function WikiPage() {
   const { isEditor, isAuthed } = useAuth();
   const q = trpc.pages.get.useQuery({ slug: slug! }, { retry: false });
 
-  if (q.isLoading) return <Loading />;
+  if (q.isLoading) return <PageDetailSkeleton />;
   if (q.error || !q.data) return <NotFound />;
   const page = q.data;
 
@@ -71,7 +71,11 @@ export function WikiPage() {
       {page.content.trim() ? (
         <Markdown content={page.content} />
       ) : (
-        <p className="muted">This page has no content yet.</p>
+        <EmptyState
+          icon="✦"
+          title="This page is waiting for content"
+          body="The entry exists, but no published guide text has been added yet."
+        />
       )}
     </div>
   );

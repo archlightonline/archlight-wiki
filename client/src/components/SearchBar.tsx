@@ -1,13 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export function SearchBar() {
   const [params] = useSearchParams();
   const [q, setQ] = useState(params.get('q') ?? '');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setQ(params.get('q') ?? '');
+  }, [params]);
+
   return (
     <form
       className="search-box"
+      aria-label="Search the wiki"
       onSubmit={(e) => {
         e.preventDefault();
         if (q.trim()) navigate(`/search?q=${encodeURIComponent(q.trim())}`);
@@ -22,6 +28,9 @@ export function SearchBar() {
         aria-label="Search the wiki"
         autoComplete="off"
       />
+      <button className="search-submit" type="submit" aria-label="Submit search">
+        <span aria-hidden="true">↵</span>
+      </button>
     </form>
   );
 }

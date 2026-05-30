@@ -3,6 +3,11 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { trpc } from '../lib/trpc';
 import { ErrorBox } from '../components/ui';
 
+interface LoginErrors {
+  username?: string;
+  password?: string;
+}
+
 export function Login() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -10,6 +15,7 @@ export function Login() {
   const utils = trpc.useUtils();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<LoginErrors>({});
 
   const login = trpc.auth.login.useMutation({
     onSuccess: async () => {
@@ -18,13 +24,32 @@ export function Login() {
     },
   });
 
+  const clearError = (field: keyof LoginErrors) => {
+    setErrors((current) => {
+      const nextErrors = { ...current };
+      delete nextErrors[field];
+      return nextErrors;
+    });
+  };
+
+  const validate = (): LoginErrors => {
+    const nextErrors: LoginErrors = {};
+    if (!username.trim()) nextErrors.username = 'Username is required.';
+    if (!password) nextErrors.password = 'Password is required.';
+    return nextErrors;
+  };
+
   return (
     <div className="auth-wrap">
       <form
         className="card auth-card"
+        noValidate
         onSubmit={(e) => {
           e.preventDefault();
-          login.mutate({ username, password });
+          const nextErrors = validate();
+          setErrors(nextErrors);
+          if (Object.keys(nextErrors).length > 0) return;
+          login.mutate({ username: username.trim(), password });
         }}
       >
         <div className="eyebrow center">Archlight Wiki</div>
@@ -33,7 +58,23 @@ export function Login() {
         </h1>
         <label className="field">
           <span>Username</span>
-          <input className="input" value={username} autoComplete="username" onChange={(e) => setUsername(e.target.value)} />
+          <input
+            className="input"
+            value={username}
+            autoComplete="username"
+            required
+            aria-invalid={Boolean(errors.username)}
+            aria-describedby={errors.username ? 'login-username-error' : undefined}
+            onChange={(e) => {
+              setUsername(e.target.value);
+              if (errors.username) clearError('username');
+            }}
+          />
+          {errors.username && (
+            <span className="field-error" id="login-username-error">
+              {errors.username}
+            </span>
+          )}
         </label>
         <label className="field">
           <span>Password</span>
@@ -42,8 +83,19 @@ export function Login() {
             type="password"
             value={password}
             autoComplete="current-password"
-            onChange={(e) => setPassword(e.target.value)}
+            required
+            aria-invalid={Boolean(errors.password)}
+            aria-describedby={errors.password ? 'login-password-error' : undefined}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (errors.password) clearError('password');
+            }}
           />
+          {errors.password && (
+            <span className="field-error" id="login-password-error">
+              {errors.password}
+            </span>
+          )}
         </label>
         {login.error && <ErrorBox error={login.error} />}
         <button className="btn primary" style={{ width: '100%' }} disabled={login.isPending}>

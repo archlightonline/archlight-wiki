@@ -17,7 +17,14 @@ export function WorldsSelector() {
 
   return (
     <div className="worlds" ref={ref}>
-      <button className="worlds-btn" onClick={() => setOpen((o) => !o)} aria-haspopup="true" aria-expanded={open}>
+      <button
+        className="worlds-btn"
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Select world"
+        aria-haspopup="true"
+        aria-expanded={open}
+      >
         <span className={`status-dot ${active.status}`} aria-hidden="true" />
         <span>{active.name}</span>
         <span aria-hidden="true">▾</span>

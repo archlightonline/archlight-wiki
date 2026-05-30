@@ -1,7 +1,9 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 // Ported from the original static 404 (empty-page card), restyled with tokens.
 export function NotFound() {
+  const navigate = useNavigate();
+
   return (
     <div className="container narrow">
       <div className="empty-state">
@@ -19,9 +21,9 @@ export function NotFound() {
           showing placeholder information.
         </p>
         <div className="toolbar" style={{ justifyContent: 'center' }}>
-          <Link className="btn primary" to="/">
-            Return home
-          </Link>
+          <button className="btn primary" type="button" onClick={() => navigate(-1)}>
+            Go back
+          </button>
           <Link className="btn" to="/browse">
             Browse all pages
           </Link>

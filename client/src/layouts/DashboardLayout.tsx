@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { SearchBar } from '../components/SearchBar';
@@ -11,6 +12,20 @@ import { BrandLogo } from '../components/BrandLogo';
 export function DashboardLayout({ require = 'editor' }: { require?: 'editor' | 'admin' }) {
   const { isLoading, isAuthed, isAdmin, isEditor, user } = useAuth();
   const location = useLocation();
+  const [mobOpen, setMobOpen] = useState(false);
+
+  useEffect(() => {
+    setMobOpen(false);
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    if (!mobOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [mobOpen]);
 
   if (isLoading) {
     return (
@@ -41,6 +56,15 @@ export function DashboardLayout({ require = 'editor' }: { require?: 'editor' | '
   return (
     <div className="app">
       <header className="topbar">
+        <button
+          className="mob-menu-btn"
+          onClick={() => setMobOpen((o) => !o)}
+          aria-label="Toggle dashboard menu"
+          aria-controls="dashboard-sidebar"
+          aria-expanded={mobOpen}
+        >
+          ☰
+        </button>
         <Link to="/" className="logo-zone" style={{ textDecoration: 'none' }}>
           <BrandLogo size={40} />
           <div>
@@ -57,7 +81,7 @@ export function DashboardLayout({ require = 'editor' }: { require?: 'editor' | '
         </div>
       </header>
 
-      <aside className="sidebar">
+      <aside id="dashboard-sidebar" className={`sidebar${mobOpen ? ' open' : ''}`} onClick={() => setMobOpen(false)}>
         <div className="group-label">Editing</div>
         <NavItem to="/new" icon="📝" label="New page" />
         <NavItem to="/admin/contributions" icon="✦" label="Review queue" />
@@ -69,6 +93,12 @@ export function DashboardLayout({ require = 'editor' }: { require?: 'editor' | '
           </>
         )}
       </aside>
+      <button
+        className={`sidebar-backdrop${mobOpen ? ' open' : ''}`}
+        type="button"
+        aria-label="Close dashboard menu"
+        onClick={() => setMobOpen(false)}
+      />
 
       <main className="main">
         <Outlet />

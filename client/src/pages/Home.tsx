@@ -1,11 +1,12 @@
 import { useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { trpc } from '../lib/trpc';
-import { PageLink } from '../components/ui';
+import { EmptyState, PageLink, PageListSkeleton } from '../components/ui';
 import { BrandLogo } from '../components/BrandLogo';
 import { iconFor } from '../components/NavItem';
 
 const WORDMARK = 'ARCHLIGHT'.split('');
+const ANNOUNCEMENT_KEY = 'archlight-home-announcement-dismissed';
 
 function Hero() {
   const stats = trpc.pages.siteStats.useQuery();
@@ -67,12 +68,20 @@ function Hero() {
 }
 
 function Announcement() {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return window.sessionStorage.getItem(ANNOUNCEMENT_KEY) !== '1';
+  });
+  const dismiss = () => {
+    window.sessionStorage.setItem(ANNOUNCEMENT_KEY, '1');
+    setOpen(false);
+  };
+
   if (!open) return null;
   return (
     <div className="home-announce" role="status">
       <span className="ha-icon" aria-hidden="true">📣</span>
-      <div style={{ flex: 1 }}>
+      <div className="ha-copy">
         <div className="ha-eyebrow">Season Notice</div>
         <div className="ha-title">Abaldar launch information is live</div>
         <div className="ha-body">
@@ -81,12 +90,14 @@ function Announcement() {
         </div>
         <div className="ha-by">Posted by Archlight Team</div>
       </div>
-      <Link className="btn sm primary" to="/category/Updates">
-        Read Updates
-      </Link>
-      <button className="btn sm ghost" aria-label="Dismiss" onClick={() => setOpen(false)}>
-        ✕
-      </button>
+      <div className="ha-actions">
+        <Link className="btn sm primary" to="/category/Updates">
+          Read Updates
+        </Link>
+        <button className="btn sm ghost" aria-label="Dismiss announcement" onClick={dismiss}>
+          ✕
+        </button>
+      </div>
     </div>
   );
 }
@@ -109,6 +120,14 @@ export function Home() {
           <p className="sec-s">A cleaner hub for progression, character power, gear, farming, and the reference pages players use most.</p>
         </div>
 
+        {categories.isLoading && <PageListSkeleton count={4} />}
+        {categories.data?.length === 0 && (
+          <EmptyState
+            icon="∅"
+            title="No categories yet"
+            body="Published pages will appear here as the wiki fills in."
+          />
+        )}
         <div className="lib-grid">
           {categories.data?.map((c) => (
             <Link key={c.category} to={`/category/${encodeURIComponent(c.category)}`} className="lib-group" style={{ textDecoration: 'none' }}>
@@ -124,11 +143,15 @@ export function Home() {
 
         <div className="split" style={{ marginTop: 40 }}>
           <section>
-            <h2 style={{ fontFamily: 'var(--font-label)', color: 'var(--g2)' }}>📰 Recent Updates</h2>
+            <h2 className="section-title">📰 Recent Updates</h2>
+            {recentUpdates.isLoading && <PageListSkeleton count={3} />}
+            {recentUpdates.data?.length === 0 && <p className="muted">No updates have been published yet.</p>}
             {recentUpdates.data?.map((p) => <PageLink key={p.id} p={p} />)}
           </section>
           <section>
-            <h2 style={{ fontFamily: 'var(--font-label)', color: 'var(--g2)' }}>🕑 Recently Edited</h2>
+            <h2 className="section-title">🕑 Recently Edited</h2>
+            {recentEdited.isLoading && <PageListSkeleton count={3} />}
+            {recentEdited.data?.length === 0 && <p className="muted">No recent edits yet.</p>}
             {recentEdited.data?.map((p) => <PageLink key={p.id} p={p} />)}
           </section>
         </div>

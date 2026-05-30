@@ -21,15 +21,16 @@ const { ensureSystemAdmin } = await import('../server/lib/bootstrap.ts');
 const schema = await import('../server/db/schema.ts');
 const { sanitizeContent, sanitizeText } = await import('../server/lib/sanitize.ts');
 const { uniqueSlug } = await import('../server/lib/slug.ts');
-const { extractAllPages } = await import('./extract-content.mjs');
+const { extractAllPages, extractConceptPages } = await import('./extract-content.mjs');
 
 const database = await createDatabase();
 await database.ensureSchema();
 const db = database.db;
 const adminId = await ensureSystemAdmin(db);
 
-const pages = extractAllPages();
-console.log(`[migrate] extracted ${pages.length} Phase-1 pages; inserting...`);
+const conceptPages = extractConceptPages();
+const pages = [...extractAllPages(), ...conceptPages];
+console.log(`[migrate] extracted ${pages.length} pages (${conceptPages.length} concept/design-lab); inserting...`);
 
 const existing = await db.select({ slug: schema.pages.slug }).from(schema.pages);
 const used = new Set(existing.map((e) => e.slug));

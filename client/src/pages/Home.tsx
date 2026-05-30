@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { trpc } from '../lib/trpc';
 import { EmptyState, PageLink, PageListSkeleton } from '../components/ui';
 import { BrandLogo } from '../components/BrandLogo';
+import { LogoCanvas } from '../wiki-components/LogoCanvas';
 import { iconFor } from '../components/NavItem';
 
 const WORDMARK = 'ARCHLIGHT'.split('');
@@ -16,10 +17,11 @@ function Hero() {
     <section className="hero">
       <div className="hero-body">
         <div className="hero-logo">
-          <div className="hero-logo-aura" aria-hidden="true" />
-          <div className="hero-logo-glow" aria-hidden="true" />
           <div className="hero-logo-ring" aria-hidden="true" />
-          <BrandLogo size={108} />
+          <div className="logo-canvas-wrapper">
+            <LogoCanvas />
+            <BrandLogo size={108} />
+          </div>
         </div>
 
         <div className="hw-eyebrow">◆&nbsp;&nbsp;&nbsp;Official Community Knowledge Hub&nbsp;&nbsp;&nbsp;◆</div>

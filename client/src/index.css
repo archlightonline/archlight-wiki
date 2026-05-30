@@ -353,6 +353,10 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
 .hero-logo-ring::before { content: ""; position: absolute; top: -3px; left: 50%; width: 6px; height: 6px; border-radius: 50%; background: var(--g3); box-shadow: 0 0 10px var(--g3); transform: translateX(-50%); }
 .hero-logo-glow { position: absolute; inset: -26px; border-radius: 50%; background: radial-gradient(circle, rgba(200, 160, 50, 0.1) 0%, transparent 70%); animation: breathe 3.2s ease-in-out infinite alternate; }
 .hero-logo-aura { position: absolute; inset: -34px; border-radius: 50%; z-index: -1; pointer-events: none; background: conic-gradient(from 90deg, transparent, rgba(245, 204, 80, 0.2), transparent 34%, rgba(80, 180, 220, 0.1), transparent 68%, rgba(245, 204, 80, 0.16), transparent); filter: blur(0.2px); opacity: 0.6; animation: spin 9s linear infinite; }
+/* Animated particle/glow canvas behind the hero logo */
+.logo-canvas-wrapper { position: relative; display: inline-block; }
+.logo-canvas { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 0; }
+.logo-canvas-wrapper .brand-logo { position: relative; z-index: 1; }
 @keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 @keyframes breathe { from { transform: scale(0.9); opacity: 0.5; } to { transform: scale(1.1); opacity: 1; } }
 @keyframes logoFloat { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-9px) scale(1.025); } }

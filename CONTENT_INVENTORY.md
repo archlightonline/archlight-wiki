@@ -1,6 +1,6 @@
 # Content Inventory — Archlight Wiki (Phase 1 migration checklist)
 
-_Generated 2026-05-29 from `archlight_wiki_v534_concepts_static_hosts_fixed/` (read-only source)._
+_Generated 2026-05-30 from `archlight_wiki_v534_concepts_static_hosts_fixed/` (read-only source)._
 
 Status legend: ✅ migrated into the `pages` table · ⬜ not yet migrated.
 
@@ -11,10 +11,11 @@ Status legend: ✅ migrated into the `pages` table · ⬜ not yet migrated.
 | `index.html` inline content | 11 | Activities (professions) + quests |
 | `data/unlocks-tasks-pages.js` | 13 | world / unlock / quest pages |
 | `data/updates-data.js` | 569 | Updates (one page per patch note) |
-| **Total (Phase 1)** | **593** | |
-| Migrated so far | 593 | |
+| `concepts/design-lab/in-review/…` | 44 | Concept pages (Classes, Power, Content, Equipment, Rewards, …) |
+| **Total** | **637** | |
+| Migrated so far | 637 | |
 
-**Deferred to Phase 2:** the 47 concept/design-lab pages (`data/concept-routes.js`, content under `concepts/design-lab/in-review/…`) and all media assets (images/GIFs). See IMPROVEMENTS.md.
+**Now migrated:** the concept/design-lab pages (Classes, Power, Content, Equipment, Professions, Guilds, Rewards, Tools) under `concepts/design-lab/in-review/…`, converted from HTML/JS to Markdown. **Still deferred:** media assets (most are "Image later" placeholders in the source) and the cinematic-carousel-engine demo.
 
 ---
 
@@ -46,6 +47,59 @@ Status legend: ✅ migrated into the `pages` table · ⬜ not yet migrated.
 | `minerva-uprising` | Minerva’s Uprising | Questline | quest | 2,017 | unlocks-tasks-pages.js | ✅ |
 | `quest-task-cleanup` | Quest / Task Cleanup | Checklist | check | 782 | unlocks-tasks-pages.js | ✅ |
 | `shadows-ashen-questline` | Shadows of the Ashen Questline | Questline | quest | 12,731 | unlocks-tasks-pages.js | ✅ |
+
+---
+
+## Concept / design-lab pages (44)
+
+Migrated from `concepts/design-lab/in-review/…` (HTML/JS → Markdown), reachable from the sidebar nav. Page screenshots remain "Image later" placeholders in the source.
+
+| ID / slug | Title | Category | Content (chars) | Migrated |
+| --- | --- | --- | ---: | :---: |
+| `awakening` | Awakening | Classes | 1,673 | ✅ |
+| `classes` | Classes | Classes | 20,746 | ✅ |
+| `companions` | Companions | Classes | 1,562 | ✅ |
+| `feats` | Feats | Classes | 1,181 | ✅ |
+| `prestige` | Prestige | Classes | 1,489 | ✅ |
+| `promotions` | Promotions | Classes | 1,612 | ✅ |
+| `bosses` | Bosses | Content | 7,927 | ✅ |
+| `bounties` | Bounties | Content | 1,384 | ✅ |
+| `dailies` | Dailies | Content | 2,197 | ✅ |
+| `dimensions` | Dimensions | Content | 1,244 | ✅ |
+| `dungeons` | Dungeons | Content | 5,127 | ✅ |
+| `endless-abyss` | Endless Abyss | Content | 3,943 | ✅ |
+| `events-hub` | Events Hub | Content | 20,869 | ✅ |
+| `hunting-zones` | Hunting Zones | Content | 4,239 | ✅ |
+| `monsters` | Monsters and Loot | Content | 13,034 | ✅ |
+| `prisons` | Prisons | Content | 3,812 | ✅ |
+| `ramparts` | Ramparts Siege | Content | 4,818 | ✅ |
+| `rifts` | Rifts | Content | 3,181 | ✅ |
+| `secret-maps` | Secret Maps | Content | 2,092 | ✅ |
+| `wargates` | Wargates | Content | 4,243 | ✅ |
+| `zaqors-tower` | Zaqor’s Tower | Content | 4,505 | ✅ |
+| `equipment-index` | Equipments | Equipment | 39,901 | ✅ |
+| `gear-enhancements` | Equipment Enhancements | Equipment | 19,231 | ✅ |
+| `guilds` | Guilds | Guilds | 8,608 | ✅ |
+| `artifacts` | Artifacts | Power | 1,730 | ✅ |
+| `bestiary` | Bestiary | Power | 2,056 | ✅ |
+| `glyphs` | Glyphs | Power | 1,667 | ✅ |
+| `soul-shards` | Soul Shards | Power | 2,777 | ✅ |
+| `stat-nodes` | Stat Nodes | Power | 1,710 | ✅ |
+| `stats-caps` | Stats and Caps | Power | 1,840 | ✅ |
+| `talent-tree` | Talent Tree | Power | 3,226 | ✅ |
+| `training` | Training | Power | 1,161 | ✅ |
+| `vocation-traits` | Vocation Traits | Power | 2,531 | ✅ |
+| `professions` | Professions | Professions | 33,429 | ✅ |
+| `achievements` | Achievements | Rewards | 1,268 | ✅ |
+| `archpass-rewards` | Archpass | Rewards | 1,279 | ✅ |
+| `boosts-blessing` | Blessings &amp; Boosts | Rewards | 1,242 | ✅ |
+| `challenges-pass` | Challenges Pass | Rewards | 1,122 | ✅ |
+| `cosmetic-bonus-sharing` | Cosmetic Bonus Sharing | Rewards | 1,124 | ✅ |
+| `living-token-trader` | Living Token Trader | Rewards | 1,446 | ✅ |
+| `race-points` | Race Points | Rewards | 1,297 | ✅ |
+| `roulette` | Roulette &amp; Loot Crates | Rewards | 1,520 | ✅ |
+| `addons` | Addons | Tools | 18,701 | ✅ |
+| `heirloom-cross-linking` | Heirloom, Cross-Server, and Linking | Tools | 4,109 | ✅ |
 
 ---
 

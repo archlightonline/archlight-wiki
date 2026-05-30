@@ -7,7 +7,14 @@ register();
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { extractIndexPages, extractUnlockPages, extractUpdatePages } from './extract-content.mjs';
+import {
+  extractIndexPages,
+  extractUnlockPages,
+  extractUpdatePages,
+  extractConceptPages,
+  extractClassesPage,
+  extractAddonsPage,
+} from './extract-content.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -28,6 +35,7 @@ try {
 const idx = extractIndexPages();
 const unlocks = extractUnlockPages();
 const updates = extractUpdatePages();
+const concept = [...extractConceptPages(), ...extractClassesPage(), ...extractAddonsPage()];
 const content = [...idx, ...unlocks];
 const status = (slug) => (migratedSlugs.has(slug) ? '✅' : '⬜');
 
@@ -66,10 +74,11 @@ lines.push('| --- | ---: | --- |');
 lines.push(`| \`index.html\` inline content | ${idx.length} | Activities (professions) + quests |`);
 lines.push(`| \`data/unlocks-tasks-pages.js\` | ${unlocks.length} | world / unlock / quest pages |`);
 lines.push(`| \`data/updates-data.js\` | ${updates.length} | Updates (one page per patch note) |`);
-lines.push(`| **Total (Phase 1)** | **${content.length + updates.length}** | |`);
-lines.push(`| Migrated so far | ${[...content, ...updates].filter((p) => migratedSlugs.has(p.slug)).length} | |`);
+lines.push(`| \`concepts/design-lab/in-review/…\` | ${concept.length} | Concept pages (Classes, Power, Content, Equipment, Rewards, …) |`);
+lines.push(`| **Total** | **${content.length + updates.length + concept.length}** | |`);
+lines.push(`| Migrated so far | ${[...content, ...updates, ...concept].filter((p) => migratedSlugs.has(p.slug)).length} | |`);
 lines.push('');
-lines.push('**Deferred to Phase 2:** the 47 concept/design-lab pages (`data/concept-routes.js`, content under `concepts/design-lab/in-review/…`) and all media assets (images/GIFs). See IMPROVEMENTS.md.');
+lines.push('**Now migrated:** the concept/design-lab pages (Classes, Power, Content, Equipment, Professions, Guilds, Rewards, Tools) under `concepts/design-lab/in-review/…`, converted from HTML/JS to Markdown. **Still deferred:** media assets (most are "Image later" placeholders in the source) and the cinematic-carousel-engine demo.');
 lines.push('');
 lines.push('---');
 lines.push('');
@@ -78,6 +87,18 @@ lines.push('');
 lines.push('| ID / slug | Title | Category | Subcategory | Content (chars) | Source | Migrated |');
 lines.push('| --- | --- | --- | --- | ---: | --- | :---: |');
 for (const p of content) lines.push(row(p));
+lines.push('');
+lines.push('---');
+lines.push('');
+lines.push(`## Concept / design-lab pages (${concept.length})`);
+lines.push('');
+lines.push('Migrated from `concepts/design-lab/in-review/…` (HTML/JS → Markdown), reachable from the sidebar nav. Page screenshots remain "Image later" placeholders in the source.');
+lines.push('');
+lines.push('| ID / slug | Title | Category | Content (chars) | Migrated |');
+lines.push('| --- | --- | --- | ---: | :---: |');
+for (const p of [...concept].sort((a, b) => (a.category + a.id).localeCompare(b.category + b.id))) {
+  lines.push(`| \`${p.id}\` | ${p.title.replace(/\|/g, '\\|')} | ${p.category} | ${p.markdown.length.toLocaleString()} | ${status(p.slug)} |`);
+}
 lines.push('');
 lines.push('---');
 lines.push('');

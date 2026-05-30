@@ -1,0 +1,11 @@
+# Treat source as text so diffs stay readable even when files contain emoji or
+# box-drawing characters (git's heuristic otherwise flags them as binary).
+*.mjs   text
+*.ts    text
+*.tsx   text
+*.js    text
+*.jsx   text
+*.css   text
+*.md    text
+*.json  text
+*.html  text

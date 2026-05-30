@@ -70,17 +70,10 @@ export function WikiLayout() {
           </a>
         </div>
 
-        {user ? (
-          <Link className="top-contribute" to="/browse">
-            <span aria-hidden="true">✦</span>
-            <span>Contribute</span>
-          </Link>
-        ) : (
-          <button type="button" className="top-contribute" onClick={() => openAuth('login')}>
-            <span aria-hidden="true">✦</span>
-            <span>Contribute</span>
-          </button>
-        )}
+        <Link className="top-contribute" to="/contribute">
+          <span aria-hidden="true">✦</span>
+          <span>Contribute</span>
+        </Link>
 
         <SearchBar />
         <WorldsSelector />

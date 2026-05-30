@@ -763,3 +763,26 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
 @media (prefers-reduced-motion: reduce) {
   .auth-modal-backdrop, .auth-modal-card, .amb-glow { animation: none !important; }
 }
+
+/* ===== Contribute page ================================================== */
+.contrib-title {
+  font-family: var(--font-display); font-weight: 900; text-align: center;
+  font-size: clamp(26px, 3.4vw, 38px); letter-spacing: 0.04em; text-transform: uppercase; margin: 6px 0 8px;
+  background: linear-gradient(160deg, #c08010, #fff4a0 45%, #e8b030 70%, #c08010);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.contrib-pills { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 18px 0 8px; }
+.contrib-pill { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--g2); background: var(--glow2); border: 1px solid var(--rim2); border-radius: 999px; padding: 7px 14px; }
+.type-card { display: flex; flex-direction: column; gap: 10px; }
+.type-head { display: flex; align-items: center; gap: 10px; }
+.type-head h3 { margin: 0; color: var(--g3); font-size: 15px; }
+.type-ico { font-size: 22px; line-height: 1; }
+.type-card .muted { flex: 1; }
+.type-meta { font-family: var(--font-mono); font-size: 11px; color: var(--teal); letter-spacing: 0.02em; }
+.type-card .btn { align-self: flex-start; }
+.rank-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.rank-ico { color: var(--g3); }
+.rank-name { font-family: var(--font-label); color: var(--tx0); font-size: 13px; letter-spacing: 0.04em; }
+.rank-stars { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--g2); }
+.step-card { display: flex; gap: 14px; align-items: flex-start; }
+.step-num { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; color: #0a0a0a; background: linear-gradient(135deg, var(--g1), var(--g3)); }

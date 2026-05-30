@@ -4,6 +4,7 @@ import { DashboardLayout } from './layouts/DashboardLayout';
 import { Home } from './pages/Home';
 import { WikiPage } from './pages/WikiPage';
 import { CategoryBrowser } from './pages/CategoryBrowser';
+import { Contribute } from './pages/Contribute';
 import { SearchResults } from './pages/SearchResults';
 import { ContributionForm } from './pages/ContributionForm';
 import { RevisionHistory } from './pages/RevisionHistory';
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/browse" element={<CategoryBrowser />} />
         <Route path="/category/:category" element={<CategoryBrowser />} />
         <Route path="/search" element={<SearchResults />} />
+        <Route path="/contribute" element={<Contribute />} />
         <Route path="/contribute/:slug" element={<ContributionForm />} />
         <Route path="/history/:slug" element={<RevisionHistory />} />
         <Route path="/profile" element={<Profile />} />

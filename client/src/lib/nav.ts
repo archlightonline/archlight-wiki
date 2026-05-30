@@ -125,7 +125,7 @@ export function navRoute(id: string): string {
     case 'admin':
       return '/admin';
     case 'contribute':
-      return '/browse';
+      return '/contribute';
     default:
       return `/wiki/${id}`;
   }

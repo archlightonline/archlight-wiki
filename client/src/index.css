@@ -177,7 +177,7 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
 .search-submit:hover { background: rgba(245, 204, 80, 0.18); color: var(--g4); }
 
 /* worlds selector with server status */
-.worlds { position: relative; }
+.worlds { position: relative; display: none; } /* dropdown: mobile only (<768px) */
 .worlds-btn {
   display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
   padding: 6px 12px; border-radius: 10px; border: 1px solid var(--rim2);
@@ -199,6 +199,46 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
 .worlds-menu .wm-item:hover { background: var(--bg4); }
 .worlds-menu .wm-name { font-family: var(--font-label); font-size: 12px; color: var(--tx0); }
 .worlds-menu .wm-tag { margin-left: auto; font-size: 9px; color: var(--tx3); font-family: var(--font-mono); }
+
+/* Inline worlds selector (desktop) — all worlds visible with live status badges */
+.worlds-wrap { display: flex; align-items: center; position: relative; }
+.worlds-selector { display: flex; align-items: center; gap: 6px; }
+.worlds-label { font-family: var(--font-label); font-size: 8px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--tx3); margin-right: 2px; white-space: nowrap; }
+.world-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 9px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--rim2); background: rgba(255, 255, 255, 0.03);
+  color: var(--tx2); opacity: 0.6; transition: all 0.16s; white-space: nowrap;
+}
+.world-btn:hover { opacity: 0.9; border-color: var(--rim3); color: var(--tx0); }
+.world-btn.active {
+  opacity: 1; color: var(--tx0);
+  border: 1px solid rgba(59, 165, 93, 0.8);
+  background: rgba(59, 165, 93, 0.08);
+  box-shadow: 0 0 10px rgba(59, 165, 93, 0.35), inset 0 0 8px rgba(59, 165, 93, 0.06);
+}
+.world-ico { font-size: 13px; line-height: 1; }
+.world-name { font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase; }
+.world-status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.world-status-dot.live { background: #3ba55d; box-shadow: 0 0 6px rgba(59, 165, 93, 0.85); animation: worldPulse 2s ease-in-out infinite; }
+.world-status-dot.offline { background: #666; }
+.world-status-dot.maint { background: #c8922a; box-shadow: 0 0 6px rgba(200, 146, 42, 0.6); }
+@keyframes worldPulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+.world-status-badge { font-family: var(--font-mono); font-size: 7.5px; font-weight: 700; letter-spacing: 0.06em; padding: 2px 6px; border-radius: 999px; line-height: 1; white-space: nowrap; }
+.world-status-badge.live { color: #3ba55d; background: rgba(59, 165, 93, 0.14); border: 1px solid rgba(59, 165, 93, 0.45); }
+.world-status-badge.offline { color: #888; background: rgba(120, 124, 132, 0.12); border: 1px solid rgba(120, 124, 132, 0.4); }
+.world-status-badge.maint { color: #c8922a; background: rgba(200, 146, 42, 0.14); border: 1px solid rgba(200, 146, 42, 0.45); }
+
+/* Tighter widths: compact the inline worlds (icon + dot + badge) so all three fit. */
+@media (max-width: 1040px) {
+  .worlds-label, .world-name { display: none; }
+  .world-btn { padding: 5px 7px; gap: 5px; }
+}
+/* Under 768px: collapse the inline row back to the compact dropdown. */
+@media (max-width: 767px) {
+  .worlds-selector { display: none; }
+  .worlds { display: block; }
+}
 
 /* topbar right cluster */
 .tb-right { display: flex; align-items: center; gap: 9px; margin-left: auto; flex-shrink: 0; }
@@ -572,7 +612,7 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
   }
   .split { grid-template-columns: 1fr; }
   .mob-menu-btn { display: inline-flex; }
-  .worlds, .top-social, .top-updates { display: none; }
+  .top-social, .top-updates { display: none; }
   .container { padding: 22px 18px 80px; }
 }
 @media (max-width: 720px) {
@@ -589,7 +629,7 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
   .logo-zone .brand-logo canvas { width: 34px !important; height: 34px !important; }
   .logo-zone .logo-name { font-size: 15px; }
   .logo-zone .logo-sub { display: none; }
-  .top-social, .top-contribute, .top-updates, .worlds { display: none; }
+  .top-social, .top-contribute, .top-updates { display: none; }
   .tb-right { gap: 7px; margin-left: auto; }
   .user-chip { padding: 5px; }
   .user-chip .uc-copy { display: none !important; }

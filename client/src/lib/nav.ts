@@ -133,7 +133,7 @@ export function navRoute(id: string): string {
 
 /** The live worlds shown in the topbar selector (from updates-data worlds). */
 export const WORLDS = [
-  { id: 'abaldar', name: 'Abaldar', tag: 'Live', status: 'online' as const },
-  { id: 'hardcore', name: 'Hardcore / PTR', tag: 'PTR', status: 'ptr' as const },
-  { id: 'legacy', name: 'Legacy', tag: 'Archive', status: 'legacy' as const },
+  { id: 'abaldar', name: 'Abaldar', icon: '⚔️', status: 'LIVE', tone: 'live' as const },
+  { id: 'legacy', name: 'Legacy', icon: '🕯️', status: 'OFFLINE', tone: 'offline' as const },
+  { id: 'hardcore', name: 'Hardcore', icon: '🔥', status: 'MAINT', tone: 'maint' as const },
 ];

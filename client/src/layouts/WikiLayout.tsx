@@ -86,6 +86,9 @@ export function WikiLayout() {
         <WorldsSelector />
 
         <div className="tb-right">
+          <Link className="tbtn play-btn top-play" to="/browse" aria-label="Play Archlight">
+            ▶ Play
+          </Link>
           {user ? (
             <Link className="user-chip" to="/profile">
               <span
@@ -106,9 +109,6 @@ export function WikiLayout() {
           )}
           <Link className="tbtn top-updates" to="/category/Updates">
             🧾 Updates
-          </Link>
-          <Link className="tbtn play top-play" to="/browse" aria-label="Browse pages and play guides">
-            ▶ Play
           </Link>
         </div>
       </header>

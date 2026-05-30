@@ -254,8 +254,22 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em;
 }
 .tbtn:hover { border-color: var(--rim3); color: var(--tx0); text-decoration: none; }
-.tbtn.play { background: linear-gradient(135deg, var(--g0), var(--g2)); color: #050810; font-weight: 700; border: none; }
-.tbtn.play:hover { color: #050810; filter: brightness(1.08); }
+/* Play — the primary topbar CTA (most prominent element). */
+.play-btn {
+  background: linear-gradient(135deg, #c8922a 0%, #e8b84b 50%, #c8922a 100%);
+  color: #0a0a0a;
+  font-weight: 700;
+  border: 1px solid rgba(232, 184, 75, 0.6);
+  box-shadow: 0 0 12px rgba(200, 146, 42, 0.4);
+  padding: 6px 16px;
+  letter-spacing: 0.08em;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.play-btn:hover { box-shadow: 0 0 20px rgba(200, 146, 42, 0.7); transform: scale(1.03); color: #0a0a0a; border-color: rgba(232, 184, 75, 0.9); }
+.play-btn:active { transform: scale(0.97); }
+/* Secondary actions sit quieter next to Play. */
+.top-login, .top-updates { font-size: 9.5px; opacity: 0.9; }
+.top-login:hover, .top-updates:hover { opacity: 1; }
 .mob-menu-btn {
   display: none; align-items: center; justify-content: center;
   width: 38px; height: 38px; padding: 0; border-radius: 9px;
@@ -664,7 +678,7 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
 }
 @media (max-width: 420px) {
   .top-play { display: none; }
-  .tbtn.play { padding-inline: 11px; }
+  .play-btn { padding-inline: 11px; }
   .container { padding-inline: 14px; }
   .card { padding: 16px; }
   .auth-wrap { padding-inline: 14px; }

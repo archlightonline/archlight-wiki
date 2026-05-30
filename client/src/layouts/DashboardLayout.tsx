@@ -2,6 +2,7 @@ import { Link, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { SearchBar } from '../components/SearchBar';
 import { NavItem } from '../components/NavItem';
+import { BrandLogo } from '../components/BrandLogo';
 
 /**
  * Authenticated shell for admin/editor tools (page editor, admin panel).
@@ -39,20 +40,21 @@ export function DashboardLayout({ require = 'editor' }: { require?: 'editor' | '
 
   return (
     <div className="app">
-      <div className="brand">
-        <Link to="/" style={{ textDecoration: 'none' }}>
-          <div className="mark">⚜ Archlight</div>
-          <div className="sub">Dashboard</div>
-        </Link>
-      </div>
-
       <header className="topbar">
-        <SearchBar />
-        <div className="spacer" />
-        <span className={`badge role-${user?.role}`}>{user?.role}</span>
-        <Link className="btn sm ghost" to="/">
-          View wiki
+        <Link to="/" className="logo-zone" style={{ textDecoration: 'none' }}>
+          <BrandLogo size={40} />
+          <div>
+            <div className="logo-name">Archlight</div>
+            <div className="logo-sub">Dashboard</div>
+          </div>
         </Link>
+        <SearchBar />
+        <div className="tb-right">
+          <span className={`badge role-${user?.role}`}>{user?.role}</span>
+          <Link className="tbtn" to="/">
+            View wiki
+          </Link>
+        </div>
       </header>
 
       <aside className="sidebar">

@@ -18,7 +18,7 @@ export function NavItem({
   const active = match ? match(here) : here === to;
   return (
     <Link to={to} className={`nav-item${active ? ' active' : ''}`}>
-      <span aria-hidden="true">{icon}</span>
+      <span className="ni-ico" aria-hidden="true">{icon}</span>
       <span>{label}</span>
       {typeof count === 'number' && <span className="ct">{count}</span>}
     </Link>

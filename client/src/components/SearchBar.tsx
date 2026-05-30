@@ -13,9 +13,10 @@ export function SearchBar() {
         if (q.trim()) navigate(`/search?q=${encodeURIComponent(q.trim())}`);
       }}
     >
+      <span className="s-ico" aria-hidden="true">⚲</span>
       <input
         type="search"
-        placeholder="Search the wiki…"
+        placeholder="Search Wiki"
         value={q}
         onChange={(e) => setQ(e.target.value)}
         aria-label="Search the wiki"

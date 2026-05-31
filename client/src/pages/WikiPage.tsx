@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth';
 import { fmtDateTime } from '../lib/format';
 import { EmptyState, PageDetailSkeleton } from '../components/ui';
 import { NotFound } from './NotFound';
+import { TableOfContents, parseTocEntries } from '../wiki-components/TableOfContents';
 
 export function WikiPage() {
   const { slug } = useParams();
@@ -15,6 +16,9 @@ export function WikiPage() {
   if (q.isLoading) return <PageDetailSkeleton />;
   if (q.error || !q.data) return <NotFound />;
   const page = q.data;
+
+  const tocEntries = parseTocEntries(page.content);
+  const hasToc = tocEntries.length >= 3;
 
   return (
     <div className="container">
@@ -68,15 +72,21 @@ export function WikiPage() {
         ))}
       </div>
 
-      {page.content.trim() ? (
-        <Markdown content={page.content} />
-      ) : (
-        <EmptyState
-          icon="✦"
-          title="This page is waiting for content"
-          body="The entry exists, but no published guide text has been added yet."
-        />
-      )}
+      {/* Two-column layout when a TOC is present */}
+      <div className={hasToc ? 'wiki-page-body wiki-page-body--toc' : 'wiki-page-body'}>
+        <div className="wiki-page-content">
+          {page.content.trim() ? (
+            <Markdown content={page.content} />
+          ) : (
+            <EmptyState
+              icon="✦"
+              title="This page is waiting for content"
+              body="The entry exists, but no published guide text has been added yet."
+            />
+          )}
+        </div>
+        {hasToc && <TableOfContents markdown={page.content} />}
+      </div>
     </div>
   );
 }

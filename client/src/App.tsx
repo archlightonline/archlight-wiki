@@ -5,6 +5,7 @@ import { Home } from './pages/Home';
 import { WikiPage } from './pages/WikiPage';
 import { CategoryBrowser } from './pages/CategoryBrowser';
 import { Contribute } from './pages/Contribute';
+import { ClassesPage } from './pages/ClassesPage';
 import { SearchResults } from './pages/SearchResults';
 import { ContributionForm } from './pages/ContributionForm';
 import { RevisionHistory } from './pages/RevisionHistory';
@@ -21,6 +22,8 @@ export default function App() {
       {/* Public wiki — custom wiki layout with sidebar nav */}
       <Route element={<WikiLayout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/classes" element={<ClassesPage />} />
+        <Route path="/wiki/classes" element={<ClassesPage />} />
         <Route path="/wiki/:slug" element={<WikiPage />} />
         <Route path="/browse" element={<CategoryBrowser />} />
         <Route path="/category/:category" element={<CategoryBrowser />} />

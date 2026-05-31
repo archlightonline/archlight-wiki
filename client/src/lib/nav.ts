@@ -124,6 +124,8 @@ export function navRoute(id: string): string {
       return '/category/Updates';
     case 'admin':
       return '/admin';
+    case 'classes':
+      return '/classes';
     case 'contribute':
       return '/contribute';
     default:

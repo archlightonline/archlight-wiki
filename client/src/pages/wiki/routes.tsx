@@ -11,6 +11,10 @@ import { PromotionsPage } from './PromotionsPage';
 import { PrestigePage } from './PrestigePage';
 import { AwakeningPage } from './AwakeningPage';
 import { FeatsPage } from './FeatsPage';
+import { CompanionsPage } from './CompanionsPage';
+import { StatsCapsPage } from './StatsCapsPage';
+import { TalentTreePage } from './TalentTreePage';
+import { VocationTraitsPage } from './VocationTraitsPage';
 
 export interface DedicatedWikiRoute {
   paths: string[];
@@ -22,4 +26,8 @@ export const DEDICATED_WIKI_ROUTES: DedicatedWikiRoute[] = [
   { paths: ['/wiki/prestige', '/prestige'], element: <PrestigePage /> },
   { paths: ['/wiki/awakening', '/awakening'], element: <AwakeningPage /> },
   { paths: ['/wiki/feats', '/feats'], element: <FeatsPage /> },
+  { paths: ['/wiki/companions', '/companions'], element: <CompanionsPage /> },
+  { paths: ['/wiki/stats-caps', '/stats-caps'], element: <StatsCapsPage /> },
+  { paths: ['/wiki/talent-tree', '/talent-tree'], element: <TalentTreePage /> },
+  { paths: ['/wiki/vocation-traits', '/vocation-traits'], element: <VocationTraitsPage /> },
 ];

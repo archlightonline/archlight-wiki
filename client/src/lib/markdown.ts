@@ -38,12 +38,16 @@ const customRenderer: Partial<Renderer> = {
 
 marked.use({ renderer: customRenderer, gfm: true, breaks: true });
 
-export function renderMarkdown(md: string): string {
+export function renderMarkdown(input: string): string {
   // Reset the slug-dedup counter for each fresh render so ids are stable
   // regardless of order components render.
   slugCounts.clear();
 
-  const raw = marked.parse(md ?? '', { async: false }) as string;
+  const text = input ?? '';
+  // Content from the Tiptap editor is stored as HTML (starts with a tag);
+  // legacy content is Markdown. Render each accordingly, then sanitize.
+  const isHtml = text.trimStart().startsWith('<');
+  const raw = isHtml ? text : (marked.parse(text, { async: false }) as string);
   return DOMPurify.sanitize(raw, {
     ADD_ATTR: ['id', 'target', 'rel'],
     FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed'],

@@ -532,6 +532,47 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
   box-shadow: 0 0 0 3px rgba(200, 64, 64, 0.14);
 }
 
+/* ===== Rich-text (Tiptap) block editor ================================= */
+.rte { border: 1px solid var(--rim2); border-radius: 10px; overflow: hidden; background: rgba(255, 255, 255, 0.02); }
+.rte-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  padding: 8px 10px; background: var(--bg3); border-bottom: 1px solid var(--rim2);
+}
+.rte-btn {
+  min-width: 30px; height: 30px; padding: 0 8px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--rim2); border-radius: 6px;
+  color: var(--tx1); font-family: var(--font-label); font-size: 12px; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.rte-btn:hover { background: var(--glow2); border-color: var(--rim3); color: var(--tx0); }
+.rte-btn.active { background: rgba(245, 204, 80, 0.14); border-color: var(--g1); color: var(--g3); }
+.rte-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.rte-sep { width: 1px; height: 20px; background: var(--rim2); margin: 0 4px; }
+
+.rte-content { max-height: 62vh; overflow-y: auto; }
+.rte-content .ProseMirror {
+  min-height: 320px; padding: 16px 18px; outline: none;
+  color: var(--tx1); font-family: var(--font-body); font-size: 16px; line-height: 1.8;
+}
+.rte-content .ProseMirror > * + * { margin-top: 12px; }
+.rte-content .ProseMirror h2 { font-family: var(--font-label); color: var(--g2); font-size: 19px; letter-spacing: 0.05em; border-bottom: 1px solid var(--rim); padding-bottom: 6px; }
+.rte-content .ProseMirror h3 { font-family: var(--font-label); color: var(--g3); font-size: 15px; letter-spacing: 0.05em; }
+.rte-content .ProseMirror ul, .rte-content .ProseMirror ol { padding-left: 22px; }
+.rte-content .ProseMirror blockquote { border-left: 3px solid var(--rim3); padding: 4px 16px; color: var(--tx2); font-style: italic; }
+.rte-content .ProseMirror pre { background: rgba(0, 0, 0, 0.35); border: 1px solid var(--rim2); border-radius: 8px; padding: 12px 14px; font-family: var(--font-mono); font-size: 13.5px; color: var(--tx0); overflow-x: auto; }
+.rte-content .ProseMirror code { font-family: var(--font-mono); font-size: 13px; background: rgba(255, 255, 255, 0.05); padding: 1px 6px; border-radius: 5px; color: var(--g3); }
+.rte-content .ProseMirror pre code { background: none; padding: 0; color: inherit; }
+.rte-content .ProseMirror a { color: var(--g3); text-decoration: underline; }
+.rte-content .ProseMirror img { max-width: 100%; border-radius: 8px; border: 1px solid var(--rim); }
+.rte-content .ProseMirror table { width: 100%; border-collapse: collapse; margin: 8px 0; table-layout: fixed; }
+.rte-content .ProseMirror th, .rte-content .ProseMirror td { border: 1px solid var(--rim2); padding: 8px 10px; vertical-align: top; }
+.rte-content .ProseMirror th { background: var(--glow2); color: var(--g2); font-family: var(--font-label); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; text-align: left; }
+.rte-content .ProseMirror .selectedCell { background: rgba(245, 204, 80, 0.08); }
+.rte-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder); color: var(--tx3); float: left; height: 0; pointer-events: none;
+}
+
 /* ===== Prose (rendered markdown) ======================================= */
 .prose { color: var(--tx1); font-size: 16.5px; line-height: 1.84; }
 .prose h1, .prose h2, .prose h3 { font-family: var(--font-label); color: var(--g2); margin: 28px 0 10px; letter-spacing: 0.05em; }

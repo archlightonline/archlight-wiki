@@ -4,6 +4,7 @@ import { trpc } from '../lib/trpc';
 import { useAuth } from '../lib/auth';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { Markdown } from '../components/Markdown';
+import { RichTextEditor } from '../components/RichTextEditor';
 import { Loading, ErrorBox } from '../components/ui';
 
 interface Form {
@@ -169,11 +170,10 @@ export function PageEditor({ mode }: { mode: 'create' | 'edit' }) {
           <Markdown content={form.content} />
         </div>
       ) : (
-        <textarea
-          className="textarea"
+        <RichTextEditor
           value={form.content}
-          onChange={(e) => set({ content: e.target.value })}
-          placeholder={typeMeta?.placeholder ?? '# Markdown content…'}
+          onChange={(html) => set({ content: html })}
+          placeholder="Write the page content — use the toolbar for headings, lists, tables, and images…"
         />
       )}
 

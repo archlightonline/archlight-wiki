@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { trpc } from '../lib/trpc';
 import { useAuth } from '../lib/auth';
 import { Breadcrumb } from '../components/Breadcrumb';
@@ -18,11 +18,47 @@ interface Form {
 
 const EMPTY: Form = { title: '', category: '', subcategory: '', tags: '', content: '', editSummary: '', isProtected: false };
 
+/**
+ * Per-contribution-type presentation for the create editor. The Contribute page
+ * deep-links here with ?type=improvement|fix|report|draft so the heading, intro,
+ * and content placeholder reflect what the contributor set out to do.
+ */
+const TYPE_META: Record<string, { heading: string; badge: string; blurb: string; placeholder: string }> = {
+  improvement: {
+    heading: 'Suggest a Page Improvement',
+    badge: '💡 Improvement',
+    blurb: 'Share a useful improvement for a page — a missing note, clearer explanation, source location, or better example.',
+    placeholder: '# Describe the improvement\n\nWhich page, and what would make it better?',
+  },
+  fix: {
+    heading: 'Submit a Page Fix',
+    badge: '✏️ Fix',
+    blurb: 'Provide the actual fix — replacement text, a corrected number, or a clear step-by-step correction.',
+    placeholder: '# Provide the corrected content\n\nWhat is wrong now, and what should it say instead?',
+  },
+  report: {
+    heading: 'Report a Page Issue',
+    badge: '🐛 Report',
+    blurb: 'Tell us what is wrong on an existing page so an editor can act on it.',
+    placeholder: '# Describe the issue\n\nWhich page, and what is wrong (wrong value, broken link, unclear step)?',
+  },
+  draft: {
+    heading: 'Draft a Missing Page',
+    badge: '📄 Draft',
+    blurb: 'Create a useful starter draft for a missing quest, system, class, dungeon, profession, or item.',
+    placeholder: '# Markdown content…',
+  },
+};
+
 export function PageEditor({ mode }: { mode: 'create' | 'edit' }) {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isAdmin } = useAuth();
   const utils = trpc.useUtils();
+
+  const contribType = mode === 'create' ? searchParams.get('type') ?? '' : '';
+  const typeMeta = TYPE_META[contribType];
 
   const existing = trpc.pages.get.useQuery({ slug: slug! }, { enabled: mode === 'edit', retry: false });
   const [form, setForm] = useState<Form>(EMPTY);
@@ -87,10 +123,16 @@ export function PageEditor({ mode }: { mode: 'create' | 'edit' }) {
         items={[
           { label: 'Home', to: '/' },
           { label: 'Dashboard', to: '/admin' },
-          { label: mode === 'create' ? 'New page' : `Edit: ${form.title}` },
+          { label: mode === 'create' ? typeMeta?.heading ?? 'New page' : `Edit: ${form.title}` },
         ]}
       />
-      <h1 className="page-title">{mode === 'create' ? 'New page' : 'Edit page'}</h1>
+      <h1 className="page-title">{mode === 'create' ? typeMeta?.heading ?? 'New page' : 'Edit page'}</h1>
+      {typeMeta && (
+        <div className="editor-type-note">
+          <span className="badge">{typeMeta.badge}</span>
+          <span className="muted">{typeMeta.blurb}</span>
+        </div>
+      )}
 
       <div className="split">
         <label className="field">
@@ -131,7 +173,7 @@ export function PageEditor({ mode }: { mode: 'create' | 'edit' }) {
           className="textarea"
           value={form.content}
           onChange={(e) => set({ content: e.target.value })}
-          placeholder="# Markdown content…"
+          placeholder={typeMeta?.placeholder ?? '# Markdown content…'}
         />
       )}
 
@@ -160,7 +202,11 @@ export function PageEditor({ mode }: { mode: 'create' | 'edit' }) {
         <button className="btn primary" disabled={pending || !form.title.trim()} onClick={save}>
           {pending ? 'Saving…' : mode === 'create' ? 'Create page' : 'Save changes'}
         </button>
-        <button className="btn ghost" type="button" onClick={() => navigate(-1)}>
+        <button
+          className="btn ghost"
+          type="button"
+          onClick={() => navigate(mode === 'edit' && slug ? `/wiki/${slug}` : '/')}
+        >
           Cancel
         </button>
         {mode === 'edit' && <span className="muted">Saving creates a revision snapshot.</span>}

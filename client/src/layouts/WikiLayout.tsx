@@ -5,6 +5,7 @@ import { SearchBar } from '../components/SearchBar';
 import { NavItem } from '../components/NavItem';
 import { BrandLogo } from '../components/BrandLogo';
 import { WorldsSelector } from '../components/WorldsSelector';
+import { PlayMenu } from '../components/PlayMenu';
 import { SIDEBAR_GROUPS, navRoute } from '../lib/nav';
 import { useAuthModal } from '../wiki-components/AuthModal';
 
@@ -79,9 +80,7 @@ export function WikiLayout() {
         <WorldsSelector />
 
         <div className="tb-right">
-          <Link className="tbtn play-btn top-play" to="/browse" aria-label="Play Archlight">
-            ▶ Play
-          </Link>
+          <PlayMenu />
           {user ? (
             <Link className="user-chip" to="/profile">
               <span

@@ -16,7 +16,7 @@ const TYPES = [
     meta: '30 sec · +2 contribution stars',
   },
   {
-    type: 'suggest',
+    type: 'improvement',
     icon: '💡',
     title: 'Suggest Page Improvement',
     desc: 'Send a useful idea for a page: a missing note, route tip, source location, example, clarification, or a better way to explain something.',

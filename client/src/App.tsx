@@ -6,6 +6,7 @@ import { WikiPage } from './pages/WikiPage';
 import { CategoryBrowser } from './pages/CategoryBrowser';
 import { Contribute } from './pages/Contribute';
 import { ClassesPage } from './pages/ClassesPage';
+import { DEDICATED_WIKI_ROUTES } from './pages/wiki/routes';
 import { SearchResults } from './pages/SearchResults';
 import { ContributionForm } from './pages/ContributionForm';
 import { RevisionHistory } from './pages/RevisionHistory';
@@ -24,6 +25,10 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/classes" element={<ClassesPage />} />
         <Route path="/wiki/classes" element={<ClassesPage />} />
+        {/* Dedicated wiki pages — must precede the generic catch-all below */}
+        {DEDICATED_WIKI_ROUTES.flatMap((r) =>
+          r.paths.map((p) => <Route key={p} path={p} element={r.element} />),
+        )}
         <Route path="/wiki/:slug" element={<WikiPage />} />
         <Route path="/browse" element={<CategoryBrowser />} />
         <Route path="/category/:category" element={<CategoryBrowser />} />

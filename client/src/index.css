@@ -842,3 +842,83 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
   .wiki-page-body--toc { grid-template-columns: 1fr; }
   .toc-sidebar { display: none; }
 }
+
+/* ===== Dedicated wiki pages (ut-shell look) ============================= */
+.wk-hero { margin: 6px 0 26px; }
+.wk-statgrid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.wk-stat {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 9px 14px; min-width: 120px;
+  background: rgba(16, 21, 40, 0.6);
+  border: 1px solid var(--rim2); border-radius: var(--rr);
+}
+.wk-stat span {
+  font-family: var(--font-label); font-size: 8.5px; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--tx3);
+}
+.wk-stat b { font-family: var(--font-mono); font-size: 13.5px; font-weight: 500; color: var(--g3); }
+
+.wk-section {
+  background: linear-gradient(180deg, rgba(16, 21, 40, 0.7), rgba(10, 14, 28, 0.7));
+  border: 1px solid var(--rim); border-radius: var(--rr2);
+  padding: 22px 24px; margin: 0 0 22px; scroll-margin-top: calc(var(--tb) + 28px);
+}
+.wk-section-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+.wk-num {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  min-width: 34px; height: 34px; padding: 0 8px;
+  font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--bg);
+  background: linear-gradient(160deg, var(--g3), var(--g1));
+  border-radius: 9px; box-shadow: 0 2px 10px rgba(192, 128, 16, 0.25);
+}
+.wk-section-titles { min-width: 0; }
+.wk-section-title {
+  font-family: var(--font-display); font-size: 21px; font-weight: 700;
+  color: var(--tx0); margin: 2px 0 0; line-height: 1.2;
+}
+.wk-section-sub {
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--g2); margin-top: 5px;
+}
+.wk-body { color: var(--tx1); }
+.wk-body .wk-p { font-family: var(--font-body); font-size: 15px; line-height: 1.7; color: var(--tx1); margin: 0 0 12px; }
+.wk-body .wk-p:last-child { margin-bottom: 0; }
+.wk-list { margin: 4px 0 12px; padding-left: 20px; }
+.wk-list li { font-family: var(--font-body); font-size: 15px; line-height: 1.65; color: var(--tx1); margin-bottom: 6px; }
+.wk-media {
+  display: flex; align-items: center; gap: 8px; margin: 12px 0;
+  padding: 16px 18px; border: 1px dashed var(--rim2); border-radius: var(--rr);
+  background: var(--glow2); color: var(--tx3); font-size: 13px;
+}
+.wk-media em { font-style: italic; }
+
+/* Card grids for data-rich pages */
+.wk-card-grid { display: grid; gap: 14px; margin: 4px 0 6px; }
+.wk-card {
+  background: rgba(16, 21, 40, 0.6); border: 1px solid var(--rim2);
+  border-radius: var(--rr); padding: 16px 18px; transition: border-color 0.15s, transform 0.15s;
+}
+.wk-card.hover:hover { border-color: var(--g1); transform: translateY(-2px); }
+.wk-card-eyebrow {
+  font-family: var(--font-label); font-size: 8.5px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--g2);
+}
+.wk-card-title { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--tx0); margin: 4px 0 8px; }
+.wk-card-text { font-family: var(--font-body); font-size: 13.5px; line-height: 1.6; color: var(--tx2); }
+.wk-card-tag {
+  display: inline-block; font-family: var(--font-label); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--g3); padding: 3px 9px; border-radius: 999px;
+  border: 1px solid var(--rim2); background: var(--glow2); margin-bottom: 8px;
+}
+.wk-pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.wk-pill {
+  font-family: var(--font-mono); font-size: 11px; color: var(--tx1);
+  padding: 3px 9px; border-radius: 999px; border: 1px solid var(--rim2); background: rgba(0,0,0,0.2);
+}
+.wk-callout {
+  display: flex; gap: 12px; padding: 14px 16px; margin: 4px 0 6px;
+  border: 1px solid var(--rim2); border-left: 3px solid var(--g2);
+  border-radius: var(--rr); background: rgba(245, 204, 80, 0.05);
+}
+.wk-callout .wk-callout-icon { font-size: 18px; line-height: 1.3; }
+.wk-callout p { font-family: var(--font-body); font-size: 14px; line-height: 1.6; color: var(--tx1); margin: 0; }

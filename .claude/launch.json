@@ -4,7 +4,7 @@
     {
       "name": "wiki-client",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev:client"],
+      "runtimeArgs": ["dev"],
       "port": 5173
     }
   ]

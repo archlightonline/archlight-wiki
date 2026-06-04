@@ -106,7 +106,17 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
 }
 
 .logo-zone { display: flex; align-items: center; gap: 11px; padding-right: 8px; flex-shrink: 0; min-width: 0; }
-.logo-zone .logo-name { font-family: var(--font-display); font-weight: 900; font-size: 17px; color: var(--g3); line-height: 1; letter-spacing: 0.02em; text-shadow: 0 0 16px var(--glow); }
+.logo-zone .logo-name {
+  font-family: var(--font-display); font-weight: 900; font-size: 17px; line-height: 1; letter-spacing: 0.02em;
+  /* Gold gradient text with a bright band that sweeps across (shimmer). */
+  background: linear-gradient(100deg, var(--g1) 0%, var(--g2) 30%, #fff6c4 48%, #fffbe6 52%, var(--g2) 70%, var(--g1) 100%);
+  background-size: 250% auto;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  filter: drop-shadow(0 0 14px var(--glow));
+  animation: logoShine 4.5s linear infinite;
+}
+@keyframes logoShine { 0% { background-position: 200% center; } 100% { background-position: -50% center; } }
 .logo-zone .logo-sub { font-family: var(--font-label); font-size: 8px; letter-spacing: 0.34em; color: var(--tx3); text-transform: uppercase; margin-top: 3px; }
 
 .brand-logo { position: relative; display: grid; place-items: center; flex-shrink: 0; }
@@ -414,16 +424,50 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
 .hhs-card:hover { transform: translateY(-2px); border-color: rgba(132, 245, 229, 0.48); box-shadow: 0 22px 48px rgba(0, 0, 0, 0.36), 0 0 20px rgba(111, 238, 219, 0.1); }
 .hhs-value { position: relative; z-index: 2; font-family: var(--font-display); font-size: 46px; line-height: 0.88; font-weight: 900; letter-spacing: 0.035em; color: #fff0ad; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.72), 0 0 16px rgba(255, 216, 95, 0.12); }
 .hhs-label { position: relative; z-index: 2; margin-top: 16px; color: #f0f8f7; font: 900 11px/1.1 var(--font-label); letter-spacing: 0.14em; text-transform: uppercase; }
-.hhs-anniv { min-height: 120px; position: relative; display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 14px; align-items: center; padding: 16px 20px; border: 1px solid rgba(255, 225, 116, 0.62); border-radius: 16px; background: radial-gradient(circle at 44px 50%, rgba(255, 237, 150, 0.22), transparent 38%), linear-gradient(135deg, rgba(33, 20, 8, 0.98), rgba(74, 43, 12, 0.98) 48%, rgba(8, 17, 25, 0.985)); box-shadow: inset 0 1px 0 rgba(255, 251, 219, 0.24), inset 0 -18px 28px rgba(0, 0, 0, 0.34), 0 0 24px rgba(255, 168, 42, 0.14); cursor: pointer; transition: all 0.18s; }
+.hhs-anniv { min-height: 120px; position: relative; overflow: hidden; display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 14px; align-items: center; padding: 16px 20px; border: 1px solid rgba(255, 225, 116, 0.62); border-radius: 16px; background: radial-gradient(circle at 44px 50%, rgba(255, 237, 150, 0.22), transparent 38%), linear-gradient(135deg, rgba(33, 20, 8, 0.98), rgba(74, 43, 12, 0.98) 48%, rgba(8, 17, 25, 0.985)); box-shadow: inset 0 1px 0 rgba(255, 251, 219, 0.24), inset 0 -18px 28px rgba(0, 0, 0, 0.34), 0 0 24px rgba(255, 168, 42, 0.14); cursor: pointer; transition: all 0.18s; }
 .hhs-anniv:hover { transform: translateY(-3px); border-color: rgba(255, 238, 151, 0.88); box-shadow: inset 0 1px 0 rgba(255, 251, 219, 0.34), 0 0 36px rgba(255, 185, 54, 0.3); }
 .hhs-anniv-num { justify-self: center; font-family: "Arial Black", Arial, sans-serif; font-size: 60px; line-height: 0.82; font-weight: 900; letter-spacing: 0; color: #fff8cf; -webkit-text-stroke: 1.1px rgba(36, 18, 2, 0.96); text-shadow: 0 2px 0 #4b2704, 0 0 18px rgba(255, 238, 154, 0.74), 0 0 30px rgba(255, 139, 25, 0.32); }
 .hhs-anniv-copy { display: grid; gap: 6px; }
 .hhs-anniv-kicker { color: #93fff0; font: 900 8.5px/1 var(--font-label); letter-spacing: 0.24em; text-transform: uppercase; }
 .hhs-anniv-main { color: #fff3bd; font: 900 16px/1.08 var(--font-label); letter-spacing: 0.06em; text-transform: uppercase; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.92); }
 .hhs-anniv-since { justify-self: start; padding: 4px 8px; border: 1px solid rgba(255, 225, 126, 0.34); background: rgba(0, 0, 0, 0.24); color: #ecfbf8; font: 850 8px/1 var(--font-label); letter-spacing: 0.16em; border-radius: 4px; }
+/* Keep the number + copy above the sparkle layer. */
+.hhs-anniv-num, .hhs-anniv-copy { position: relative; z-index: 2; }
+/* CSS-only sparkle/particle layer that distinguishes the anniversary card. */
+.hhs-anniv-sparkles { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.hhs-anniv-sparkles::before, .hhs-anniv-sparkles::after {
+  content: ""; position: absolute; inset: 0; background-repeat: no-repeat;
+}
+.hhs-anniv-sparkles::before {
+  background-image:
+    radial-gradient(circle, #fffbe0 0, #fffbe0 1.4px, transparent 2.2px),
+    radial-gradient(circle, #ffe79a 0, #ffe79a 1.2px, transparent 2px),
+    radial-gradient(circle, #ffffff 0, #ffffff 1px, transparent 1.6px),
+    radial-gradient(circle, #ffd87a 0, #ffd87a 1.1px, transparent 1.8px);
+  background-size: 100% 100%;
+  background-position: 30% 26%, 78% 34%, 54% 72%, 90% 78%;
+  animation: annivSparkleA 2.8s ease-in-out infinite;
+}
+.hhs-anniv-sparkles::after {
+  background-image:
+    radial-gradient(circle, #ffffff 0, #ffffff 1.3px, transparent 2px),
+    radial-gradient(circle, #ffec96 0, #ffec96 1px, transparent 1.6px),
+    radial-gradient(circle, #fffbe0 0, #fffbe0 1px, transparent 1.6px);
+  background-size: 100% 100%;
+  background-position: 64% 18%, 20% 60%, 44% 44%;
+  animation: annivSparkleB 3.7s ease-in-out infinite;
+}
+@keyframes annivSparkleA { 0%, 100% { opacity: 0.25; transform: scale(0.92); } 50% { opacity: 1; transform: scale(1); } }
+@keyframes annivSparkleB { 0%, 100% { opacity: 0.9; transform: scale(1); } 50% { opacity: 0.2; transform: scale(0.9); } }
 
 /* ===== Announcement banner ============================================= */
-.home-announce { position: relative; display: flex; align-items: center; gap: 16px; width: min(1080px, 100%); margin: 30px auto 0; padding: 16px 20px; border: 1px solid rgba(200, 160, 50, 0.4); border-radius: 14px; background: linear-gradient(135deg, rgba(40, 28, 8, 0.7), rgba(14, 18, 32, 0.8)); box-shadow: 0 0 26px rgba(200, 160, 50, 0.1), inset 0 1px 0 rgba(255, 240, 170, 0.08); }
+.home-announce { position: relative; display: flex; align-items: center; gap: 16px; width: min(1080px, 100%); margin: 30px auto 0; padding: 16px 20px; border: 1px solid rgba(200, 160, 50, 0.4); border-radius: 14px; background: linear-gradient(135deg, rgba(40, 28, 8, 0.7), rgba(14, 18, 32, 0.8)); box-shadow: 0 0 26px rgba(200, 160, 50, 0.1), inset 0 1px 0 rgba(255, 240, 170, 0.08); animation: announceGlow 7s ease-in-out infinite; }
+/* Slow border glow cycling through the gold → amber → bright-gold brand colours. */
+@keyframes announceGlow {
+  0%, 100% { border-color: rgba(200, 160, 50, 0.45); box-shadow: 0 0 24px rgba(200, 160, 50, 0.14), inset 0 1px 0 rgba(255, 240, 170, 0.08); }
+  33%      { border-color: rgba(224, 112, 32, 0.62); box-shadow: 0 0 34px rgba(224, 112, 32, 0.22), inset 0 1px 0 rgba(255, 240, 170, 0.1); }
+  66%      { border-color: rgba(245, 204, 80, 0.66); box-shadow: 0 0 40px rgba(245, 204, 80, 0.26), inset 0 1px 0 rgba(255, 240, 170, 0.12); }
+}
 .home-announce::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: linear-gradient(180deg, var(--g2), var(--g0)); box-shadow: 0 0 12px var(--glow); }
 .home-announce .ha-icon { font-size: 24px; }
 .home-announce .ha-copy { flex: 1; min-width: 180px; }
@@ -715,7 +759,8 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
   .hhs-anniv { padding: 14px 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .hw-letter, .hero-logo .brand-logo canvas, .hero-logo-ring, .hero-logo-glow, .hero-logo-aura, .status-dot.online, .loading-spinner, .skeleton-dot, .skeleton-line { animation: none !important; }
+  .hw-letter, .hero-logo .brand-logo canvas, .hero-logo-ring, .hero-logo-glow, .hero-logo-aura, .status-dot.online, .loading-spinner, .skeleton-dot, .skeleton-line,
+  .logo-zone .logo-name, .hhs-anniv-sparkles::before, .hhs-anniv-sparkles::after, .home-announce { animation: none !important; }
 }
 
 /* ===== Auth modal ======================================================= */

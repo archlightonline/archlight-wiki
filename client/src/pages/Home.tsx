@@ -56,9 +56,9 @@ function Hero() {
             <span className="hhs-label">Revisions</span>
           </article>
           <article className="hhs-anniv" aria-label="11 Years of Archlight">
+            <span className="hhs-anniv-sparkles" aria-hidden="true" />
             <span className="hhs-anniv-num">11</span>
             <span className="hhs-anniv-copy">
-              <span className="hhs-anniv-kicker">Anniversary</span>
               <span className="hhs-anniv-main">Years of Archlight</span>
               <span className="hhs-anniv-since">Since 2015</span>
             </span>

@@ -88,4 +88,14 @@ export const DDL_STATEMENTS: string[] = [
     updated_at timestamptz NOT NULL DEFAULT now()
   )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS social_links_key_uq ON social_links (key)`,
+
+  `CREATE TABLE IF NOT EXISTS world_status (
+    id           serial PRIMARY KEY,
+    key          text NOT NULL,
+    name         text NOT NULL,
+    status       text NOT NULL DEFAULT 'live' CHECK (status IN ('live','offline','maintenance')),
+    display_name text NOT NULL,
+    updated_at   timestamptz NOT NULL DEFAULT now()
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS world_status_key_uq ON world_status (key)`,
 ];

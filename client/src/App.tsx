@@ -56,6 +56,7 @@ export default function App() {
         <Route path="/admin/users" element={<AdminPanel tab="users" />} />
         <Route path="/admin/pages" element={<AdminPanel tab="pages" />} />
         <Route path="/admin/social" element={<AdminPanel tab="social" />} />
+        <Route path="/admin/worlds" element={<AdminPanel tab="worlds" />} />
       </Route>
     </Routes>
   );

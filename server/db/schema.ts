@@ -28,6 +28,9 @@ export type Role = (typeof ROLES)[number];
 export const CONTRIBUTION_STATUSES = ['pending', 'approved', 'rejected'] as const;
 export type ContributionStatus = (typeof CONTRIBUTION_STATUSES)[number];
 
+export const WORLD_STATUSES = ['live', 'offline', 'maintenance'] as const;
+export type WorldStatusValue = (typeof WORLD_STATUSES)[number];
+
 export const users = pgTable(
   'users',
   {
@@ -147,6 +150,22 @@ export const socialLinks = pgTable(
   }),
 );
 
+/** Editable world/server status shown in the topbar (DB-backed). */
+export const worldStatus = pgTable(
+  'world_status',
+  {
+    id: serial('id').primaryKey(),
+    key: text('key').notNull(), // abaldar, legacy, hardcore
+    name: text('name').notNull(),
+    status: text('status', { enum: WORLD_STATUSES }).notNull().default('live'),
+    displayName: text('display_name').notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    keyUq: uniqueIndex('world_status_key_uq').on(t.key),
+  }),
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Page = typeof pages.$inferSelect;
@@ -154,3 +173,4 @@ export type NewPage = typeof pages.$inferInsert;
 export type PageRevision = typeof pageRevisions.$inferSelect;
 export type Contribution = typeof contributions.$inferSelect;
 export type SocialLink = typeof socialLinks.$inferSelect;
+export type WorldStatus = typeof worldStatus.$inferSelect;

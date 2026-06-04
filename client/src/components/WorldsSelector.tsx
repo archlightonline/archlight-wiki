@@ -1,16 +1,45 @@
 import { useEffect, useRef, useState } from 'react';
+import { trpc } from '../lib/trpc';
 import { WORLDS } from '../lib/nav';
 
 /**
- * Worlds selector. On desktop it shows all worlds inline with live status
- * badges (active world gets a green glowing border); under 768px it collapses
- * to a compact dropdown to save topbar space.
+ * Worlds selector. World names/statuses are DB-backed (admin-editable via
+ * /admin/worlds); the static nav.ts WORLDS act as a fallback while loading.
+ * Icons stay in the component (not an editable field).
+ *
+ * On desktop it shows all worlds inline with live status badges (active world
+ * gets a green glowing border); under 768px it collapses to a compact dropdown.
  */
+const ICON_BY_KEY: Record<string, string> = { abaldar: '⚔️', legacy: '🕯️', hardcore: '🔥' };
+const toneFor = (status: string) => (status === 'maintenance' ? 'maint' : status); // live | offline | maint
+const badgeFor = (status: string) => (status === 'maintenance' ? 'MAINT' : status.toUpperCase()); // LIVE | OFFLINE | MAINT
+
+interface WorldView {
+  id: string;
+  icon: string;
+  name: string;
+  tone: string;
+  status: string;
+}
+
+const FALLBACK: WorldView[] = WORLDS.map((w) => ({ id: w.id, icon: w.icon, name: w.name, tone: w.tone, status: w.status }));
+
 export function WorldsSelector() {
-  const [activeId, setActiveId] = useState(WORLDS[0].id);
+  const q = trpc.worldStatus.list.useQuery();
+  const worlds: WorldView[] = q.data && q.data.length
+    ? q.data.map((w) => ({
+        id: w.key,
+        icon: ICON_BY_KEY[w.key] ?? '🌐',
+        name: w.displayName,
+        tone: toneFor(w.status),
+        status: badgeFor(w.status),
+      }))
+    : FALLBACK;
+
+  const [activeId, setActiveId] = useState(FALLBACK[0].id);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const active = WORLDS.find((w) => w.id === activeId) ?? WORLDS[0];
+  const active = worlds.find((w) => w.id === activeId) ?? worlds[0];
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -25,7 +54,7 @@ export function WorldsSelector() {
       {/* Desktop: all worlds inline */}
       <div className="worlds-selector" role="group" aria-label="Worlds">
         <span className="worlds-label">Worlds</span>
-        {WORLDS.map((w) => (
+        {worlds.map((w) => (
           <button
             key={w.id}
             type="button"
@@ -58,7 +87,7 @@ export function WorldsSelector() {
         </button>
         {open && (
           <div className="worlds-menu" role="menu">
-            {WORLDS.map((w) => (
+            {worlds.map((w) => (
               <button
                 key={w.id}
                 type="button"

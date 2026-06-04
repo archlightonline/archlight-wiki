@@ -9,7 +9,7 @@
 import crypto from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import type { DB } from '../db';
-import { users, socialLinks } from '../db/schema';
+import { users, socialLinks, worldStatus } from '../db/schema';
 import { hashPassword } from './password';
 
 export async function ensureSystemAdmin(db: DB): Promise<number> {
@@ -59,4 +59,21 @@ export async function ensureSocialLinks(db: DB): Promise<void> {
   const have = new Set(existing.map((r) => r.key));
   const missing = DEFAULT_SOCIAL_LINKS.filter((s) => !have.has(s.key));
   if (missing.length) await db.insert(socialLinks).values(missing);
+}
+
+/**
+ * Seed the editable topbar world/server statuses from the values previously
+ * hardcoded in nav.ts. Idempotent: only inserts keys that don't exist yet.
+ */
+const DEFAULT_WORLD_STATUS = [
+  { key: 'abaldar', name: 'Abaldar', status: 'live' as const, displayName: 'Abaldar' },
+  { key: 'legacy', name: 'Legacy', status: 'offline' as const, displayName: 'Legacy' },
+  { key: 'hardcore', name: 'Hardcore', status: 'maintenance' as const, displayName: 'Hardcore' },
+];
+
+export async function ensureWorldStatus(db: DB): Promise<void> {
+  const existing = await db.select({ key: worldStatus.key }).from(worldStatus);
+  const have = new Set(existing.map((r) => r.key));
+  const missing = DEFAULT_WORLD_STATUS.filter((w) => !have.has(w.key));
+  if (missing.length) await db.insert(worldStatus).values(missing);
 }

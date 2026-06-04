@@ -55,6 +55,71 @@ function SocialLinksAdmin() {
   );
 }
 
+type WorldStatusValue = 'live' | 'offline' | 'maintenance';
+
+function WorldStatusAdmin() {
+  const utils = trpc.useUtils();
+  const worlds = trpc.worldStatus.list.useQuery();
+  const update = trpc.worldStatus.update.useMutation({ onSuccess: () => utils.worldStatus.list.invalidate() });
+  const [edits, setEdits] = useState<Record<string, { status: WorldStatusValue; displayName: string }>>({});
+
+  useEffect(() => {
+    if (worlds.data) {
+      setEdits(Object.fromEntries(worlds.data.map((w) => [w.key, { status: w.status, displayName: w.displayName }])));
+    }
+  }, [worlds.data]);
+
+  return (
+    <div>
+      {worlds.isLoading && <Loading />}
+      {update.error && <ErrorBox error={update.error} />}
+      <p className="muted" style={{ marginBottom: 14 }}>
+        Status and display name shown in the topbar world badges. Changes take effect immediately.
+      </p>
+      {worlds.data?.map((w) => {
+        const e = edits[w.key] ?? { status: w.status, displayName: w.displayName };
+        const dirty = e.status !== w.status || e.displayName !== w.displayName;
+        return (
+          <div
+            className="card"
+            key={w.key}
+            style={{ marginBottom: 10, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}
+          >
+            <div style={{ minWidth: 110 }}>
+              <b style={{ color: 'var(--tx0)' }}>{w.name}</b>
+              <div className="muted" style={{ fontSize: 11.5 }}>{w.key}</div>
+            </div>
+            <input
+              className="input"
+              style={{ flex: 1, minWidth: 180, width: 'auto' }}
+              value={e.displayName}
+              onChange={(ev) => setEdits((s) => ({ ...s, [w.key]: { ...e, displayName: ev.target.value } }))}
+              placeholder="Display name"
+            />
+            <select
+              className="select"
+              style={{ width: 'auto' }}
+              value={e.status}
+              onChange={(ev) => setEdits((s) => ({ ...s, [w.key]: { ...e, status: ev.target.value as WorldStatusValue } }))}
+            >
+              <option value="live">live</option>
+              <option value="offline">offline</option>
+              <option value="maintenance">maintenance</option>
+            </select>
+            <button
+              className="btn sm primary"
+              disabled={update.isPending || !dirty || !e.displayName.trim()}
+              onClick={() => update.mutate({ key: w.key, status: e.status, displayName: e.displayName.trim() })}
+            >
+              Save
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function ContributionsQueue() {
   const utils = trpc.useUtils();
   const [status, setStatus] = useState<'pending' | 'all'>('pending');
@@ -261,7 +326,7 @@ function PagesAdmin() {
   );
 }
 
-export function AdminPanel({ tab }: { tab: 'contributions' | 'users' | 'pages' | 'social' }) {
+export function AdminPanel({ tab }: { tab: 'contributions' | 'users' | 'pages' | 'social' | 'worlds' }) {
   const { isAdmin } = useAuth();
   return (
     <div className="container">
@@ -285,11 +350,17 @@ export function AdminPanel({ tab }: { tab: 'contributions' | 'users' | 'pages' |
             Social Links
           </Link>
         )}
+        {isAdmin && (
+          <Link className={`tab${tab === 'worlds' ? ' active' : ''}`} to="/admin/worlds">
+            World Status
+          </Link>
+        )}
       </div>
       {tab === 'contributions' && <ContributionsQueue />}
       {tab === 'users' && <UsersAdmin />}
       {tab === 'pages' && <PagesAdmin />}
       {tab === 'social' && <SocialLinksAdmin />}
+      {tab === 'worlds' && <WorldStatusAdmin />}
     </div>
   );
 }

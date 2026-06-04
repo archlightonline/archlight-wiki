@@ -23,6 +23,11 @@ import { EquipmentEnhancementPage } from './EquipmentEnhancementPage';
 import { DungeonsPage } from './DungeonsPage';
 import { HuntingZonesPage } from './HuntingZonesPage';
 import { ProfessionsPage } from './ProfessionsPage';
+import { GuildsPage } from './GuildsPage';
+import { ArchpassPage } from './ArchpassPage';
+import { NewPlayerGuidePage } from './NewPlayerGuidePage';
+import { AdvancedPlayerGuidePage } from './AdvancedPlayerGuidePage';
+import { EndgameGuidePage } from './EndgameGuidePage';
 
 export interface DedicatedWikiRoute {
   paths: string[];
@@ -46,4 +51,9 @@ export const DEDICATED_WIKI_ROUTES: DedicatedWikiRoute[] = [
   { paths: ['/wiki/dungeons', '/dungeons'], element: <DungeonsPage /> },
   { paths: ['/wiki/hunting-zones', '/hunting-zones'], element: <HuntingZonesPage /> },
   { paths: ['/wiki/professions', '/professions'], element: <ProfessionsPage /> },
+  { paths: ['/wiki/guilds', '/guilds'], element: <GuildsPage /> },
+  { paths: ['/wiki/archpass-rewards', '/wiki/archpass', '/archpass'], element: <ArchpassPage /> },
+  { paths: ['/wiki/new-player-guide', '/new-player-guide'], element: <NewPlayerGuidePage /> },
+  { paths: ['/wiki/advanced-player-guide', '/advanced-player-guide'], element: <AdvancedPlayerGuidePage /> },
+  { paths: ['/wiki/endgame-guide', '/endgame-guide'], element: <EndgameGuidePage /> },
 ];

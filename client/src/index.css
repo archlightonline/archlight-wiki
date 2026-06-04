@@ -980,3 +980,13 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
   .prof-menu { position: static; flex-direction: row; flex-wrap: wrap; max-height: none; }
   .prof-group { flex: 1 1 140px; }
 }
+
+/* ===== Guide roadmap link cards ======================================== */
+.guide-link { display: flex; flex-direction: column; text-decoration: none; }
+.guide-link .wk-card-title { color: var(--g3); transition: color 0.14s; }
+.guide-link:hover .wk-card-title { color: var(--g4); }
+.guide-link-cta {
+  margin-top: 12px; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--g2); transition: color 0.14s;
+}
+.guide-link:hover .guide-link-cta { color: var(--g4); }

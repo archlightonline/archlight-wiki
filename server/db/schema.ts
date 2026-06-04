@@ -86,9 +86,9 @@ export const pageRevisions = pgTable(
       .notNull()
       .references(() => pages.id, { onDelete: 'cascade' }),
     content: text('content').notNull(), // full snapshot
-    editedBy: integer('edited_by').references(() => users.id),
-    editSummary: text('edit_summary'),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    editedBy: text('edited_by'), // user display name at edit time (denormalised)
+    editedAt: timestamp('edited_at', { withTimezone: true }).notNull().defaultNow(),
+    summary: text('summary'), // optional short summary
   },
   (t) => ({
     pageIdx: index('page_revisions_page_idx').on(t.pageId),

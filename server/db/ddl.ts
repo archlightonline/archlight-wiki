@@ -48,12 +48,12 @@ export const DDL_STATEMENTS: string[] = [
     USING gin (to_tsvector('english', coalesce(title, '') || ' ' || coalesce(content, '')))`,
 
   `CREATE TABLE IF NOT EXISTS page_revisions (
-    id           serial PRIMARY KEY,
-    page_id      integer NOT NULL REFERENCES pages(id) ON DELETE CASCADE,
-    content      text NOT NULL,
-    edited_by    integer REFERENCES users(id),
-    edit_summary text,
-    created_at   timestamptz NOT NULL DEFAULT now()
+    id         serial PRIMARY KEY,
+    page_id    integer NOT NULL REFERENCES pages(id) ON DELETE CASCADE,
+    content    text NOT NULL,
+    edited_by  text,
+    edited_at  timestamptz NOT NULL DEFAULT now(),
+    summary    text
   )`,
   `CREATE INDEX IF NOT EXISTS page_revisions_page_idx ON page_revisions (page_id)`,
 

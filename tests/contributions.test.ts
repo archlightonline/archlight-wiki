@@ -24,7 +24,7 @@ describe('contributions', () => {
     expect(c.contributorId).toBe(viewer.id);
   });
 
-  it('an editor reviews; approval applies the edit and snapshots the old content', async () => {
+  it('an editor reviews; approval applies the edit and records a revision', async () => {
     const vw = callerFor(dbh, viewer).caller;
     const c = await vw.contributions.submit({ slug: 'contrib-page', proposedContent: 'improved content' });
 
@@ -39,7 +39,7 @@ describe('contributions', () => {
 
     const got = await callerFor(dbh, null).caller.pages.get({ slug: 'contrib-page' });
     expect(got.content).toBe('improved content');
-    expect(got.revisionCount).toBe(1); // old content snapshotted
+    expect(got.revisionCount).toBe(2); // creation revision + old content snapshotted on approval
   });
 
   it('rejection records the decision without changing the page', async () => {

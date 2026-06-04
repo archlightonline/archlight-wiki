@@ -73,9 +73,9 @@ export const contributionsRouter = router({
     }),
 
   /**
-   * Approve or reject. Approving applies the proposed content to the page,
-   * snapshotting the current content as a revision first (so the contribution
-   * workflow is end-to-end). admin/editor.
+   * Approve or reject. Approving applies the proposed content to the page and
+   * records it as a new revision (so the contribution workflow is end-to-end).
+   * admin/editor.
    */
   review: editorProcedure
     .input(
@@ -101,9 +101,9 @@ export const contributionsRouter = router({
         if (page) {
           await ctx.db.insert(pageRevisions).values({
             pageId: page.id,
-            content: page.content,
-            editedBy: ctx.user.id,
-            editSummary: `Approved contribution #${contribution.id}`,
+            content: contribution.proposedContent,
+            editedBy: ctx.user.displayName || ctx.user.username || 'unknown',
+            summary: `Approved contribution #${contribution.id}`,
           });
           await ctx.db
             .update(pages)

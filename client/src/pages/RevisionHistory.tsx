@@ -12,7 +12,7 @@ type Sel = number | 'current';
 
 export function RevisionHistory() {
   const { slug } = useParams();
-  const { isAdmin } = useAuth();
+  const { isEditor } = useAuth();
   const utils = trpc.useUtils();
 
   const page = trpc.pages.get.useQuery({ slug: slug! }, { retry: false });
@@ -43,7 +43,7 @@ export function RevisionHistory() {
   const ops = lineDiff(fromContent, toContent);
   const options: { value: Sel; label: string }[] = [
     { value: 'current', label: 'Current (live)' },
-    ...(revs.data ?? []).map((r) => ({ value: r.id as Sel, label: `#${r.id} · ${r.editor} · ${fmtDateTime(r.createdAt)}` })),
+    ...(revs.data ?? []).map((r) => ({ value: r.id as Sel, label: `#${r.number} · ${r.editedBy} · ${fmtDateTime(r.editedAt)}` })),
   ];
 
   return (
@@ -61,12 +61,12 @@ export function RevisionHistory() {
           {revs.data?.map((r) => (
             <div className="card" key={r.id} style={{ marginBottom: 8, padding: '10px 14px' }}>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <span className="badge">#{r.id}</span>
-                <span style={{ color: 'var(--tx0)' }}>{r.editor}</span>
+                <span className="badge">Revision #{r.number}</span>
+                <span style={{ color: 'var(--tx0)' }}>{r.editedBy}</span>
                 <span className="spacer" />
-                <span className="muted" style={{ fontSize: 11.5 }}>{fmtDateTime(r.createdAt)}</span>
+                <span className="muted" style={{ fontSize: 11.5 }}>{fmtDateTime(r.editedAt)}</span>
               </div>
-              {r.editSummary && <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>{r.editSummary}</div>}
+              {r.summary && <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>{r.summary}</div>}
               <div className="toolbar" style={{ margin: '8px 0 0' }}>
                 <button className="btn sm ghost" onClick={() => setFrom(r.id)}>
                   Compare from
@@ -74,12 +74,14 @@ export function RevisionHistory() {
                 <button className="btn sm ghost" onClick={() => setTo(r.id)}>
                   Compare to
                 </button>
-                {isAdmin && (
+                {isEditor && (
                   <button
                     className="btn sm danger"
                     disabled={rollback.isPending}
                     onClick={() => {
-                      if (confirm(`Restore the page to revision #${r.id}?`)) rollback.mutate({ revisionId: r.id });
+                      if (confirm(`Restore the page to revision #${r.number}? This replaces the current content and is saved as a new revision.`)) {
+                        rollback.mutate({ revisionId: r.id });
+                      }
                     }}
                   >
                     Restore

@@ -25,7 +25,7 @@ describe('pages', () => {
     expect(got.title).toBe('My Test Page');
     expect(got.category).toBe('Guides');
     expect(got.tags).toContain('alpha');
-    expect(got.revisionCount).toBe(0);
+    expect(got.revisionCount).toBe(1); // creation is recorded as the first revision
 
     // Duplicate title -> distinct slug.
     const page2 = await ed.pages.create({ title: 'My Test Page', content: 'x' });
@@ -42,7 +42,7 @@ describe('pages', () => {
     await expect(anon.pages.create({ title: 'Nope', content: 'x' })).rejects.toThrow(/logged in/i);
   });
 
-  it('creates a revision snapshot on every update', async () => {
+  it('creates a revision snapshot on every save (create + each update)', async () => {
     const ed = callerFor(dbh, editor).caller;
     await ed.pages.create({ title: 'Rev Page', content: 'v1' });
     await ed.pages.update({ slug: 'rev-page', content: 'v2', editSummary: 'second pass' });
@@ -53,8 +53,10 @@ describe('pages', () => {
     expect(got.content).toBe('v3');
 
     const revs = await pub.pages.getRevisions({ slug: 'rev-page' });
-    expect(revs.length).toBe(2); // snapshots of v1 and v2
-    expect(revs[0].editor).toBe('editor');
+    expect(revs.length).toBe(3); // one revision per save: v1, v2, v3
+    expect(revs[0].editedBy).toBe('editor'); // newest first
+    expect(revs[0].number).toBe(3);
+    expect(revs[revs.length - 1].number).toBe(1);
   });
 
   it('admin can roll a page back to a prior revision', async () => {
@@ -63,11 +65,12 @@ describe('pages', () => {
     await ad.pages.update({ slug: 'rb', content: 'changed' });
 
     const revs = await ad.pages.getRevisions({ slug: 'rb' });
-    expect(revs.length).toBe(1);
-    const rev = await ad.pages.getRevision({ id: revs[0].id });
+    expect(revs.length).toBe(2); // one revision per save: 'original' then 'changed'
+    const original = revs[revs.length - 1]; // oldest = the creation revision
+    const rev = await ad.pages.getRevision({ id: original.id });
     expect(rev.content).toBe('original');
 
-    await ad.pages.rollback({ revisionId: revs[0].id });
+    await ad.pages.rollback({ revisionId: original.id });
     const got = await callerFor(dbh, null).caller.pages.get({ slug: 'rb' });
     expect(got.content).toBe('original');
   });

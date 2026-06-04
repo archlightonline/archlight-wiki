@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, lte, sql } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { router, publicProcedure, editorProcedure, adminProcedure } from '../trpc/trpc';
 import { pages, pageRevisions, pageTags, users } from '../db/schema';
@@ -9,6 +9,11 @@ import { sanitizeContent, sanitizeText } from '../lib/sanitize';
 
 function isPrivileged(ctx: Context): boolean {
   return !!ctx.user && (ctx.user.role === 'admin' || ctx.user.role === 'editor');
+}
+
+/** Display name to stamp on a revision (denormalised). */
+function actorName(ctx: Context): string {
+  return ctx.user?.displayName || ctx.user?.username || 'unknown';
 }
 
 async function loadPageBySlug(ctx: Context, slug: string) {
@@ -194,6 +199,14 @@ export const pagesRouter = router({
       if (input.tags?.length) {
         await ctx.db.insert(pageTags).values(input.tags.map((tag) => ({ pageId: created.id, tag })));
       }
+
+      // Record the creation as the page's first revision.
+      await ctx.db.insert(pageRevisions).values({
+        pageId: created.id,
+        content: created.content,
+        editedBy: actorName(ctx),
+        summary: `Created by ${actorName(ctx)}`,
+      });
       return created;
     }),
 
@@ -218,17 +231,20 @@ export const pagesRouter = router({
         throw new TRPCError({ code: 'FORBIDDEN', message: 'This page is protected (admin-only edit).' });
       }
 
-      // Snapshot the CURRENT content as a revision BEFORE saving the new content.
+      const newContent = input.content !== undefined ? sanitizeContent(input.content) : page.content;
+
+      // Record this save as a revision (the content exactly as saved) before
+      // overwriting the live page, so every saved version is restorable.
       await ctx.db.insert(pageRevisions).values({
         pageId: page.id,
-        content: page.content,
-        editedBy: ctx.user.id,
-        editSummary: sanitizeText(input.editSummary ?? '', 200) || null,
+        content: newContent,
+        editedBy: actorName(ctx),
+        summary: sanitizeText(input.editSummary ?? '', 200) || `Edited by ${actorName(ctx)}`,
       });
 
       const patch: Record<string, unknown> = { updatedAt: new Date(), updatedBy: ctx.user.id };
       if (input.title !== undefined) patch.title = sanitizeText(input.title, 200);
-      if (input.content !== undefined) patch.content = sanitizeContent(input.content);
+      if (input.content !== undefined) patch.content = newContent;
       if (input.category !== undefined) patch.category = input.category;
       if (input.subcategory !== undefined) patch.subcategory = input.subcategory;
       if (input.isProtected !== undefined && ctx.user.role === 'admin') patch.isProtected = input.isProtected;
@@ -302,20 +318,21 @@ export const pagesRouter = router({
     const rows = await ctx.db
       .select({
         id: pageRevisions.id,
-        editSummary: pageRevisions.editSummary,
-        createdAt: pageRevisions.createdAt,
-        editorName: users.displayName,
-        editorUsername: users.username,
+        editedBy: pageRevisions.editedBy,
+        summary: pageRevisions.summary,
+        editedAt: pageRevisions.editedAt,
       })
       .from(pageRevisions)
-      .leftJoin(users, eq(users.id, pageRevisions.editedBy))
       .where(eq(pageRevisions.pageId, page.id))
-      .orderBy(desc(pageRevisions.createdAt), desc(pageRevisions.id));
-    return rows.map((r) => ({
+      .orderBy(desc(pageRevisions.editedAt), desc(pageRevisions.id));
+    const total = rows.length;
+    // Reverse-chronological; the newest revision gets the highest number.
+    return rows.map((r, i) => ({
       id: r.id,
-      editSummary: r.editSummary,
-      createdAt: r.createdAt,
-      editor: r.editorName || r.editorUsername || 'unknown',
+      number: total - i,
+      editedBy: r.editedBy ?? 'unknown',
+      summary: r.summary,
+      editedAt: r.editedAt,
     }));
   }),
 
@@ -325,20 +342,31 @@ export const pagesRouter = router({
     return rev;
   }),
 
-  rollback: adminProcedure
+  /** Restore a page to a prior revision. Editors and admins (protected pages: admin only). */
+  rollback: editorProcedure
     .input(z.object({ revisionId: z.number().int() }))
     .mutation(async ({ ctx, input }) => {
       const [rev] = await ctx.db.select().from(pageRevisions).where(eq(pageRevisions.id, input.revisionId)).limit(1);
       if (!rev) throw new TRPCError({ code: 'NOT_FOUND', message: 'Revision not found.' });
       const [page] = await ctx.db.select().from(pages).where(eq(pages.id, rev.pageId)).limit(1);
       if (!page) throw new TRPCError({ code: 'NOT_FOUND', message: 'Page not found.' });
+      if (page.isProtected && ctx.user.role !== 'admin') {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'This page is protected (admin-only edit).' });
+      }
 
-      // Preserve the pre-rollback state as its own revision so rollback is itself undoable.
+      // Friendly (chronological) number of the revision being restored.
+      const [countRow] = await ctx.db
+        .select({ c: sql<number>`count(*)::int` })
+        .from(pageRevisions)
+        .where(and(eq(pageRevisions.pageId, rev.pageId), lte(pageRevisions.id, rev.id)));
+      const number = Number(countRow?.c ?? 0);
+
+      // Record the restore as a new saved revision (the restored content).
       await ctx.db.insert(pageRevisions).values({
         pageId: page.id,
-        content: page.content,
-        editedBy: ctx.user.id,
-        editSummary: `Rollback to revision #${rev.id}`,
+        content: rev.content,
+        editedBy: actorName(ctx),
+        summary: `Restored to revision #${number}`,
       });
       const [updated] = await ctx.db
         .update(pages)

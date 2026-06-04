@@ -61,9 +61,11 @@ export function WikiPage() {
             Sign in to contribute
           </Link>
         )}
-        <Link className="btn ghost" to={`/history/${page.slug}`}>
-          🕑 History ({page.revisionCount})
-        </Link>
+        {isEditor && (
+          <Link className="btn ghost" to={`/history/${page.slug}`}>
+            🕑 History ({page.revisionCount})
+          </Link>
+        )}
         <span className="spacer" />
         {page.tags?.map((t) => (
           <Link key={t} className="badge" style={{ textDecoration: 'none' }} to={`/browse?tag=${encodeURIComponent(t)}`}>

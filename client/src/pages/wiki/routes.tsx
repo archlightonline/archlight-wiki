@@ -19,6 +19,10 @@ import { GlyphsPage } from './GlyphsPage';
 import { ArtifactsPage } from './ArtifactsPage';
 import { SoulShardsPage } from './SoulShardsPage';
 import { EquipmentPage } from './EquipmentPage';
+import { EquipmentEnhancementPage } from './EquipmentEnhancementPage';
+import { DungeonsPage } from './DungeonsPage';
+import { HuntingZonesPage } from './HuntingZonesPage';
+import { ProfessionsPage } from './ProfessionsPage';
 
 export interface DedicatedWikiRoute {
   paths: string[];
@@ -38,4 +42,8 @@ export const DEDICATED_WIKI_ROUTES: DedicatedWikiRoute[] = [
   { paths: ['/wiki/artifacts', '/artifacts'], element: <ArtifactsPage /> },
   { paths: ['/wiki/soul-shards', '/soul-shards'], element: <SoulShardsPage /> },
   { paths: ['/wiki/equipment-index', '/wiki/equipment', '/equipment'], element: <EquipmentPage /> },
+  { paths: ['/wiki/gear-enhancements', '/wiki/equipment-enhancement', '/equipment-enhancement'], element: <EquipmentEnhancementPage /> },
+  { paths: ['/wiki/dungeons', '/dungeons'], element: <DungeonsPage /> },
+  { paths: ['/wiki/hunting-zones', '/hunting-zones'], element: <HuntingZonesPage /> },
+  { paths: ['/wiki/professions', '/professions'], element: <ProfessionsPage /> },
 ];

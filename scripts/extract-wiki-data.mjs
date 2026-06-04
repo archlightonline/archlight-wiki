@@ -31,14 +31,34 @@ const decode = (s) =>
 const strip = (s) => decode(String(s || '').replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim();
 const grab = (re, s) => strip((s.match(re) || [])[1] || '');
 
+// Clean a single table cell: drop "Img"/"Icon" image-placeholder spans (icons
+// are still pending in the source), turn <br> into " / ", strip remaining tags.
+const stripCell = (h) =>
+  decode(
+    String(h || '')
+      .replace(/<span[^>]*class="[^"]*placeholder[^"]*"[^>]*>[\s\S]*?<\/span>/gi, '')
+      .replace(/<br\s*\/?>/gi, ' / ')
+      .replace(/<[^>]+>/g, ''),
+  )
+    .replace(/\s+/g, ' ')
+    .replace(/^\s*\/\s*|\s*\/\s*$/g, '')
+    .trim();
+
 function parseTable(tableHtml) {
-  const headers = [...tableHtml.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map((m) => strip(m[1]));
-  const rows = [];
+  let headers = [...tableHtml.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map((m) => strip(m[1]));
+  let rows = [];
   for (const tr of tableHtml.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)) {
-    const tds = [...tr[1].matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map((m) =>
-      decode(m[1].replace(/<br\s*\/?>/gi, ' / ').replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim(),
-    );
+    const tds = [...tr[1].matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map((m) => stripCell(m[1]));
     if (tds.length) rows.push(tds);
+  }
+  // Drop columns whose data cells are entirely empty (e.g. pending icon columns).
+  if (headers.length && rows.length) {
+    const keep = headers.map((_, i) => rows.some((r) => (r[i] ?? '').trim() !== ''));
+    if (keep.some((k) => !k)) {
+      const filt = (arr) => arr.filter((_, i) => keep[i]);
+      headers = filt(headers);
+      rows = rows.map((r) => filt(r));
+    }
   }
   return { headers, rows };
 }

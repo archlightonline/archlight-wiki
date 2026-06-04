@@ -15,6 +15,10 @@ import { CompanionsPage } from './CompanionsPage';
 import { StatsCapsPage } from './StatsCapsPage';
 import { TalentTreePage } from './TalentTreePage';
 import { VocationTraitsPage } from './VocationTraitsPage';
+import { GlyphsPage } from './GlyphsPage';
+import { ArtifactsPage } from './ArtifactsPage';
+import { SoulShardsPage } from './SoulShardsPage';
+import { EquipmentPage } from './EquipmentPage';
 
 export interface DedicatedWikiRoute {
   paths: string[];
@@ -30,4 +34,8 @@ export const DEDICATED_WIKI_ROUTES: DedicatedWikiRoute[] = [
   { paths: ['/wiki/stats-caps', '/stats-caps'], element: <StatsCapsPage /> },
   { paths: ['/wiki/talent-tree', '/talent-tree'], element: <TalentTreePage /> },
   { paths: ['/wiki/vocation-traits', '/vocation-traits'], element: <VocationTraitsPage /> },
+  { paths: ['/wiki/glyphs', '/glyphs'], element: <GlyphsPage /> },
+  { paths: ['/wiki/artifacts', '/artifacts'], element: <ArtifactsPage /> },
+  { paths: ['/wiki/soul-shards', '/soul-shards'], element: <SoulShardsPage /> },
+  { paths: ['/wiki/equipment-index', '/wiki/equipment', '/equipment'], element: <EquipmentPage /> },
 ];

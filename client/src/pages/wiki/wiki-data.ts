@@ -1811,161 +1811,161 @@ export const WIKI_PAGE_DATA: Record<string, WikiPageData> = {
             ],
             "rows": [
               [
-                "ImgPrismatic Bow",
+                "Prismatic Bow",
                 "1",
                 "10",
                 "25",
                 "Starter equipment."
               ],
               [
-                "ImgVoodoo Bow",
+                "Voodoo Bow",
                 "2",
                 "10",
                 "30",
                 "Reward from Voodoo Quest."
               ],
               [
-                "ImgVoodoo Crossbow",
+                "Voodoo Crossbow",
                 "2",
                 "10",
                 "30",
                 "Reward from Voodoo Quest."
               ],
               [
-                "ImgHeroes Bow",
+                "Heroes Bow",
                 "2",
                 "10",
                 "40",
                 "Reward from Heroes Quest."
               ],
               [
-                "ImgHeroes Crossbow",
+                "Heroes Crossbow",
                 "2",
                 "10",
                 "40",
                 "Reward from Heroes Quest."
               ],
               [
-                "ImgRift Bow",
+                "Rift Bow",
                 "3",
                 "12",
                 "45",
                 "Rift Trader."
               ],
               [
-                "ImgRift Crossbow",
+                "Rift Crossbow",
                 "3",
                 "12",
                 "45",
                 "Rift Trader."
               ],
               [
-                "ImgSharptooth Bow",
+                "Sharptooth Bow",
                 "3",
                 "14",
                 "50",
                 "Reward from Sharptooth Quest."
               ],
               [
-                "ImgDarksteel Bow",
+                "Darksteel Bow",
                 "4",
                 "15",
                 "60",
                 "Possible reward from Halls of Darksteel Quest."
               ],
               [
-                "ImgIceforged Bow",
+                "Iceforged Bow",
                 "5",
                 "20",
                 "70",
                 "Possible reward from Iceforged Quest."
               ],
               [
-                "ImgAshen Bow",
+                "Ashen Bow",
                 "1",
                 "20",
                 "1",
                 "Reward from Pipes Quest on the Ashen Questline."
               ],
               [
-                "ImgRefined Ashen Bow",
+                "Refined Ashen Bow",
                 "1",
                 "20",
                 "10",
                 "Obtained by upgrading the Ashen Bow."
               ],
               [
-                "ImgGreater Ashen Bow",
+                "Greater Ashen Bow",
                 "1",
                 "20",
                 "20",
                 "Obtained by upgrading the Refined Ashen Bow."
               ],
               [
-                "ImgSuperior Ashen Bow",
+                "Superior Ashen Bow",
                 "1",
                 "20",
                 "30",
                 "Obtained by upgrading the Greater Ashen Bow."
               ],
               [
-                "ImgMaledict Ashen Bow",
+                "Maledict Ashen Bow",
                 "5",
                 "20",
                 "85",
                 "Obtained by upgrading the Superior Ashen Bow."
               ],
               [
-                "ImgMaledict Ashen Bow (Dexterity)",
+                "Maledict Ashen Bow (Dexterity)",
                 "5",
                 "20",
                 "85",
                 "Obtained by using Dexterity Dust on Maledict Ashen Bow. Can be infused onto the Reforged Mastercrafted Bow applying the +10 Dexterity stats bonus."
               ],
               [
-                "ImgMaledict Ashen Bow (Intelligence)",
+                "Maledict Ashen Bow (Intelligence)",
                 "5",
                 "20",
                 "85",
                 "Obtained by using Intelligence Dust on Maledict Ashen Bow. Can be infused onto the Reforged Mastercrafted Bow applying the +10 Intelligence stats bonus."
               ],
               [
-                "ImgMaledict Ashen Bow (Strength)",
+                "Maledict Ashen Bow (Strength)",
                 "5",
                 "20",
                 "85",
                 "Obtained by using Strength Dust on Maledict Ashen Bow. Can be infused onto the Reforged Mastercrafted Bow applying the +10 Strength stats bonus."
               ],
               [
-                "ImgGoldencrafted Bow",
+                "Goldencrafted Bow",
                 "5",
                 "30",
                 "80",
                 "Traded with Deadstone Merchant at the Otherworld Stronghold for 2 Goldencrafted Tokens. Goldencrafted Tokens are obtained as reward from the Castles (Story Quest)."
               ],
               [
-                "ImgMastercrafted Bow",
+                "Mastercrafted Bow",
                 "5",
                 "30",
                 "90",
                 "Obtained by leveling the Goldencrafted Bow."
               ],
               [
-                "ImgReforged Mastercrafted Bow",
+                "Reforged Mastercrafted Bow",
                 "6",
                 "30 (35)",
                 "100",
                 "Obtained by leveling the Mastercrafted Bow Upgrade Cap Level is raised to 35 after using a Maledict Ashen Bow."
               ],
               [
-                "ImgForgemaster Bow",
+                "Forgemaster Bow",
                 "7",
                 "40",
                 "125",
                 "Obtained directly from the Forgemaster Raid Boss or Traded with NPC at Myrefall for 8 Forgemaster Shards. Forgemaster Shards can be obtained from the Raid Boss or the Weekly Raid Dungeon."
               ],
               [
-                "ImgOlympus Bow",
+                "Olympus Bow",
                 "8",
                 "40",
                 "156",
@@ -2000,44 +2000,37 @@ export const WIKI_PAGE_DATA: Record<string, WikiPageData> = {
             "type": "table",
             "headers": [
               "Amulet",
-              "Image",
               "Attributes",
               "Where to obtain"
             ],
             "rows": [
               [
                 "Prismatic Necklace",
-                "Icon",
                 "+7 Skill +2% Monster Essence",
                 "Donation Store"
               ],
               [
                 "Refreshing Amulet(Only Dracona and Ildar)",
-                "Icon",
                 "Essence Find +3% 1% Health every 2 Seconds 0.5% Mana every 2 Seconds Skills +23",
                 "Living Token Trader"
               ],
               [
                 "Minor Oblation Amulet",
-                "Icon",
                 "+3% Damage +2% Base Health Regeneration +2% Base Mana Regeneration +20 Skill +2% Essence Find",
                 "Gold Merchant"
               ],
               [
                 "Minor Reaping Amulet",
-                "Icon",
                 "Gives 5 Archlight Keys Per Quest Completed (Total 20)",
                 "Gold Merchant"
               ],
               [
                 "Reaping Amulet(Only Ildar)",
-                "Icon",
                 "Gives 6 Legendary Keys Per Completed Quest (Total of 24)",
                 "Living Token Trader"
               ],
               [
                 "Oblation Amulet(Only Ildar)",
-                "Icon",
                 "+5% Damage +3% Base Health Regeneration +3% Base Mana Regeneration +25 Skill +3% Essence Find",
                 "Living Token Trader"
               ]
@@ -2047,50 +2040,42 @@ export const WIKI_PAGE_DATA: Record<string, WikiPageData> = {
             "type": "table",
             "headers": [
               "Amulet",
-              "Image",
               "Attributes",
               "Where to obtain"
             ],
             "rows": [
               [
                 "Dragon Necklace",
-                "Icon",
                 "+6 Skill +0.5% Base Health +0.5% Base Mana",
                 "Jewelcrafting"
               ],
               [
                 "Foxtail Amulet",
-                "Icon",
                 "+5 Skill +0.7% Base Health +0.7% Base Mana",
                 "Jewelcrafting"
               ],
               [
                 "Sapphire Amulet",
-                "Icon",
                 "+12 Skill +1.0% Base Health +1.0% Base Mana",
                 "Jewelcrafting"
               ],
               [
                 "Amulet Of Theurgy",
-                "Icon",
                 "+15 Skill +1.1% Base Health +1.1% Base Mana",
                 "Jewelcrafting"
               ],
               [
                 "The Lions Heart",
-                "Icon",
                 "+20 Skill +1.5% Base Health +1.5% Base Mana",
                 "Jewelcrafting"
               ],
               [
                 "Cobra Amulet",
-                "Icon",
                 "+22 Skill +1.5% Base Health +1.5% Base Mana",
                 "Jewelcrafting"
               ],
               [
                 "Jade Amulet",
-                "Icon",
                 "+25 Skill +2.5% Base Health +2.5% Base Mana",
                 "Jewelcrafting"
               ]
@@ -2100,74 +2085,62 @@ export const WIKI_PAGE_DATA: Record<string, WikiPageData> = {
             "type": "table",
             "headers": [
               "Name",
-              "Image",
               "Attributes",
               "Where to obtain"
             ],
             "rows": [
               [
                 "Refreshing Ring",
-                "Icon",
                 "0.25%HP, Mana 0.25%/tick, skill level +23 monster essence +3%",
                 "Promotion Token Trader, N/A"
               ],
               [
                 "Sweetheart Ring",
-                "Icon",
                 "Skill Value +28",
                 "Promotion Token Trader"
               ],
               [
                 "Archlight Ring",
-                "Icon",
                 "Resistance +8%, speed +25, 50 health/ 2s, 50 mana/ 1s",
                 "Promotion Token Trader"
               ],
               [
                 "Signet Ring",
-                "Icon",
                 "Resistance +5% Monster essence +2%",
                 "Archlight Demon Helmet Quest"
               ],
               [
                 "Prismatic Ring",
-                "Icon",
                 "Resistance +4% Monster essence +3%",
                 "Donation Store"
               ],
               [
                 "Hornet Ring",
-                "Icon",
                 "+4% Resistance +1% Monster Essence Find",
                 "Jewelcrafting"
               ],
               [
                 "Gold Ring",
-                "Icon",
                 "+4% Resistence +3% Monster Essence Find",
                 "Jewelcrafting"
               ],
               [
                 "Star Ring",
-                "Icon",
                 "+3-5% Resistance (Random) +3% Monster Essence Find (Random)",
                 "Jewelcrafting"
               ],
               [
                 "Death Rings",
-                "Icon",
                 "+6% Resistance +2% Monster Essence Find",
                 "Jewelcrafting"
               ],
               [
                 "Blister Ring",
-                "Icon",
                 "+5-7% Resistance (Random) +2-4% Monster Essence Find (Random)",
                 "Jewelcrafting"
               ],
               [
                 "Butterfly Ring",
-                "Icon",
                 "+8% Resistance +5% Monster Essence Find",
                 "Jewelcrafting"
               ]
@@ -2176,164 +2149,137 @@ export const WIKI_PAGE_DATA: Record<string, WikiPageData> = {
           {
             "type": "table",
             "headers": [
-              "Relic",
               "Name",
               "Description",
               "How to get"
             ],
             "rows": [
               [
-                "Icon",
                 "Boxing Day Crate",
                 "Carrying this relic in your backpack will boost the restoration of all elixirs and runes by 10%.",
                 "Unobtainable"
               ],
               [
-                "Icon",
                 "Burning Heart",
                 "Carrying this relic in your backpack will boost the restoration of all elixirs and runes by 10%.",
                 "Archlight Loot Crate"
               ],
               [
-                "Icon",
                 "Egg of the Many",
                 "Carrying this relic in your backpack will boost the restoration of all elixirs and runes by 10%.",
                 "Archlight Loot Crate"
               ],
               [
-                "Icon",
                 "Eye Pod",
                 "Carrying this relic in your backpack will boost the restoration of all elixirs and runes by 10%.",
                 "Archlight Loot Crate"
               ],
               [
-                "Icon",
                 "Holy Icon",
                 "Carrying this relic in your backpack will boost the restoration of all elixirs and runes by 10%.",
                 "Archlight Loot Crate"
               ],
               [
-                "Icon",
                 "Sword Of Archlight",
                 "Carrying this relic in your backpack will boost the restoration of all elixirs and runes by 10%.",
                 "Archlight Loot Crate"
               ],
               [
-                "Icon",
                 "Eye of Jorus",
                 "Carrying this relic in your backpack will boost the restoration of all elixirs and runes by 10%.",
                 "Unobtainable"
               ],
               [
-                "Icon",
                 "Letterbag",
                 "Carrying this relic in your backpack will boost the restoration of all elixirs and runes by 10%.",
                 "Unobtainable"
               ],
               [
-                "Icon",
                 "Pumpkinhead",
                 "Carrying this relic in your backpack will boost the restoration of all elixirs and runes by 10%.",
                 "Unobtainable"
               ],
               [
-                "Icon",
                 "Necrometer",
                 "Carrying this relic in your backpack will boost the restoration of all elixirs and runes by 10%.",
                 "Relic Box from Promotion Item Trader or bought for 15 Rift Shards from Rift Trader"
               ],
               [
-                "Icon",
                 "Tribal Totem",
                 "Carrying this relic in your backpack will boost the restoration of all elixirs and runes by 10%.",
                 "Relic Box from Promotion Item Trader"
               ],
               [
-                "Icon",
                 "Tribal Relic",
                 "Carrying this relic in your backpack will boost the restoration of all elixirs and runes by 10%.",
                 "Relic Box from Promotion Item Trader"
               ],
               [
-                "Icon",
                 "Seven Trials Battle Horn",
                 "Carrying this relic in your backpack will boost the restoration of all elixirs and runes by 10%.",
                 "Seven Trials of Archlight"
               ],
               [
-                "Icon",
                 "Forgotten Quill",
                 "Carrying this relic in your backpack will boost the restoration of all elixirs and runes by 10%.",
                 "Forgotten Gold From Gold Collector at Myrefall (First Forgotten Island)"
               ],
               [
-                "Icon",
                 "Forgotten Glyph",
                 "Carrying this relic in your backpack will boost the restoration of all elixirs and runes by 10%.",
                 "Forgotten Gold From Gold Collector at Myrefall (First Forgotten Island)"
               ],
               [
-                "Icon",
                 "Valentine's Bouquet",
                 "Carrying this relic in your backpack will boost the restoration of all elixirs and runes by 20%.",
                 "Living Token Exchanger for 4 Living Tokens (unobtainable)"
               ],
               [
-                "Icon",
                 "Florisa's Staff",
                 "Carrying this relic in your backpack will boost the restoration of all elixirs and runes by 30%.",
                 "Relic from Florisa Event (unobtainable after event)"
               ],
               [
-                "Icon",
                 "Cupcake Relic",
                 "Having this relic in your backpack will increase your self healing from spells, potions, rune emblems and any healing received by 10%. Essentially it is a restoration relic.",
                 "4th Anniversary Event for 8 Living Tokens (unobtainable after event) can be bought from other players."
               ],
               [
-                "Icon",
                 "Gilded Icon of Tukh",
                 "Carrying this relic in your backpack will grant +10% experience.",
                 "Deluxe Roulette Token"
               ],
               [
-                "Icon",
                 "Herald's Wings",
                 "Carrying this relic in your backpack will grant +7.5% monster essence.",
                 "Deluxe Roulette Token"
               ],
               [
-                "Icon",
                 "Luminary Oculus",
                 "Carrying this relic in your backpack will grant +7.5% loot rate.",
                 "Deluxe Roulette Token"
               ],
               [
-                "Icon",
                 "Plushie of Tentugly",
                 "Carrying this relic in your backpack will grant +2% gem effectiveness.",
                 "Deluxe Roulette Token"
               ],
               [
-                "Icon",
                 "Regal Diadem",
                 "Carrying this relic in your backpack will grant +5% experience, gold and archlight tokens from monster essences.",
                 "Deluxe Roulette Token"
               ],
               [
-                "Icon",
                 "Twilight Shield",
                 "Carrying this relic in your backpack will grant +5% experience.",
                 "Lite Roulette Token"
               ],
               [
-                "Icon",
                 "Seashell Symphony",
                 "Carrying this relic in your backpack will grant +2.5% monster essence.",
                 "Lite Roulette Token"
               ],
               [
-                "Icon",
                 "Eye of Horus",
                 "Carrying this relic in your backpack will grant +2.5% loot rate.",
                 "Lite Roulette Token"
@@ -2722,62 +2668,52 @@ export const WIKI_PAGE_DATA: Record<string, WikiPageData> = {
           {
             "type": "table",
             "headers": [
-              "Image",
               "Key Name",
               "Regrade",
               "Chance"
             ],
             "rows": [
               [
-                "Icon",
                 "Bronze Regrade Key",
                 "1",
                 "100%"
               ],
               [
-                "Icon",
                 "Silver Regrade Key",
                 "2",
                 "100%"
               ],
               [
-                "Icon",
                 "Golden Regrade Key",
                 "3",
                 "100%"
               ],
               [
-                "Icon",
                 "Crystal Regrade Key",
                 "4",
                 "100%"
               ],
               [
-                "Icon",
                 "Mythic Regrade Key",
                 "5",
                 "100%"
               ],
               [
-                "Icon",
                 "Cloud Regrade Key",
                 "6",
                 "30%"
               ],
               [
-                "Icon",
                 "Bone Regrade Key",
                 "7",
                 "20%"
               ],
               [
-                "Icon",
                 "Forged Regrade Key",
                 "8",
                 "10%"
               ],
               [
-                "Icon",
                 "Dark Key",
                 "9",
                 "100%"
@@ -2787,7 +2723,6 @@ export const WIKI_PAGE_DATA: Record<string, WikiPageData> = {
           {
             "type": "table",
             "headers": [
-              "Image",
               "Gem",
               "Bonuses",
               "Primary Value",
@@ -2795,42 +2730,36 @@ export const WIKI_PAGE_DATA: Record<string, WikiPageData> = {
             ],
             "rows": [
               [
-                "Icon",
                 "Mountain Gem",
                 "Max Health Health Regeneration",
                 "Max Health 0.4% - 0.8%",
                 "Health Regen 0.1% - 0.2%"
               ],
               [
-                "Icon",
                 "Ocean Gem",
                 "Max Mana Mana Regeneration",
                 "Max Mana 0.4% - 0.8%",
                 "Mana Regen 0.1% - 0.2%"
               ],
               [
-                "Icon",
                 "Inferno Gem",
                 "Spell Damage Physical Damage",
                 "Spell Damage 0.4% - 0.8%",
                 "Auto Attack Damage 0.4% - 0.8%"
               ],
               [
-                "Icon",
                 "Forest Gem",
                 "Attack Speed Cooldown Reduction",
                 "Attack Speed 0.3% - 0.6%",
                 "Cooldown Reduction 0.2% - 0.5%"
               ],
               [
-                "Icon",
                 "Cloud Gem",
                 "Resistance Rune Effectiveness",
                 "Resistance 0.2% - 0.5%",
                 "Rune Effectiveness 0.4% - 0.8%"
               ],
               [
-                "Icon",
                 "Order Gem",
                 "Essence Find Loot Luck",
                 "Essence Find 0.8% - 1.6%",
@@ -2841,7 +2770,6 @@ export const WIKI_PAGE_DATA: Record<string, WikiPageData> = {
           {
             "type": "table",
             "headers": [
-              "Image",
               "Gem",
               "Bonuses",
               "Primary Value",
@@ -2849,42 +2777,36 @@ export const WIKI_PAGE_DATA: Record<string, WikiPageData> = {
             ],
             "rows": [
               [
-                "Icon",
                 "Charged Mountain Gem",
                 "Max Health Health Regeneration",
                 "Max Health 0.8% - 1.6%",
                 "Health Regen 0.2% - 0.3%"
               ],
               [
-                "Icon",
                 "Charged Ocean Gem",
                 "Max Mana Mana Regeneration",
                 "Max Mana 0.8% - 1.6%",
                 "Mana Regen 0.2% - 0.3%"
               ],
               [
-                "Icon",
                 "Charged Inferno Gem",
                 "Spell Damage Physical Damage",
                 "Spell Damage 0.8% - 1.6%",
                 "Auto Attack Damage 0.8% - 1.6%"
               ],
               [
-                "Icon",
                 "Charged Forest Gem",
                 "Attack Speed Cooldown Reduction",
                 "Attack Speed 0.7% - 1.4%",
                 "Cooldown Reduction 0.6% - 1.2%"
               ],
               [
-                "Icon",
                 "Charged Cloud Gem",
                 "Resistance Rune Effectiveness",
                 "Resistance 0.5% - 0.9%",
                 "Rune Effectiveness 0.9% - 1.6%"
               ],
               [
-                "Icon",
                 "Charged Order Gem",
                 "Essence Find Loot Luck",
                 "Essence Find 1.6% - 2.4%",
@@ -2895,7 +2817,6 @@ export const WIKI_PAGE_DATA: Record<string, WikiPageData> = {
           {
             "type": "table",
             "headers": [
-              "Image",
               "Gem",
               "Bonuses",
               "Primary Value",
@@ -2903,42 +2824,36 @@ export const WIKI_PAGE_DATA: Record<string, WikiPageData> = {
             ],
             "rows": [
               [
-                "Icon",
                 "Overcharged Mountain Gem",
                 "Max Health Health Regeneration",
                 "Max Health 1.3% - 2%",
                 "Health Regen 0.3% - 0.5%"
               ],
               [
-                "Icon",
                 "Overcharged Ocean Gem",
                 "Max Mana Mana Regeneration",
                 "Max Mana 1.3% - 2%",
                 "Mana Regen 0.3% - 0.5%"
               ],
               [
-                "Icon",
                 "Overcharged Inferno Gem",
                 "Spell Damage Physical Damage",
                 "Spell Damage 1.6% - 2.4%",
                 "Auto Attack Damage 1.6% - 2.4%"
               ],
               [
-                "Icon",
                 "Overcharged Forest Gem",
                 "Attack Speed Cooldown Reduction",
                 "Attack Speed 1% - 1.6%",
                 "Cooldown Reduction 0.9% - 1.5%"
               ],
               [
-                "Icon",
                 "Overcharged Cloud Gem",
                 "Resistance Rune Effectiveness",
                 "Resistance 0.8% - 1.2%",
                 "Rune Effectiveness 1.2% - 2.0%"
               ],
               [
-                "Icon",
                 "Overcharged Order Gem",
                 "Essence Find Loot Luck",
                 "Essence Find 2.4% - 4.8%",
@@ -2949,7 +2864,6 @@ export const WIKI_PAGE_DATA: Record<string, WikiPageData> = {
           {
             "type": "table",
             "headers": [
-              "Image",
               "Gem",
               "Bonuses",
               "Primary Value",
@@ -2957,42 +2871,36 @@ export const WIKI_PAGE_DATA: Record<string, WikiPageData> = {
             ],
             "rows": [
               [
-                "Icon",
                 "Surging Mountain Gem",
                 "Max Health Health Regeneration",
                 "Max Health 2.4% - 3.2%",
                 "Health Regen 0.36% - 0.6%"
               ],
               [
-                "Icon",
                 "Surging Ocean Gem",
                 "Max Mana Mana Regeneration",
                 "Max Mana 2.4% - 3.2%",
                 "Mana Regen 0.36% - 0.6%"
               ],
               [
-                "Icon",
                 "Surging Inferno Gem",
                 "Spell Damage Physical Damage",
                 "Spell Damage 2.4% - 3.2%",
                 "Auto Attack Damage 2.4% - 3.2%"
               ],
               [
-                "Icon",
                 "Surging Forest Gem",
                 "Attack Speed Cooldown Reduction",
                 "Attack Speed 1.3% - 1.9%",
                 "Cooldown Reduction 1.2% - 1.8%"
               ],
               [
-                "Icon",
                 "Surging Cloud Gem",
                 "Resistance Rune Effectiveness",
                 "Resistance 1.0% - 1.4%",
                 "Rune Effectiveness 1.6% - 2.4%"
               ],
               [
-                "Icon",
                 "Surging Order Gem",
                 "Essence Find Loot Luck",
                 "Essence Find 3.6% - 6.0%",
@@ -3390,51 +3298,43 @@ export const WIKI_PAGE_DATA: Record<string, WikiPageData> = {
             "headers": [
               "Name",
               "Kills",
-              "Portal",
-              "Reward"
+              "Portal"
             ],
             "rows": [
               [
                 "Aged Serpent Spawns",
                 "115",
-                "250+/450+",
-                ""
+                "250+/450+"
               ],
               [
                 "Cave Worms*",
                 "115",
-                "inside a dungeon",
-                ""
+                "inside a dungeon"
               ],
               [
                 "Enflamed Lords",
                 "115",
-                "450+",
-                ""
+                "450+"
               ],
               [
                 "Metal Gargoyles",
                 "115",
-                "450+",
-                ""
+                "450+"
               ],
               [
                 "Nomads",
                 "115",
-                "900+",
-                ""
+                "900+"
               ],
               [
                 "Plagued Rats",
                 "115",
-                "900+",
-                ""
+                "900+"
               ],
               [
                 "Yetis",
                 "115",
-                "450+",
-                ""
+                "450+"
               ]
             ]
           }

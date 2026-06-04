@@ -11,7 +11,7 @@ import { register } from 'tsx/esm/api';
 register();
 
 const { createDatabase } = await import('../server/db/index.ts');
-const { ensureSystemAdmin } = await import('../server/lib/bootstrap.ts');
+const { ensureSystemAdmin, ensureSocialLinks } = await import('../server/lib/bootstrap.ts');
 
 const database = await createDatabase();
 console.log(`[db:push] driver: ${database.kind}`);
@@ -20,6 +20,9 @@ console.log('[db:push] schema applied (tables + full-text search index).');
 
 const adminId = await ensureSystemAdmin(database.db);
 console.log(`[db:push] system admin ensured (user id ${adminId}).`);
+
+await ensureSocialLinks(database.db);
+console.log('[db:push] social links seeded.');
 
 await database.close();
 console.log('[db:push] done.');

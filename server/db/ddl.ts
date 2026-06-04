@@ -78,4 +78,14 @@ export const DDL_STATEMENTS: string[] = [
   )`,
   `CREATE INDEX IF NOT EXISTS contributions_status_idx ON contributions (status)`,
   `CREATE INDEX IF NOT EXISTS contributions_page_idx ON contributions (page_id)`,
+
+  `CREATE TABLE IF NOT EXISTS social_links (
+    id         serial PRIMARY KEY,
+    key        text NOT NULL,
+    label      text NOT NULL,
+    url        text NOT NULL,
+    icon       text,
+    updated_at timestamptz NOT NULL DEFAULT now()
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS social_links_key_uq ON social_links (key)`,
 ];

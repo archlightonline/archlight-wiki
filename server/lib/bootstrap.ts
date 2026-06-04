@@ -9,7 +9,7 @@
 import crypto from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import type { DB } from '../db';
-import { users } from '../db/schema';
+import { users, socialLinks } from '../db/schema';
 import { hashPassword } from './password';
 
 export async function ensureSystemAdmin(db: DB): Promise<number> {
@@ -40,4 +40,23 @@ export async function ensureSystemAdmin(db: DB): Promise<number> {
     );
   }
   return admin.id;
+}
+
+/**
+ * Seed the editable topbar social links from the values that were previously
+ * hardcoded in WikiLayout. Idempotent: only inserts keys that don't exist yet,
+ * so admin edits are never overwritten on restart/db:push.
+ */
+const DEFAULT_SOCIAL_LINKS = [
+  { key: 'discord', label: 'Discord', url: 'https://discord.com', icon: '💬' },
+  { key: 'youtube', label: 'YouTube', url: 'https://youtube.com', icon: '▶' },
+  { key: 'facebook', label: 'Facebook', url: 'https://facebook.com', icon: 'f' },
+  { key: 'website', label: 'Website', url: 'https://archlightonline.com', icon: '🌐' },
+];
+
+export async function ensureSocialLinks(db: DB): Promise<void> {
+  const existing = await db.select({ key: socialLinks.key }).from(socialLinks);
+  const have = new Set(existing.map((r) => r.key));
+  const missing = DEFAULT_SOCIAL_LINKS.filter((s) => !have.has(s.key));
+  if (missing.length) await db.insert(socialLinks).values(missing);
 }

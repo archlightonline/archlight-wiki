@@ -55,6 +55,7 @@ export default function App() {
       <Route element={<DashboardLayout require="admin" />}>
         <Route path="/admin/users" element={<AdminPanel tab="users" />} />
         <Route path="/admin/pages" element={<AdminPanel tab="pages" />} />
+        <Route path="/admin/social" element={<AdminPanel tab="social" />} />
       </Route>
     </Routes>
   );

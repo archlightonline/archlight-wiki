@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { trpc } from '../lib/trpc';
 import { useAuth } from '../lib/auth';
@@ -6,6 +6,54 @@ import { EmptyState, Loading, ErrorBox } from '../components/ui';
 import { Markdown } from '../components/Markdown';
 import { fmtDate } from '../lib/format';
 import type { Role } from '../lib/auth';
+
+function SocialLinksAdmin() {
+  const utils = trpc.useUtils();
+  const links = trpc.socialLinks.list.useQuery();
+  const update = trpc.socialLinks.update.useMutation({ onSuccess: () => utils.socialLinks.list.invalidate() });
+  const [urls, setUrls] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (links.data) setUrls(Object.fromEntries(links.data.map((l) => [l.key, l.url])));
+  }, [links.data]);
+
+  return (
+    <div>
+      {links.isLoading && <Loading />}
+      {update.error && <ErrorBox error={update.error} />}
+      <p className="muted" style={{ marginBottom: 14 }}>
+        URLs used by the topbar social buttons. Changes take effect immediately — no redeploy needed.
+      </p>
+      {links.data?.map((l) => (
+        <div
+          className="card"
+          key={l.key}
+          style={{ marginBottom: 10, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}
+        >
+          <span aria-hidden="true" style={{ fontSize: 18, width: 26, textAlign: 'center' }}>{l.icon}</span>
+          <div style={{ minWidth: 110 }}>
+            <b style={{ color: 'var(--tx0)' }}>{l.label}</b>
+            <div className="muted" style={{ fontSize: 11.5 }}>{l.key}</div>
+          </div>
+          <input
+            className="input"
+            style={{ flex: 1, minWidth: 220, width: 'auto' }}
+            value={urls[l.key] ?? ''}
+            onChange={(e) => setUrls((u) => ({ ...u, [l.key]: e.target.value }))}
+            placeholder="https://…"
+          />
+          <button
+            className="btn sm primary"
+            disabled={update.isPending || !(urls[l.key] ?? '').trim() || (urls[l.key] ?? '') === l.url}
+            onClick={() => update.mutate({ key: l.key, url: (urls[l.key] ?? '').trim() })}
+          >
+            Save
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function ContributionsQueue() {
   const utils = trpc.useUtils();
@@ -213,7 +261,7 @@ function PagesAdmin() {
   );
 }
 
-export function AdminPanel({ tab }: { tab: 'contributions' | 'users' | 'pages' }) {
+export function AdminPanel({ tab }: { tab: 'contributions' | 'users' | 'pages' | 'social' }) {
   const { isAdmin } = useAuth();
   return (
     <div className="container">
@@ -232,10 +280,16 @@ export function AdminPanel({ tab }: { tab: 'contributions' | 'users' | 'pages' }
             Page protection
           </Link>
         )}
+        {isAdmin && (
+          <Link className={`tab${tab === 'social' ? ' active' : ''}`} to="/admin/social">
+            Social Links
+          </Link>
+        )}
       </div>
       {tab === 'contributions' && <ContributionsQueue />}
       {tab === 'users' && <UsersAdmin />}
       {tab === 'pages' && <PagesAdmin />}
+      {tab === 'social' && <SocialLinksAdmin />}
     </div>
   );
 }

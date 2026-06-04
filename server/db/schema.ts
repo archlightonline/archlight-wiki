@@ -131,9 +131,26 @@ export const contributions = pgTable(
   }),
 );
 
+/** Editable social links shown in the topbar (DB-backed so admins can change URLs). */
+export const socialLinks = pgTable(
+  'social_links',
+  {
+    id: serial('id').primaryKey(),
+    key: text('key').notNull(), // discord, youtube, facebook, website
+    label: text('label').notNull(),
+    url: text('url').notNull(),
+    icon: text('icon'),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    keyUq: uniqueIndex('social_links_key_uq').on(t.key),
+  }),
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Page = typeof pages.$inferSelect;
 export type NewPage = typeof pages.$inferInsert;
 export type PageRevision = typeof pageRevisions.$inferSelect;
 export type Contribution = typeof contributions.$inferSelect;
+export type SocialLink = typeof socialLinks.$inferSelect;

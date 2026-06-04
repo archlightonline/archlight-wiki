@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
+import { trpc } from '../lib/trpc';
 import { SearchBar } from '../components/SearchBar';
 import { NavItem } from '../components/NavItem';
 import { BrandLogo } from '../components/BrandLogo';
@@ -14,6 +15,11 @@ export function WikiLayout() {
   const { open: openAuth } = useAuthModal();
   const [mobOpen, setMobOpen] = useState(false);
   const location = useLocation();
+
+  // DB-backed social link URLs (admin-editable) with safe fallbacks.
+  const social = trpc.socialLinks.list.useQuery();
+  const socialUrl = (key: string, fallback: string) =>
+    social.data?.find((s) => s.key === key)?.url ?? fallback;
 
   useEffect(() => {
     setMobOpen(false);
@@ -52,7 +58,7 @@ export function WikiLayout() {
         <div className="top-social">
           <a
             className="top-social-link discord-btn"
-            href="https://discord.com"
+            href={socialUrl('discord', 'https://discord.com')}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Open Archlight Discord"
@@ -63,10 +69,10 @@ export function WikiLayout() {
               <small>Community Hub</small>
             </span>
           </a>
-          <a className="top-social-link mini" href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+          <a className="top-social-link mini" href={socialUrl('youtube', 'https://youtube.com')} target="_blank" rel="noopener noreferrer" aria-label="YouTube">
             <span className="top-social-icon" aria-hidden="true">▶</span>
           </a>
-          <a className="top-social-link mini" href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+          <a className="top-social-link mini" href={socialUrl('facebook', 'https://facebook.com')} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
             <span className="top-social-icon" aria-hidden="true">f</span>
           </a>
         </div>

@@ -23,13 +23,14 @@ export function createApp(database: Database): express.Express {
     res.json({ ok: true, db: database.kind });
   });
 
-  app.use(
-    '/trpc',
-    createExpressMiddleware({
-      router: appRouter,
-      createContext: createExpressContextFactory(database.db),
-    }),
-  );
+  // tRPC HTTP handler. Mounted at /trpc (used by the client) and also at
+  // /api/trpc so the Railway healthcheck (GET /api/trpc/pages.siteStats) resolves.
+  const trpc = createExpressMiddleware({
+    router: appRouter,
+    createContext: createExpressContextFactory(database.db),
+  });
+  app.use('/trpc', trpc);
+  app.use('/api/trpc', trpc);
 
   // Phase 1: serve the original (read-only) media/assets so migrated image
   // references that use absolute /assets or /media paths resolve. Relative refs
@@ -39,8 +40,8 @@ export function createApp(database: Database): express.Express {
     app.use('/media', express.static(path.join(SOURCE_DIR, 'assets', 'media')));
   }
 
-  // In production, serve the built SPA with a history-API fallback.
-  if (fs.existsSync(CLIENT_DIST)) {
+  // In production, serve the built SPA from dist/ with a history-API fallback.
+  if (process.env.NODE_ENV === 'production' && fs.existsSync(CLIENT_DIST)) {
     app.use(express.static(CLIENT_DIST));
     app.get(/^(?!\/(trpc|api|assets|media)).*/, (_req, res) => {
       res.sendFile(path.join(CLIENT_DIST, 'index.html'));

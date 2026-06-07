@@ -1,0 +1,7 @@
+# pnpm 11 build-script approval. Settings live here because pnpm 11 no longer
+# reads the "pnpm" field in package.json. esbuild's postinstall is harmless (its
+# platform binary also ships via an optional dependency), but pnpm 11 fails the
+# install with ERR_PNPM_IGNORED_BUILDS on un-approved build scripts — which would
+# break the Railway build. Approving esbuild keeps `pnpm install` exit 0.
+allowBuilds:
+  esbuild: true

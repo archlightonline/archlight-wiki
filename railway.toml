@@ -1,10 +1,9 @@
-# last updated: 2026-06-07
 [build]
 builder = "nixpacks"
-buildCommand = "npm install -g pnpm@9.15.4 && pnpm install --frozen-lockfile && pnpm build"
+buildCommand = "pnpm install --frozen-lockfile && pnpm build"
 
 [deploy]
-startCommand = "pnpm start"
+startCommand = "node --experimental-vm-modules node_modules/.bin/tsx server/index.ts"
 healthcheckPath = "/api/trpc/pages.siteStats"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"

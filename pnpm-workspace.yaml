@@ -1,6 +1,0 @@
-# pnpm v11 build-script approval. esbuild's build is harmless (its platform
-# binary also comes via an optional dependency). Approving it stops `pnpm install`
-# from exiting non-zero on "ignored builds", which otherwise blocks the pre-run
-# dependency check used by `pnpm db:push` / `pnpm test`.
-allowBuilds:
-  esbuild: true

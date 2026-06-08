@@ -32,12 +32,18 @@ export function createApp(database: Database): express.Express {
   app.use('/trpc', trpc);
   app.use('/api/trpc', trpc);
 
-  // Phase 1: serve the original (read-only) media/assets so migrated image
-  // references that use absolute /assets or /media paths resolve. Relative refs
-  // inside page content remain as-is and 404 gracefully until Phase 2.
+  // Serve the original (read-only) media so migrated image references that use
+  // absolute /assets or /media paths resolve.
+  //
+  // SECURITY: only the image/media subdirectories are exposed. The old static
+  // site's assets/ tree also contains legacy js/ and css/ — and js/ held files
+  // with hardcoded credentials (e.g. login.js). Those must NEVER be served, so
+  // we mount specific safe subdirectories instead of the whole assets/ folder.
   if (fs.existsSync(SOURCE_DIR)) {
-    app.use('/assets', express.static(path.join(SOURCE_DIR, 'assets')));
-    app.use('/media', express.static(path.join(SOURCE_DIR, 'assets', 'media')));
+    const assetsDir = path.join(SOURCE_DIR, 'assets');
+    app.use('/assets/images', express.static(path.join(assetsDir, 'images')));
+    app.use('/assets/media', express.static(path.join(assetsDir, 'media')));
+    app.use('/media', express.static(path.join(assetsDir, 'media')));
   }
 
   // In production, serve the built SPA from dist/ with a history-API fallback.

@@ -6,7 +6,8 @@
  *     • index.html  → 11 professions + quests (HTML → Markdown)
  *     • unlocks-tasks-pages.js → world/unlock/quest pages
  *     • updates-data.js → one page per patch-note entry ("Updates")
- *   Deferred to Phase 2: concept/design-lab pages + media assets.
+ *     • concept-routes.js → concept/design-lab pages (HTML/JS → Markdown)
+ *   Deferred to Phase 2: media assets.
  *
  * Idempotent: pages whose slug already exists are skipped. All pages are
  * published, created_by/updated_by = system admin (id 1). Prints a report.

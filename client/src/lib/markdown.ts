@@ -38,6 +38,16 @@ const customRenderer: Partial<Renderer> = {
 
 marked.use({ renderer: customRenderer, gfm: true, breaks: true });
 
+/**
+ * Sanitize a server-built search snippet before rendering it as HTML. The
+ * snippet only ever needs the <mark> highlight tags ts_headline injects, so we
+ * allow nothing else — any HTML from page content is stripped. (Same DOMPurify
+ * defense as renderMarkdown, scoped tighter for snippets.)
+ */
+export function sanitizeSnippet(html: string): string {
+  return DOMPurify.sanitize(html ?? '', { ALLOWED_TAGS: ['mark'], ALLOWED_ATTR: [] });
+}
+
 export function renderMarkdown(input: string): string {
   // Reset the slug-dedup counter for each fresh render so ids are stable
   // regardless of order components render.

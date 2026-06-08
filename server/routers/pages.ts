@@ -314,7 +314,11 @@ export const pagesRouter = router({
 
   getRevisions: publicProcedure.input(z.object({ slug: z.string() })).query(async ({ ctx, input }) => {
     const page = await loadPageBySlug(ctx, input.slug);
-    if (!page) throw new TRPCError({ code: 'NOT_FOUND', message: 'Page not found.' });
+    // Same visibility rule as pages.get — unpublished pages are hidden from
+    // non-privileged users, so their revision history is too.
+    if (!page || (!page.isPublished && !isPrivileged(ctx))) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Page not found.' });
+    }
     const rows = await ctx.db
       .select({
         id: pageRevisions.id,
@@ -339,6 +343,15 @@ export const pagesRouter = router({
   getRevision: publicProcedure.input(z.object({ id: z.number().int() })).query(async ({ ctx, input }) => {
     const [rev] = await ctx.db.select().from(pageRevisions).where(eq(pageRevisions.id, input.id)).limit(1);
     if (!rev) throw new TRPCError({ code: 'NOT_FOUND', message: 'Revision not found.' });
+    // Don't leak revision content for an unpublished parent page to the public.
+    const [parent] = await ctx.db
+      .select({ isPublished: pages.isPublished })
+      .from(pages)
+      .where(eq(pages.id, rev.pageId))
+      .limit(1);
+    if (!parent || (!parent.isPublished && !isPrivileged(ctx))) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Revision not found.' });
+    }
     return rev;
   }),
 

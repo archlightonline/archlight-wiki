@@ -2,6 +2,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { trpc } from '../lib/trpc';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { EmptyState, PageListSkeleton } from '../components/ui';
+import { sanitizeSnippet } from '../lib/markdown';
 
 export function SearchResults() {
   const [params, setParams] = useSearchParams();
@@ -75,8 +76,8 @@ export function SearchResults() {
           <h3>
             <Link to={`/wiki/${r.slug}`}>{r.title}</Link> {r.category && <span className="badge">{r.category}</span>}
           </h3>
-          {/* snippet HTML is server-built with <mark> tags only */}
-          <div className="snippet" dangerouslySetInnerHTML={{ __html: r.snippet }} />
+          {/* Snippet is server-built HTML (ts_headline + <mark>); sanitize before injecting. */}
+          <div className="snippet" dangerouslySetInnerHTML={{ __html: sanitizeSnippet(r.snippet) }} />
         </div>
       ))}
     </div>

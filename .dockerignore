@@ -2,3 +2,8 @@ node_modules
 dist
 .git
 *.log
+.env*
+.pglite/
+# Legacy static-site source (old credentialed js/css live here). Images are
+# already bundled into dist/ via client/public, so the server doesn't need it.
+archlight_wiki_v534_concepts_static_hosts_fixed/

@@ -19,5 +19,9 @@ RUN pnpm build
 
 EXPOSE 3000
 
+# Drop root: run the server as an unprivileged user.
+RUN addgroup -S app && adduser -S app -G app
+USER app
+
 # package.json "start" runs `tsx server/index.ts`
 CMD ["pnpm", "start"]

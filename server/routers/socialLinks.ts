@@ -12,7 +12,18 @@ export const socialLinksRouter = router({
 
   /** Admin: change a link's URL by key. */
   update: adminProcedure
-    .input(z.object({ key: z.string().trim().min(1).max(50), url: z.string().trim().url().max(500) }))
+    .input(
+      z.object({
+        key: z.string().trim().min(1).max(50),
+        // url() alone accepts javascript:/data: schemes — require http(s) only.
+        url: z
+          .string()
+          .trim()
+          .url()
+          .max(500)
+          .refine((v) => /^https?:\/\//i.test(v), { message: 'URL must start with http:// or https://' }),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const [updated] = await ctx.db
         .update(socialLinks)

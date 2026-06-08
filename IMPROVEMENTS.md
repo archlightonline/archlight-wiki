@@ -57,7 +57,7 @@ Numbered against AUDIT.md sections.
 13. *(Large media optimization & image lazy-loading — deferred to Phase 2 with media migration.)*
 
 ### §5 — Security issues
-14. **Hardcoded plaintext admin credentials committed to the repo.** Removed entirely — no credentials anywhere in the new code; the system admin is seeded from `ADMIN_PASSWORD` (or a one-time generated password), hashed with bcrypt.
+14. **Hardcoded plaintext admin credentials committed to the repo.** Removed entirely — no credentials anywhere in the new code; the system admin is seeded from `ADMIN_PASSWORD` (or a one-time generated password), hashed with bcrypt. The seed (`ensureSystemAdmin`) is wired into the server boot path (`server/index.ts` → `seedDefaults`) alongside `ensureSocialLinks` and `ensureWorldStatus`, so a fresh database self-seeds an admin on first boot — not only via `pnpm db:push`. A regression test (`tests/bootstrap.test.ts`) asserts an admin exists after the boot sequence runs.
 15. **Client-side, bypassable "authentication".** Fixed — all auth/authorization is enforced on the server in tRPC middleware; the client cannot self-elevate.
 16. **Registration stored plaintext passwords in `localStorage`.** Fixed — passwords are bcrypt-hashed and stored only in the `users` table.
 17. **Unvalidated persisted user input.** Fixed — server-side `sanitizeContent`/`sanitizeText` on every user-submitted field before storage; https-only URL validation.
@@ -73,7 +73,7 @@ Numbered against AUDIT.md sections.
 25. **No moderation/review workflow.** Added — viewers submit contributions; editors/admins approve (applies the edit) or reject with a note.
 26. **No user-generated pages.** Added — editors create pages; slugs auto-generated and unique.
 27. **SEO/meta missing.** Improved — the app ships a `<meta name="description">` and titled document (further SSR/OG is a Phase 2 enhancement).
-28. **No automated tests/CI.** Added — 28 Vitest tests covering auth, RBAC, CRUD, revisions, contributions, search, and migration counts.
+28. **No automated tests/CI.** Added — 30 Vitest tests covering auth, RBAC, CRUD, revisions, contributions, search, migration counts, and first-boot admin seeding.
 
 ### §7 — Code quality
 29. **Duplicated `esc()`/helpers across modules.** Fixed — single shared `server/lib/*` (sanitize, slug, session, password) and typed client libs.
@@ -112,7 +112,7 @@ pnpm install
 pnpm db:push          # apply schema to PGlite (or DATABASE_URL Postgres) + seed admin
 pnpm migrate:content  # migrate 593 pages from the static source
 pnpm dev              # client (5173) + API (3001)
-pnpm test             # 28 tests
+pnpm test             # 30 tests
 ```
 
 ---

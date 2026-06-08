@@ -28,7 +28,7 @@ end to end. It is portable with no Manus lock-in — it runs on embedded **PGlit
 | --- | --- |
 | **Architecture** | React SPA (Vite) + tRPC API (Express) + Drizzle/PostgreSQL. Typed client↔server contract. Feature-split routers under `server/routers/`. Centralized theme tokens. |
 | **Auth model** | Server-enforced. bcrypt password hashes; HMAC-signed **HttpOnly, SameSite=Lax** session cookies (never readable by JS); role middleware (`protectedProcedure` / editor / admin). |
-| **Persistence** | PostgreSQL via Drizzle. 593 pages migrated. Every edit is durable and attributed (`created_by`/`updated_by`). |
+| **Persistence** | PostgreSQL via Drizzle. 637 pages migrated. Every edit is durable and attributed (`created_by`/`updated_by`). |
 | **Search** | PostgreSQL full-text search (`tsvector` + `websearch_to_tsquery`), ranked with `ts_rank`, GIN-indexed, with `ts_headline` `<mark>` snippets. |
 | **Editing** | Markdown editor with preview; create/update/soft-delete; **full revision history** with diff + admin rollback; community **contribution → review → apply** workflow. |
 | **Security** | No credentials in code; bcrypt only; https-only avatar validation; input sanitization on store + DOMPurify on render; role-gated procedures; `dist/` untracked + gitignored. |
@@ -92,7 +92,7 @@ Numbered against AUDIT.md sections.
 ## What was preserved
 
 - **Visual design language** — the dark cyberpunk/high-fantasy aesthetic: deep navy-black backgrounds, gold rune accents, Cinzel/Cinzel Decorative/Lora/JetBrains Mono typography. Tokens captured in [`DESIGN_TOKENS.md`](DESIGN_TOKENS.md) and ported to `client/src/index.css`.
-- **Page content** — all 593 Phase-1 pages (professions, world/quest unlock pages, and the full 569-entry patch-note archive) migrated to Markdown. See [`CONTENT_INVENTORY.md`](CONTENT_INVENTORY.md).
+- **Page content** — all 637 Phase-1 pages (professions, world/quest unlock pages, the full 569-entry patch-note archive, and the concept/design-lab pages) migrated to Markdown. See [`CONTENT_INVENTORY.md`](CONTENT_INVENTORY.md).
 - **Navigation structure** — the sidebar category model is preserved, now generated from the live data so it never links to empty routes.
 - **The themed 404** — ported as a styled React page.
 - **CSS/theming approach** — CSS custom properties as the single source of theme truth (fixing the inline-literal duplication the audit flagged).
@@ -100,7 +100,7 @@ Numbered against AUDIT.md sections.
 ## What was NOT migrated in Phase 1
 
 - **Media assets** (icons, awakening art, profession GIFs, ~6.8 MB) — deferred to **Phase 2**. Migrated content keeps original relative image paths, which 404 gracefully until media is rehosted.
-- **Concept / design-lab pages** — the 47 routes in `data/concept-routes.js` (`concepts/design-lab/in-review/…`: classes, power, content systems, rewards, tools) are deferred to **Phase 2**.
+- **Concept / design-lab pages** — now migrated to the `pages` table (the `concepts/design-lab/in-review/…` routes in `data/concept-routes.js`: classes, power, content systems, rewards, tools); only the cinematic-carousel-engine demo remains deferred to **Phase 2**.
 - **Deploy-time hardening** — CSP/SRI/security headers and SSR/Open-Graph metadata are host-level concerns for the Phase 2 deployment.
 
 ---
@@ -110,7 +110,7 @@ Numbered against AUDIT.md sections.
 ```bash
 pnpm install
 pnpm db:push          # apply schema to PGlite (or DATABASE_URL Postgres) + seed admin
-pnpm migrate:content  # migrate 593 pages from the static source
+pnpm migrate:content  # migrate 637 pages from the static source
 pnpm dev              # client (5173) + API (3001)
 pnpm test             # 30 tests
 ```
@@ -122,8 +122,8 @@ pnpm test             # 30 tests
 The Archlight Wiki is now a real wiki, not a themed mockup: a React + tRPC +
 Drizzle/PostgreSQL platform with server-enforced bcrypt auth, durable page storage,
 full revision history with rollback, a community contribution-and-review workflow,
-and PostgreSQL full-text search. All 593 text pages (professions, quest/unlock guides,
-and the 569-entry patch-note archive) were migrated, and the dark fantasy look you
-built was preserved by porting your CSS tokens verbatim. Every security problem from
-the audit is fixed — the hardcoded admin passwords and the committed 68 MB `dist/`
-are gone — and media plus the design-lab concept pages are the planned Phase 2.
+and PostgreSQL full-text search. All 637 text pages (professions, quest/unlock guides,
+the 569-entry patch-note archive, and the design-lab concept pages) were migrated, and
+the dark fantasy look you built was preserved by porting your CSS tokens verbatim. Every
+security problem from the audit is fixed — the hardcoded admin passwords and the committed
+68 MB `dist/` are gone — and media (plus the cinematic-carousel-engine demo) is the planned Phase 2.

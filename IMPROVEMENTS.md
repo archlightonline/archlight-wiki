@@ -147,3 +147,9 @@ the existing revision-history rollback. Run for real with
 added and dry-run-validated (0 broken emphasis, 0 residual markup, 3911/3911 images
 preserved, 17/17 embeds preserved, 0 manual-review) but has **not** been executed against
 production.
+
+The default dry run rebuilds its preview DB from the original migration source files, which
+are not present in the deployed container. For a safe **production** preview, use
+`--dry-run-live --confirm-db=<host/dbname>`: it applies the same target guards as `--execute`,
+connects to the live Postgres through a read-only proxy (any write throws), reads the real
+`Updates` pages, and reports the same diagnostics and gates — performing zero writes.

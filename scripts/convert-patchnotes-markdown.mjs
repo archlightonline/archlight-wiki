@@ -3,8 +3,12 @@
  * from their stored BBCode (Legacy) / inline-styled HTML (Abaldar) into clean
  * Markdown that the app's renderer (marked + DOMPurify) displays natively.
  *
- *   Dry run (default, touches nothing real — fresh in-memory PGlite):
+ *   Dry run (default, touches nothing real — fresh in-memory PGlite seeded from
+ *   the original migration source files; for LOCAL use only):
  *     node scripts/convert-patchnotes-markdown.mjs
+ *   Dry-run-LIVE (read-only preview of the real DB; works in production where the
+ *   migration source files are absent — performs ZERO writes):
+ *     node scripts/convert-patchnotes-markdown.mjs --dry-run-live --confirm-db=<host/dbname>
  *   Execute against the configured Postgres (requires explicit confirmation):
  *     node scripts/convert-patchnotes-markdown.mjs --execute --confirm-db=<host/dbname>
  *
@@ -69,6 +73,12 @@ const flagValue = (name) => {
 const CONFIRM_DB = flagValue('confirm-db');
 const EXPECT_UPDATES = Number(flagValue('expect-updates') ?? EXPECTED_UPDATES);
 const EXPECT_MODIFY = Number(flagValue('expect-modify') ?? EXPECTED_MODIFY);
+
+// Read-only PREVIEW against the live database. Same target guards as --execute,
+// but performs ZERO writes — used to preview the conversion in production where
+// the original migration source files (needed by the default in-memory dry run)
+// are not present in the deployed container.
+const DRY_RUN_LIVE = args.includes('--dry-run-live') || args.includes('--plan');
 
 // Dry-run-only fault-injection switches, used to demonstrate the fail-loud
 // behavior. HARD-DISABLED under --execute so they can never touch a real DB.
@@ -231,9 +241,27 @@ export function evaluateCountGate(updatesCount, planCount, { expectUpdates, expe
 }
 
 // ===========================================================================
+// Read-only DB guard — wraps a drizzle db so any write method throws. Used by
+// --dry-run-live so it is structurally impossible to mutate the live database,
+// independent of which code paths run.
+// ===========================================================================
+const WRITE_METHODS = new Set(['insert', 'update', 'delete', 'transaction', 'execute']);
+export function readOnlyDb(db) {
+  return new Proxy(db, {
+    get(target, prop, receiver) {
+      if (WRITE_METHODS.has(prop)) {
+        return () => { throw new Error(`[convert] READ-ONLY GUARD: blocked write method "${String(prop)}" in --dry-run-live mode.`); };
+      }
+      const v = Reflect.get(target, prop, receiver);
+      return typeof v === 'function' ? v.bind(target) : v;
+    },
+  });
+}
+
+// ===========================================================================
 // Read-only planning + reporting (NO writes).
 // ===========================================================================
-async function planAndReport(db) {
+export async function planAndReport(db) {
   const updates = (await db.select().from(schema.pages)).filter((r) => r.category === 'Updates');
   const plan = [];
   let alreadyConverted = 0, noop = 0;
@@ -355,7 +383,12 @@ function printReport(report) {
 // Entry point
 // ===========================================================================
 async function main() {
+  if (EXECUTE && DRY_RUN_LIVE) {
+    console.error('[convert] ABORT — --execute and --dry-run-live are mutually exclusive.');
+    process.exit(1);
+  }
   let database;
+  let liveReadOnly = false;
 
   if (EXECUTE) {
     // --- Hard wrong-target guards, BEFORE connecting to anything. ---
@@ -376,6 +409,28 @@ async function main() {
       await database.close();
       process.exit(1);
     }
+  } else if (DRY_RUN_LIVE) {
+    // Read-only PREVIEW against the live DB. SAME hard target guards as --execute,
+    // enforced BEFORE connecting; the connection is then wrapped read-only so it
+    // is structurally impossible to write.
+    const tgt = resolveExecuteTarget(process.env);
+    if (!tgt.ok) { console.error('[convert] ABORT —', tgt.reason); process.exit(1); }
+    if (!CONFIRM_DB) {
+      console.error(`[convert] ABORT — --dry-run-live requires --confirm-db=<host/dbname> matching the target. Resolved target: "${tgt.target}".`);
+      process.exit(1);
+    }
+    if (CONFIRM_DB !== tgt.target) {
+      console.error(`[convert] ABORT — --confirm-db="${CONFIRM_DB}" does not match resolved target "${tgt.target}". Refusing to run.`);
+      process.exit(1);
+    }
+    console.log(`[convert] --dry-run-live (read-only PREVIEW) confirmed for target: ${tgt.target}. Connecting read-only…`);
+    database = await createDatabase();
+    if (database.kind !== 'postgres') {
+      console.error('[convert] ABORT — connected database is not postgres; --dry-run-live refuses to run against local PGlite.');
+      await database.close();
+      process.exit(1);
+    }
+    liveReadOnly = true;
   } else {
     console.log('[convert] DRY-RUN (default). No real database will be touched.');
     console.log('[convert] Building a throwaway in-memory PGlite and seeding it from the migration pipeline…');
@@ -403,17 +458,24 @@ async function main() {
     }
   }
 
-  const db = database.db;
+  // In --dry-run-live, every DB handle is a read-only proxy: any write throws.
+  const db = liveReadOnly ? readOnlyDb(database.db) : database.db;
   const attributionId = await lookupAttributionId(db); // READ-ONLY; never creates a user
 
   // --- Read-only plan + report. ---
   const { updates, plan, alreadyConverted, noop, report } = await planAndReport(db);
 
-  const targetLabel = EXECUTE
+  const isReal = EXECUTE || DRY_RUN_LIVE;
+  const modeLabel = EXECUTE
+    ? 'EXECUTE (writing to real DB)'
+    : DRY_RUN_LIVE
+      ? 'DRY-RUN-LIVE (read-only preview of the live DB)'
+      : 'DRY-RUN (throwaway in-memory DB)';
+  const targetLabel = isReal
     ? `${database.kind} -> ${resolveExecuteTarget(process.env).target}`
     : `${database.kind} -> in-memory (throwaway — no real DB touched)`;
   console.log('--------------------------------------------------------------');
-  console.log(`[convert] mode            : ${EXECUTE ? 'EXECUTE (writing to real DB)' : 'DRY-RUN (throwaway in-memory DB)'}`);
+  console.log(`[convert] mode            : ${modeLabel}`);
   console.log(`[convert] database        : ${targetLabel}`);
   console.log(`[convert] attribution id  : ${attributionId === null ? 'null (no existing user found; column is nullable)' : attributionId}`);
   console.log(`[convert] Updates pages   : ${updates.length}`);
@@ -439,6 +501,16 @@ async function main() {
   } else {
     console.log(`\n[convert] validation gate: ${gate.clean ? 'PASS' : 'WOULD ABORT -> ' + gate.reasons.join('; ')}`);
     console.log(`[convert] count gate     : ${countGate.ok ? 'PASS' : 'WOULD ABORT -> ' + countGate.reason}`);
+  }
+
+  // --- --dry-run-live stops here: read-only preview of the live DB, no writes. ---
+  if (DRY_RUN_LIVE) {
+    const t = resolveExecuteTarget(process.env).target;
+    console.log('\n[convert] DRY-RUN-LIVE complete — READ-ONLY preview of the live database.');
+    console.log('[convert] ZERO writes performed: no pages updated, no page_revisions inserted, no schema, no admin.');
+    console.log(`[convert] If the gates above pass, run for real with:  node scripts/convert-patchnotes-markdown.mjs --execute --confirm-db=${t}`);
+    await database.close();
+    return;
   }
 
   // --- Writes (in dry-run these go to the throwaway in-memory DB). ---

@@ -70,6 +70,11 @@ const CONFIRM_DB = flagValue('confirm-db');
 const EXPECT_UPDATES = Number(flagValue('expect-updates') ?? EXPECTED_UPDATES);
 const EXPECT_MODIFY = Number(flagValue('expect-modify') ?? EXPECTED_MODIFY);
 
+// Dry-run-only fault-injection switches, used to demonstrate the fail-loud
+// behavior. HARD-DISABLED under --execute so they can never touch a real DB.
+const SIM_VALIDATION_ANOMALY = !EXECUTE && args.includes('--simulate-validation-anomaly');
+const SIM_CONFLICT = !EXECUTE && args.includes('--simulate-conflict');
+
 // ===========================================================================
 // Proven v3 converter
 // ===========================================================================
@@ -264,10 +269,12 @@ async function planAndReport(db) {
 // ===========================================================================
 // Writer — converts and writes INSIDE each per-page transaction (race-safe).
 // ===========================================================================
-async function writePages(db, plan, attributionId) {
+async function writePages(db, plan, attributionId, opts = {}) {
   let modified = 0, skipped = 0, conflicts = 0;
-  const anomalies = [];
-  for (const { page } of plan) {
+  const anomalies = []; // [{ slug, reasons }] — VALIDATION failures (fatal)
+  for (let i = 0; i < plan.length; i++) {
+    const { page } = plan[i];
+    const isFirst = i === 0;
     try {
       const result = await db.transaction(async (tx) => {
         // Re-read the CURRENT row inside the transaction.
@@ -285,16 +292,23 @@ async function writePages(db, plan, attributionId) {
         if (converted === cur.content) return 'skip';
         const body = splitHeader(cur.content).body;
         const v = validate(converted);
-        if (v.bb || v.html || v.broken || mdImgs(converted) < rawImgs(body) || mdEmbedLinks(converted) < rawEmbeds(body)) {
-          throw Object.assign(new Error('per-page validation failed'), { kind: 'validation', slug: cur.slug });
-        }
+        const reasons = [];
+        if (v.bb) reasons.push('residual BBCode');
+        if (v.html) reasons.push('residual HTML');
+        if (v.broken) reasons.push('broken emphasis');
+        if (mdImgs(converted) < rawImgs(body)) reasons.push('image loss');
+        if (mdEmbedLinks(converted) < rawEmbeds(body)) reasons.push('embed loss');
+        if (reasons.length) throw Object.assign(new Error('per-page validation failed'), { kind: 'validation', slug: cur.slug, reasons });
 
         // 1. Snapshot ORIGINAL (current) content so the page is restorable.
         await tx.insert(schema.pageRevisions).values({ pageId: cur.id, content: cur.content, editedBy: EDITED_BY, summary: ORIGINAL_SUMMARY });
         // 2. Content-guarded update — abort the page if content changed concurrently.
+        //    (Dry-run-only simulateConflict mismatches the guard for the first page
+        //     to exercise the zero-row conflict path without a real concurrent writer.)
+        const guardContent = opts.simulateConflict && isFirst ? '__sim_conflict_never_matches__' : cur.content;
         const updated = await tx.update(schema.pages)
           .set({ content: converted, updatedAt: new Date(), updatedBy: attributionId })
-          .where(and(eq(schema.pages.id, cur.id), eq(schema.pages.content, cur.content)))
+          .where(and(eq(schema.pages.id, cur.id), eq(schema.pages.content, guardContent)))
           .returning({ id: schema.pages.id });
         if (updated.length === 0) throw Object.assign(new Error('concurrent modification'), { kind: 'conflict', slug: cur.slug });
         // 3. Record the conversion revision (required summary).
@@ -303,9 +317,17 @@ async function writePages(db, plan, attributionId) {
       });
       if (result === 'modified') modified++; else skipped++;
     } catch (e) {
-      if (e.kind === 'conflict') { conflicts++; console.warn(`[convert] conflict — skipped & rolled back: ${e.slug} (content changed concurrently).`); }
-      else if (e.kind === 'validation') { anomalies.push(e.slug); console.error(`[convert] per-page validation failed — rolled back: ${e.slug}`); }
-      else throw e;
+      if (e.kind === 'conflict') {
+        // Concurrent-edit skip — expected & safe, NON-FATAL.
+        conflicts++;
+        console.warn(`[convert] CONFLICT (non-fatal skip, rolled back): ${e.slug} — content changed concurrently.`);
+      } else if (e.kind === 'validation') {
+        // Validation failure — FATAL; collected and surfaced as a nonzero exit.
+        anomalies.push({ slug: e.slug, reasons: e.reasons || ['validation failed'] });
+        console.error(`[convert] VALIDATION ANOMALY (fatal, rolled back): ${e.slug} — ${(e.reasons || []).join(', ')}`);
+      } else {
+        throw e;
+      }
     }
   }
   return { modified, skipped, conflicts, anomalies };
@@ -369,6 +391,16 @@ async function main() {
         subcategory: p.subcategory || null, content: sanitizeContent(p.markdown || ''), isPublished: true,
       });
     }
+    if (SIM_VALIDATION_ANOMALY) {
+      // Inject one page whose embed cannot be preserved (an <iframe> with no src),
+      // so the per-page validator legitimately flags embed loss -> a fatal anomaly.
+      await database.db.insert(schema.pages).values({
+        slug: 'update-__sim_anomaly__', title: 'Simulated anomaly', category: 'Updates', subcategory: 'Legacy',
+        content: '**Date:** 2020-01-01 · **World:** Legacy · **Type:** patch-notes\n\n<iframe srcdoc="no-src-here"></iframe>',
+        isPublished: true,
+      });
+      console.log('[convert] (sim) injected one page with an unpreservable embed to force a VALIDATION anomaly.');
+    }
   }
 
   const db = database.db;
@@ -410,8 +442,8 @@ async function main() {
   }
 
   // --- Writes (in dry-run these go to the throwaway in-memory DB). ---
-  const { modified, skipped, conflicts, anomalies } = await writePages(db, plan, attributionId);
-  console.log(`\n[convert] writes: modified=${modified} skipped=${skipped} conflicts=${conflicts}${anomalies.length ? ' anomalies=' + anomalies.join(',') : ''}`);
+  const { modified, skipped, conflicts, anomalies } = await writePages(db, plan, attributionId, { simulateConflict: SIM_CONFLICT });
+  console.log(`\n[convert] writes: modified=${modified} skipped=${skipped} conflicts=${conflicts} (non-fatal) validation-anomalies=${anomalies.length} (fatal)`);
 
   // Reversibility self-check.
   if (modified > 0) {
@@ -434,7 +466,18 @@ async function main() {
     console.log(`Idempotency check    : second pass planned=${second.plan.length} (expected 0) -> ${second.plan.length === 0 ? 'PASS' : 'FAIL'}`);
   }
 
-  console.log(`\n[convert] ${EXECUTE ? 'EXECUTED' : 'DRY-RUN complete'} — Updates=${updates.length}, modified=${modified}.`);
+  // FAIL LOUD: validation anomalies must never report success. Conflicts (the
+  // concurrent-edit skips from the guarded update) are expected and stay non-fatal.
+  if (anomalies.length > 0) {
+    console.error(`\n[convert] FAILED — ${anomalies.length} page(s) hit a VALIDATION ANOMALY during the write phase (rolled back, NOT written):`);
+    for (const a of anomalies) console.error(`   - ${a.slug}: ${a.reasons.join(', ')}`);
+    console.error(`[convert] Conflicts this run (non-fatal, safe skips): ${conflicts}.`);
+    console.error('[convert] The run did NOT succeed; exiting nonzero. No success is reported while any page failed validation.');
+    await database.close();
+    process.exit(1);
+  }
+
+  console.log(`\n[convert] ${EXECUTE ? 'EXECUTED' : 'DRY-RUN complete'} — Updates=${updates.length}, modified=${modified}, conflicts=${conflicts} (non-fatal), validation-anomalies=0.`);
   if (!EXECUTE) console.log('[convert] To run for real later:  node scripts/convert-patchnotes-markdown.mjs --execute --confirm-db=<host/dbname>');
   await database.close();
 }

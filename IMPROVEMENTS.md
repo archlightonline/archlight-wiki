@@ -127,3 +127,23 @@ the 569-entry patch-note archive, and the design-lab concept pages) were migrate
 the dark fantasy look you built was preserved by porting your CSS tokens verbatim. Every
 security problem from the audit is fixed — the hardcoded admin passwords and the committed
 68 MB `dist/` are gone — and media (plus the cinematic-carousel-engine demo) is the planned Phase 2.
+
+---
+
+## Patch-note Markdown conversion (added)
+
+The 569 patch-note pages (`category = 'Updates'`) were migrated with their original
+markup intact — older Legacy entries as BBCode (`[b]`, `[img]`, `[list]`, …) and newer
+Abaldar entries as inline-styled HTML. A one-time, reversible migration script,
+[`scripts/convert-patchnotes-markdown.mjs`](scripts/convert-patchnotes-markdown.mjs),
+converts both formats to clean Markdown (preserving headings, emphasis, lists, tables,
+links, image references, and oembed/iframe URLs as links; flattening styling Markdown
+can't represent). It is **dry-run by default** (converts in a throwaway in-memory PGlite
+and validates — touches nothing real) and only writes when invoked with `--execute`. It is
+idempotent (already-converted pages are skipped) and reversible: for each page it snapshots
+the original content into `page_revisions` before updating, so any page is restorable via
+the existing revision-history rollback. Run for real with
+`node scripts/convert-patchnotes-markdown.mjs --execute`. As of this commit the script is
+added and dry-run-validated (0 broken emphasis, 0 residual markup, 3911/3911 images
+preserved, 17/17 embeds preserved, 0 manual-review) but has **not** been executed against
+production.

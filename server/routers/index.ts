@@ -5,6 +5,7 @@ import { contributionsRouter } from './contributions';
 import { adminRouter } from './admin';
 import { socialLinksRouter } from './socialLinks';
 import { worldStatusRouter } from './worldStatus';
+import { uploadsRouter } from './uploads';
 
 export const appRouter = router({
   auth: authRouter,
@@ -13,6 +14,7 @@ export const appRouter = router({
   admin: adminRouter,
   socialLinks: socialLinksRouter,
   worldStatus: worldStatusRouter,
+  uploads: uploadsRouter,
 });
 
 export type AppRouter = typeof appRouter;

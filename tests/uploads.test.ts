@@ -1,13 +1,24 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Mock the R2 storage layer so tests NEVER hit real Cloudflare R2 (no network,
-// no credentials). The fake echoes the server-generated key into the URLs so we
-// can assert the router built a safe key.
+// no credentials). The fake returns a presigned-POST shape (url + fields) and
+// echoes the server-generated key + the content-length-range max so we can
+// assert the router built a safe key and requested the size cap.
 vi.mock('../server/lib/storage', () => ({
-  createPresignedUpload: vi.fn(async ({ key, contentType }: { key: string; contentType: string }) => ({
-    uploadUrl: `https://r2-presigned.test/${key}?X-Amz-Signature=fake&ct=${encodeURIComponent(contentType)}`,
-    publicUrl: `https://cdn.test/${key}`,
-  })),
+  createPresignedUpload: vi.fn(
+    async ({ key, contentType, maxBytes }: { key: string; contentType: string; maxBytes: number }) => ({
+      uploadUrl: 'https://r2-post.test/the-bucket',
+      fields: {
+        key,
+        'Content-Type': contentType,
+        Policy: 'base64-policy',
+        'X-Amz-Signature': 'fake-signature',
+        // not a real POST field — lets a test confirm the size cap was requested
+        __contentLengthRangeMax: String(maxBytes),
+      },
+      publicUrl: `https://cdn.test/${key}`,
+    }),
+  ),
   isR2Configured: () => true,
 }));
 
@@ -24,18 +35,24 @@ describe('uploads.createUploadUrl', () => {
 
   const valid = { filename: 'pic.png', contentType: 'image/png', size: 1024 };
 
-  it('returns a well-formed key/URL for a valid image (editor)', async () => {
+  it('returns a well-formed presigned POST (url + fields) for a valid image (editor)', async () => {
     const editor = await seedUser(dbh, { username: 'ed', role: 'editor' });
     const { caller } = callerFor(dbh, editor);
     const res = await caller.uploads.createUploadUrl(valid);
     expect(res.key).toMatch(/^uploads\/[0-9a-f-]{36}\.png$/);
     expect(res.publicUrl).toBe(`https://cdn.test/${res.key}`);
-    expect(res.uploadUrl).toContain(res.key);
+    // Presigned POST: a bucket URL plus signed form fields (not a PUT URL).
+    expect(res.uploadUrl).toBe('https://r2-post.test/the-bucket');
+    expect(res.fields.key).toBe(res.key);
+    expect(res.fields['Content-Type']).toBe('image/png');
+    expect(res.fields.Policy).toBeTruthy();
     expect(res.expiresInSeconds).toBe(300);
-    // Presign called with the server-generated key + validated content type, 5-min TTL.
+    // The size cap is requested as a content-length-range (0..5MB), enforced by
+    // R2 on the actual body — not just the client-declared size.
     expect(createPresignedUpload).toHaveBeenCalledWith(
-      expect.objectContaining({ key: res.key, contentType: 'image/png', expiresInSeconds: 300 }),
+      expect.objectContaining({ key: res.key, contentType: 'image/png', maxBytes: 5 * 1024 * 1024, expiresInSeconds: 300 }),
     );
+    expect(res.fields.__contentLengthRangeMax).toBe(String(5 * 1024 * 1024));
   });
 
   it('derives the extension from content-type, never the filename', async () => {

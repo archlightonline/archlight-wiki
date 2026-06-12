@@ -1,15 +1,20 @@
 /**
  * Cloudflare R2 object storage (S3-compatible) — presigned-upload helper.
  *
- * The browser asks the server for a short-lived presigned POST (URL + form
- * fields), uploads the file DIRECTLY to R2 as multipart/form-data, then embeds
- * the returned public URL. The server never receives file bytes and nothing is
- * stored in the database.
+ * The browser asks the server for a short-lived presigned PUT URL, uploads the
+ * file bytes DIRECTLY to R2, then embeds the returned public URL. The server
+ * never receives file bytes and nothing is stored in the database.
  *
- * Why presigned POST (not PUT): a POST policy carries a `content-length-range`
- * condition, so R2 itself rejects an oversized body regardless of what size the
- * client claimed. A presigned PUT cannot constrain body length, so the size
- * limit would only be advisory. The policy also pins the Content-Type and key.
+ * Why presigned PUT (not POST): R2 does NOT implement the S3 POST Object API
+ * (presigned POST returns 501 Not Implemented), so the multipart-POST policy
+ * approach does not work on R2. We use a presigned PUT, which R2 supports.
+ *
+ * Size enforcement: `ContentLength` is signed into the PUT (it becomes a signed
+ * SigV4 header). The client must send exactly that Content-Length, and R2
+ * validates that the received body length matches the Content-Length header — so
+ * the stored object cannot exceed the signed value. The router caps that signed
+ * value at the 5 MB limit before signing, so the upper bound is enforced at R2,
+ * not merely client-declared. Content-Type is signed the same way (pinned).
  *
  * Configuration comes from the environment (per-module convention, like
  * session.ts): R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET,
@@ -17,8 +22,8 @@
  * actually generated, so importing the app without R2 configured (local dev /
  * tests) never throws.
  */
-import { S3Client } from '@aws-sdk/client-s3';
-import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
 const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
@@ -55,23 +60,19 @@ function r2Client(): S3Client {
 }
 
 export interface PresignedUpload {
-  /** The multipart POST endpoint (bucket URL) the browser uploads to. */
+  /** Short-lived presigned PUT URL the browser uploads the file to. */
   uploadUrl: string;
-  /**
-   * Form fields that MUST be appended to the multipart body (the file field is
-   * appended LAST, after these). They carry the signed policy, key and
-   * Content-Type — the browser cannot alter them without breaking the signature.
-   */
-  fields: Record<string, string>;
   /** The permanent public URL the image is served from once uploaded. */
   publicUrl: string;
 }
 
 /**
- * Generate a presigned POST for `key`, enforcing:
- *   - body size in [0, maxBytes]  (content-length-range — the REAL size cap,
- *     enforced by R2 on the actual bytes, not the client's claim), and
- *   - Content-Type === contentType (pinned in the policy).
+ * Generate a presigned PUT URL for `key`, with both `contentType` and
+ * `contentLength` signed into the URL:
+ *   - the browser MUST send Content-Type === contentType, and
+ *   - the browser MUST send Content-Length === contentLength, which R2 then
+ *     validates against the actual body length — so the stored object cannot
+ *     exceed the signed size.
  * `expiresInSeconds` defaults to 300s (5 minutes).
  *
  * Signing is local cryptography — this makes no network call to R2.
@@ -79,21 +80,20 @@ export interface PresignedUpload {
 export async function createPresignedUpload(opts: {
   key: string;
   contentType: string;
-  maxBytes: number;
+  contentLength: number;
   expiresInSeconds?: number;
 }): Promise<PresignedUpload> {
   const client = r2Client();
-  const { url, fields } = await createPresignedPost(client, {
-    Bucket: R2_BUCKET as string,
+  const command = new PutObjectCommand({
+    Bucket: R2_BUCKET,
     Key: opts.key,
-    // content-length-range is what actually caps the upload at the R2 edge.
-    Conditions: [['content-length-range', 0, opts.maxBytes]],
-    // Each Field is returned in the form AND pinned as an exact-match policy
-    // condition, so the uploaded object's Content-Type must equal this.
-    Fields: { 'Content-Type': opts.contentType },
-    Expires: opts.expiresInSeconds ?? 300,
+    ContentType: opts.contentType,
+    ContentLength: opts.contentLength,
+  });
+  const uploadUrl = await getSignedUrl(client, command, {
+    expiresIn: opts.expiresInSeconds ?? 300,
   });
   const base = (R2_PUBLIC_BASE_URL as string).replace(/\/+$/, '');
   const publicUrl = `${base}/${opts.key}`;
-  return { uploadUrl: url, fields, publicUrl };
+  return { uploadUrl, publicUrl };
 }

@@ -55,15 +55,17 @@ export const uploadsRouter = router({
       const key = `uploads/${randomUUID()}.${ext}`;
 
       try {
-        // The declared-size check above is only a fast first gate; the real cap
-        // is the presigned POST's content-length-range, enforced by R2 itself.
-        const { uploadUrl, fields, publicUrl } = await createPresignedUpload({
+        // The declared-size check above gates the value we SIGN. ContentLength is
+        // signed into the PUT, so R2 rejects the upload unless the actual body
+        // length matches this server-capped (<= 5 MB) value — real enforcement,
+        // not just the client's claim.
+        const { uploadUrl, publicUrl } = await createPresignedUpload({
           key,
           contentType: input.contentType,
-          maxBytes: MAX_BYTES,
+          contentLength: input.size,
           expiresInSeconds: PRESIGN_TTL_SECONDS,
         });
-        return { uploadUrl, fields, publicUrl, key, expiresInSeconds: PRESIGN_TTL_SECONDS };
+        return { uploadUrl, publicUrl, key, expiresInSeconds: PRESIGN_TTL_SECONDS };
       } catch {
         // Misconfiguration / signing failure — do not leak internals.
         throw new TRPCError({

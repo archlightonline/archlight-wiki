@@ -80,19 +80,19 @@ function Toolbar({ editor }: { editor: Editor }) {
     }
     setUploading(true);
     try {
-      const { uploadUrl, fields, publicUrl } = await createUploadUrl.mutateAsync({
+      const { uploadUrl, publicUrl } = await createUploadUrl.mutateAsync({
         filename: file.name,
         contentType: file.type,
         size: file.size,
       });
-      // Multipart POST: append the signed policy fields first, then the file
-      // LAST (S3/R2 requirement). R2 enforces the content-length-range from the
-      // policy, so an oversized body is rejected regardless of the declared size.
-      const form = new FormData();
-      for (const [k, v] of Object.entries(fields)) form.append(k, v);
-      form.append('file', file);
-      // No Content-Type header — the browser sets the multipart boundary itself.
-      const res = await fetch(uploadUrl, { method: 'POST', body: form });
+      // Direct PUT to R2. The Content-Type must match what was signed; the
+      // browser sets Content-Length to the file size, which R2 validates against
+      // the signed ContentLength (so an oversized body is rejected).
+      const res = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      });
       if (!res.ok) throw new Error(`Upload failed (${res.status}).`);
       editor.chain().focus().setImage({ src: publicUrl }).run();
     } catch (err) {

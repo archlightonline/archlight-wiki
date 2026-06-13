@@ -14,7 +14,15 @@
  * validates that the received body length matches the Content-Length header — so
  * the stored object cannot exceed the signed value. The router caps that signed
  * value at the 5 MB limit before signing, so the upper bound is enforced at R2,
- * not merely client-declared. Content-Type is signed the same way (pinned).
+ * not merely client-declared.
+ *
+ * Content-Type is NOT cryptographically pinned: the AWS S3 presigner excludes
+ * content-type from the SigV4 signature by default, so although we set
+ * ContentType on the command (it sets the stored object's metadata when the
+ * client cooperates), the upload is not actually rejected if the client sends a
+ * different content-type. The content-type allowlist is therefore enforced only
+ * server-side BEFORE signing (a first gate), not at the R2 upload. See the
+ * accepted-residual-risk note in server/routers/uploads.ts.
  *
  * Configuration comes from the environment (per-module convention, like
  * session.ts): R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET,
@@ -67,12 +75,12 @@ export interface PresignedUpload {
 }
 
 /**
- * Generate a presigned PUT URL for `key`, with both `contentType` and
- * `contentLength` signed into the URL:
- *   - the browser MUST send Content-Type === contentType, and
- *   - the browser MUST send Content-Length === contentLength, which R2 then
- *     validates against the actual body length — so the stored object cannot
- *     exceed the signed size.
+ * Generate a presigned PUT URL for `key`.
+ *   - `contentLength` IS signed: the browser must send Content-Length ===
+ *     contentLength and R2 validates it against the actual body length, so the
+ *     stored object cannot exceed the signed size.
+ *   - `contentType` is set on the object metadata but is NOT signed/enforced by
+ *     the presigner (see the file header) — it is not a security control here.
  * `expiresInSeconds` defaults to 300s (5 minutes).
  *
  * Signing is local cryptography — this makes no network call to R2.

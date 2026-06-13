@@ -2,15 +2,17 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Mock the R2 storage layer so tests NEVER hit real Cloudflare R2 (no network,
 // no credentials). The fake returns a presigned-PUT shape (url + publicUrl) and
-// echoes the server-generated key + the signed content-type/content-length into
-// the URL so we can assert the router built a safe key and signed the size.
+// echoes the server-generated key + the signed content-length into the URL so
+// we can assert the router built a safe key and signed the size. Note:
+// content-length IS signed; content-type is NOT signed by the S3 presigner (so
+// the fake's SignedHeaders deliberately omit it).
 vi.mock('../server/lib/storage', () => ({
   createPresignedUpload: vi.fn(
-    async ({ key, contentType, contentLength }: { key: string; contentType: string; contentLength: number }) => ({
+    async ({ key, contentLength }: { key: string; contentType: string; contentLength: number }) => ({
       uploadUrl:
         `https://r2-presigned.test/${key}` +
-        `?X-Amz-SignedHeaders=content-length%3Bcontent-type%3Bhost` +
-        `&ct=${encodeURIComponent(contentType)}&len=${contentLength}`,
+        `?X-Amz-SignedHeaders=content-length%3Bhost` +
+        `&len=${contentLength}`,
       publicUrl: `https://cdn.test/${key}`,
     }),
   ),
@@ -40,8 +42,10 @@ describe('uploads.createUploadUrl', () => {
     expect(res.uploadUrl).toContain(res.key);
     expect(res).not.toHaveProperty('fields');
     expect(res.expiresInSeconds).toBe(300);
-    // Content-Type and the exact declared Content-Length are signed into the URL,
-    // so R2 rejects the upload unless the body matches — real size enforcement.
+    // The router passes the validated content-type and the exact declared size
+    // to the signer. Only Content-Length is actually signed/enforced at R2;
+    // content-type is the server-side allowlist gate (below), NOT pinned on the
+    // PUT — see the accepted-residual-risk note in server/routers/uploads.ts.
     expect(createPresignedUpload).toHaveBeenCalledWith(
       expect.objectContaining({
         key: res.key,
@@ -50,7 +54,7 @@ describe('uploads.createUploadUrl', () => {
         expiresInSeconds: 300,
       }),
     );
-    expect(res.uploadUrl).toContain('content-length');
+    expect(res.uploadUrl).toContain('content-length'); // size is signed
   });
 
   it('derives the extension from content-type, never the filename', async () => {

@@ -9,8 +9,26 @@ import { createPresignedUpload } from '../lib/storage';
  * uploads the file directly to R2, then embeds the returned public URL. The
  * server never receives the bytes; nothing is stored in the database.
  *
- * SECURITY: all limits are enforced HERE on the server. The client mirrors them
- * only for fast feedback — never trust the client.
+ * SECURITY — what is enforced where:
+ *   • size: the declared size is checked here (<= 5 MB) and that exact value is
+ *     signed as Content-Length into the PUT, so R2 rejects a body that doesn't
+ *     match — the size ceiling is enforced at R2, not merely client-declared.
+ *   • object key + extension: generated server-side (uploads/<uuid>.<ext>) and
+ *     signed into the URL; the client cannot change them.
+ *   • content-type: validated against the allowlist HERE, before signing, as a
+ *     first gate.
+ *
+ * ACCEPTED RESIDUAL RISK (v1, known — not an oversight):
+ *   The content-type allowlist is NOT enforced at the R2 upload itself. The AWS
+ *   S3 presigner excludes content-type from the SigV4 signature by default, so a
+ *   caller could request a URL for an allowed type (e.g. image/png) and then PUT
+ *   bytes of a different type. We accept this for v1 because:
+ *     - uploads are editor/admin-only (editorProcedure), not public;
+ *     - the file extension is fixed by the server-signed key, so the object is
+ *       always served under an image extension; and
+ *     - page content is sanitized at render time (DOMPurify) — see the recon
+ *       notes — which is the mitigating control against a mismatched payload.
+ *   Post-upload content validation is intentionally NOT added in v1.
  */
 
 /** Allowed image content-types → safe file extension. SVG is intentionally

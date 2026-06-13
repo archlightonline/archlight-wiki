@@ -9,6 +9,7 @@ import { ResizableImage } from './ResizableImage';
 import { Callout } from './Callout';
 import { cleanPastedHtml } from './pasteCleanup';
 import { CALLOUT_TYPES, CALLOUT_LABELS, type CalloutType } from './calloutTypes';
+import { WIDTH_PRESETS, presetWidth } from './imageAttrs';
 
 // Mirrors the server gate (server/routers/uploads.ts) for fast client feedback.
 // The server remains the real authority — never trust these alone.
@@ -130,6 +131,13 @@ function Toolbar({ editor, onUploadError }: { editor: Editor; onUploadError: (ms
     }
   };
 
+  // Width presets — quick consistent sizing that drives the same `width`
+  // attribute as drag-resize. 'full' uses the editable content width.
+  const setImagePreset = (name: Parameters<typeof presetWidth>[0]) => {
+    const containerWidth = editor.view.dom.clientWidth || 800;
+    editor.chain().focus().updateAttributes('image', { width: presetWidth(name, containerWidth) }).run();
+  };
+
   const setLink = () => {
     const prev = editor.getAttributes('link').href as string | undefined;
     const url = window.prompt('Link URL', prev ?? '');
@@ -213,6 +221,16 @@ function Toolbar({ editor, onUploadError }: { editor: Editor; onUploadError: (ms
         >
           ⬜⬜⬛
         </Btn>
+        {WIDTH_PRESETS.map((p) => (
+          <Btn
+            key={p.name}
+            title={`Image width: ${p.name}`}
+            disabled={!imageSelected}
+            onClick={() => setImagePreset(p.name)}
+          >
+            {p.label}
+          </Btn>
+        ))}
         {/* Table editing — only shown while the cursor is inside a table. */}
         {inTable && (
           <>

@@ -581,8 +581,20 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
 .rte-content .ProseMirror .rte-img-wrap.img-left { justify-content: flex-start; }
 .rte-content .ProseMirror .rte-img-wrap.img-center { justify-content: center; }
 .rte-content .ProseMirror .rte-img-wrap.img-right { justify-content: flex-end; }
+.rte-content .ProseMirror .rte-img-figure { display: inline-block; max-width: 100%; }
 .rte-content .ProseMirror .rte-img-frame { position: relative; display: inline-block; line-height: 0; max-width: 100%; }
 .rte-content .ProseMirror .rte-img-wrap.is-selected .rte-img-frame img { outline: 2px solid var(--g3); outline-offset: 1px; }
+/* Caption (editor): a subtle field while selected, static text otherwise. */
+.rte-content .ProseMirror .rte-caption-input {
+  display: block; width: 100%; margin-top: 6px; box-sizing: border-box;
+  background: transparent; border: none; border-bottom: 1px dashed var(--rim2);
+  color: var(--tx3); font-family: var(--font-body); font-size: 13px; font-style: italic;
+  text-align: center; padding: 2px 4px;
+}
+.rte-content .ProseMirror .rte-caption-input:focus { outline: none; border-bottom-color: var(--rim3); }
+.rte-content .ProseMirror .rte-img-caption {
+  margin-top: 6px; color: var(--tx3); font-size: 13px; font-style: italic; text-align: center; line-height: 1.5;
+}
 .rte-img-handle {
   position: absolute; width: 12px; height: 12px; background: var(--g3);
   border: 1px solid var(--bg1); border-radius: 2px; z-index: 2;
@@ -619,6 +631,14 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
 .prose img.img-left { display: block; margin-right: auto; margin-left: 0; }
 .prose img.img-center { display: block; margin-left: auto; margin-right: auto; }
 .prose img.img-right { display: block; margin-left: auto; margin-right: 0; }
+/* Captioned images: <figure> sized to the image, caption centered beneath.
+   Alignment class sits on the figure (block + auto margins — no float/wrap). */
+.prose figure { width: fit-content; max-width: 100%; margin: 16px 0; }
+.prose figure img { display: block; margin: 0; }
+.prose figure.img-left { margin-right: auto; margin-left: 0; }
+.prose figure.img-center { margin-left: auto; margin-right: auto; }
+.prose figure.img-right { margin-left: auto; margin-right: 0; }
+.prose figcaption { margin-top: 6px; color: var(--tx3); font-size: 13px; font-style: italic; text-align: center; line-height: 1.5; }
 .prose table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14.5px; }
 .prose th { font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--g2); padding: 10px 13px; border-bottom: 1px solid var(--rim2); background: var(--glow2); text-align: left; }
 .prose td { padding: 10px 13px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); color: var(--tx0); vertical-align: top; }

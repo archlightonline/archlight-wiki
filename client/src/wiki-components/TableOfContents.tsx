@@ -1,48 +1,24 @@
 /**
- * Sticky in-page table of contents — parsed from the Markdown source.
+ * Sticky in-page table of contents.
  *
- * Usage: pass the raw Markdown string. The component renders nothing if fewer
- * than 3 headings are found, is hidden on mobile (<900px), and uses
- * IntersectionObserver to track the active heading as the user scrolls.
+ * Usage: pass the page content (either legacy Markdown OR editor-saved HTML —
+ * the parser handles both). The component renders nothing if fewer than 3
+ * headings are found, is hidden on mobile (<900px), and uses IntersectionObserver
+ * to track the active heading as the user scrolls.
  *
- * Important: to make anchor links work, heading elements need matching `id`
- * attributes. Call `addHeadingIds(markdown)` before passing content to the
- * `<Markdown>` renderer (see WikiPage.tsx), or use the patched renderer in
- * `lib/markdown.ts`.
+ * Anchor links work because lib/markdown.ts injects matching slug `id`s onto the
+ * rendered <h2>/<h3> using the same logic this parser uses (lib/headings.ts).
  */
 import { useEffect, useRef, useState } from 'react';
+import { parseHeadings, type TocEntry } from '../lib/headings';
 
-export interface TocEntry {
-  id: string;
-  text: string;
-  level: 2 | 3;
-}
+// Re-exported for existing importers (e.g. WikiPage). The parser now extracts
+// headings from both Markdown (`## `) and editor-saved HTML (`<h2>`).
+export type { TocEntry };
+export const parseTocEntries = parseHeadings;
 
-/** Parse ## and ### headings from raw Markdown. */
-export function parseTocEntries(markdown: string): TocEntry[] {
-  const entries: TocEntry[] = [];
-  const seen = new Map<string, number>();
-  for (const line of markdown.split('\n')) {
-    const m = line.match(/^(#{2,3})\s+(.+)/);
-    if (!m) continue;
-    const level = m[1].length as 2 | 3;
-    const text = m[2].trim().replace(/\*\*?|__?|`/g, '');
-    const base = text
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
-    const count = (seen.get(base) ?? 0) + 1;
-    seen.set(base, count);
-    const id = count > 1 ? `${base}-${count}` : base;
-    entries.push({ id, text, level });
-  }
-  return entries;
-}
-
-export function TableOfContents({ markdown }: { markdown: string }) {
-  const entries = parseTocEntries(markdown);
+export function TableOfContents({ content }: { content: string }) {
+  const entries = parseTocEntries(content);
   const [activeId, setActiveId] = useState<string>('');
   const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -86,7 +62,7 @@ export function TableOfContents({ markdown }: { markdown: string }) {
     );
     headings.forEach((h) => observerRef.current!.observe(h));
     return () => observerRef.current?.disconnect();
-  }, [markdown]);
+  }, [content]);
 
   const scroll = (id: string) => {
     const el = document.getElementById(id);

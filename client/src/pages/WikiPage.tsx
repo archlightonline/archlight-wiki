@@ -87,7 +87,7 @@ export function WikiPage() {
             />
           )}
         </div>
-        {hasToc && <TableOfContents markdown={page.content} />}
+        {hasToc && <TableOfContents content={page.content} />}
       </div>
     </div>
   );

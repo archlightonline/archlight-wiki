@@ -5,6 +5,10 @@ import {
   alignToAttr,
   alignFromClass,
   clampWidth,
+  cleanCaption,
+  renderImageSpec,
+  presetWidth,
+  WIDTH_PRESETS,
   ALIGN_CLASSES,
   MIN_IMAGE_WIDTH,
   type ImageAlign,
@@ -67,5 +71,66 @@ describe('resizable image attribute round-trip', () => {
     expect(clampWidth(400, 1000)).toBe(400); // within bounds preserved
     expect(clampWidth(5000, 1000)).toBe(1000); // above max capped to container
     expect(clampWidth(123.7, 1000)).toBe(124); // rounded
+  });
+});
+
+describe('image caption render/parse round-trip', () => {
+  it('cleans caption whitespace and treats blank as empty', () => {
+    expect(cleanCaption('  A   caption ')).toBe('A caption');
+    expect(cleanCaption('')).toBe('');
+    expect(cleanCaption(null)).toBe('');
+    expect(cleanCaption('   ')).toBe('');
+  });
+
+  it('renders a captioned image as <figure><img><figcaption> with alignment on the figure', () => {
+    const spec = renderImageSpec({ align: 'center', caption: 'Boss room', imgAttrs: { src: 'x.png', width: '320' } });
+    expect(spec).toEqual([
+      'figure',
+      { class: 'img-center' },
+      ['img', { src: 'x.png', width: '320' }],
+      ['figcaption', {}, 'Boss room'],
+    ]);
+    // The caption text and the figcaption tag survive into the saved structure.
+    expect(spec[3]).toEqual(['figcaption', {}, 'Boss room']);
+  });
+
+  it('renders a figure even without alignment, and trims the caption', () => {
+    const spec = renderImageSpec({ align: null, caption: '  Map  ', imgAttrs: { src: 'm.png' } });
+    expect(spec).toEqual(['figure', {}, ['img', { src: 'm.png' }], ['figcaption', {}, 'Map']]);
+  });
+
+  it('renders a bare <img> (alignment class on the img) when there is no caption', () => {
+    expect(renderImageSpec({ align: 'right', caption: null, imgAttrs: { src: 'x.png', width: '200' } })).toEqual([
+      'img',
+      { src: 'x.png', width: '200', class: 'img-right' },
+    ]);
+    expect(renderImageSpec({ align: null, caption: '', imgAttrs: { src: 'x.png' } })).toEqual(['img', { src: 'x.png' }]);
+  });
+
+  it('parses the caption back from a figcaption text node (mirrors the node parse)', () => {
+    // The node reads element.querySelector('figcaption')?.textContent then cleanCaption().
+    expect(cleanCaption(' Boss room ')).toBe('Boss room');
+  });
+});
+
+describe('image width presets', () => {
+  it('exposes S/M/L/Full presets', () => {
+    expect(WIDTH_PRESETS.map((p) => p.name)).toEqual(['small', 'medium', 'large', 'full']);
+    expect(WIDTH_PRESETS.map((p) => p.label)).toEqual(['S', 'M', 'L', 'Full']);
+  });
+
+  it('sets the width attribute to fixed px for S/M/L (clamped to container)', () => {
+    expect(presetWidth('small', 1000)).toBe(240);
+    expect(presetWidth('medium', 1000)).toBe(440);
+    expect(presetWidth('large', 1000)).toBe(640);
+  });
+
+  it('Full uses the container width', () => {
+    expect(presetWidth('full', 720)).toBe(720);
+  });
+
+  it('clamps presets so they never exceed the container (no overflow)', () => {
+    expect(presetWidth('large', 300)).toBe(300); // L (640) capped to container 300
+    expect(presetWidth('medium', 200)).toBe(200);
   });
 });

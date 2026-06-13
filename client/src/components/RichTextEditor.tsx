@@ -62,6 +62,7 @@ function Toolbar({ editor, onUploadError }: { editor: Editor; onUploadError: (ms
   const [uploading, setUploading] = useState(false);
   const createUploadUrl = trpc.uploads.createUploadUrl.useMutation();
   const imageSelected = editor.isActive('image');
+  const inTable = editor.isActive('table');
 
   // Existing option: embed an image by pasting a URL. Kept available.
   const addImage = () => {
@@ -148,12 +149,15 @@ function Toolbar({ editor, onUploadError }: { editor: Editor; onUploadError: (ms
         <span className="rte-sep" aria-hidden="true" />
         <Btn title="Bold" active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}><b>B</b></Btn>
         <Btn title="Italic" active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}><i>I</i></Btn>
+        <Btn title="Underline" active={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()}><u>U</u></Btn>
+        <Btn title="Strikethrough" active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()}><s>S</s></Btn>
         <Btn title="Link" active={editor.isActive('link')} onClick={setLink}>🔗</Btn>
         <span className="rte-sep" aria-hidden="true" />
         <Btn title="Bullet list" active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()}>• List</Btn>
         <Btn title="Numbered list" active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()}>1. List</Btn>
         <Btn title="Blockquote" active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()}>❝ Quote</Btn>
         <Btn title="Code block" active={editor.isActive('codeBlock')} onClick={() => editor.chain().focus().toggleCodeBlock().run()}>{'</>'}</Btn>
+        <Btn title="Horizontal divider" onClick={() => editor.chain().focus().setHorizontalRule().run()}>— HR</Btn>
         <select
           className="rte-select"
           title="Callout box — wraps the selection; pick a type, or blank to remove"
@@ -209,6 +213,20 @@ function Toolbar({ editor, onUploadError }: { editor: Editor; onUploadError: (ms
         >
           ⬜⬜⬛
         </Btn>
+        {/* Table editing — only shown while the cursor is inside a table. */}
+        {inTable && (
+          <>
+            <span className="rte-sep" aria-hidden="true" />
+            <Btn title="Add row above" onClick={() => editor.chain().focus().addRowBefore().run()}>↥ Row</Btn>
+            <Btn title="Add row below" onClick={() => editor.chain().focus().addRowAfter().run()}>↧ Row</Btn>
+            <Btn title="Add column before" onClick={() => editor.chain().focus().addColumnBefore().run()}>↤ Col</Btn>
+            <Btn title="Add column after" onClick={() => editor.chain().focus().addColumnAfter().run()}>↦ Col</Btn>
+            <Btn title="Delete row" onClick={() => editor.chain().focus().deleteRow().run()}>⌫ Row</Btn>
+            <Btn title="Delete column" onClick={() => editor.chain().focus().deleteColumn().run()}>⌫ Col</Btn>
+            <Btn title="Toggle header row" onClick={() => editor.chain().focus().toggleHeaderRow().run()}>⊤ Header</Btn>
+            <Btn title="Delete table" onClick={() => editor.chain().focus().deleteTable().run()}>✕ Table</Btn>
+          </>
+        )}
       </div>
     </>
   );

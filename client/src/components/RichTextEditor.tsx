@@ -6,6 +6,9 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { renderMarkdown } from '../lib/markdown';
 import { trpc } from '../lib/trpc';
 import { ResizableImage } from './ResizableImage';
+import { Callout } from './Callout';
+import { cleanPastedHtml } from './pasteCleanup';
+import { CALLOUT_TYPES, CALLOUT_LABELS, type CalloutType } from './calloutTypes';
 
 // Mirrors the server gate (server/routers/uploads.ts) for fast client feedback.
 // The server remains the real authority — never trust these alone.
@@ -110,6 +113,22 @@ function Toolbar({ editor, onUploadError }: { editor: Editor; onUploadError: (ms
     if (file) void handleFile(file);
   };
 
+  // Callout: insert (wraps the selection), switch type, or remove — driven by
+  // built-in core commands. One <select> covers insert / type-switch / remove
+  // based on whether a callout is active.
+  const calloutType = (CALLOUT_TYPES.find((t) => editor.isActive('callout', { type: t })) ?? '') as CalloutType | '';
+  const onCalloutChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const v = e.target.value as CalloutType | '';
+    const chain = editor.chain().focus();
+    if (v === '') {
+      if (editor.isActive('callout')) chain.lift('callout').run(); // unwrap
+    } else if (editor.isActive('callout')) {
+      chain.updateAttributes('callout', { type: v }).run(); // switch type
+    } else {
+      chain.wrapIn('callout', { type: v }).run(); // wrap selection
+    }
+  };
+
   const setLink = () => {
     const prev = editor.getAttributes('link').href as string | undefined;
     const url = window.prompt('Link URL', prev ?? '');
@@ -135,6 +154,19 @@ function Toolbar({ editor, onUploadError }: { editor: Editor; onUploadError: (ms
         <Btn title="Numbered list" active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()}>1. List</Btn>
         <Btn title="Blockquote" active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()}>❝ Quote</Btn>
         <Btn title="Code block" active={editor.isActive('codeBlock')} onClick={() => editor.chain().focus().toggleCodeBlock().run()}>{'</>'}</Btn>
+        <select
+          className="rte-select"
+          title="Callout box — wraps the selection; pick a type, or blank to remove"
+          value={calloutType}
+          onChange={onCalloutChange}
+        >
+          <option value="">Callout…</option>
+          {CALLOUT_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {CALLOUT_LABELS[t]}
+            </option>
+          ))}
+        </select>
         <span className="rte-sep" aria-hidden="true" />
         <Btn title="Insert table" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}>▦ Table</Btn>
         <Btn title="Insert image by URL" onClick={addImage}>🖼 Image URL</Btn>
@@ -201,12 +233,19 @@ export function RichTextEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [2, 3] }, link: { openOnClick: false } }),
       ResizableImage,
+      Callout,
       Table.configure({ resizable: false }),
       TableRow,
       TableHeader,
       TableCell,
       Placeholder.configure({ placeholder: placeholder || 'Write the page content…' }),
     ],
+    editorProps: {
+      // Clean pasted Word/Docs/web HTML: strip inline styles + empty wrappers so
+      // pasted content conforms to the clean schema. The schema still drops
+      // unknown nodes/marks; this handles allowed tags arriving with messy styling.
+      transformPastedHTML: (html) => cleanPastedHtml(html),
+    },
     content: toInitialHtml(value),
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();

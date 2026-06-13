@@ -564,7 +564,26 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
 .rte-content .ProseMirror code { font-family: var(--font-mono); font-size: 13px; background: rgba(255, 255, 255, 0.05); padding: 1px 6px; border-radius: 5px; color: var(--g3); }
 .rte-content .ProseMirror pre code { background: none; padding: 0; color: inherit; }
 .rte-content .ProseMirror a { color: var(--g3); text-decoration: underline; }
-.rte-content .ProseMirror img { max-width: 100%; border-radius: 8px; border: 1px solid var(--rim); }
+.rte-content .ProseMirror img { max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--rim); }
+/* Resizable/alignable image NodeView (editor surface). */
+.rte-content .ProseMirror .rte-img-wrap { display: flex; margin: 8px 0; }
+.rte-content .ProseMirror .rte-img-wrap.img-left { justify-content: flex-start; }
+.rte-content .ProseMirror .rte-img-wrap.img-center { justify-content: center; }
+.rte-content .ProseMirror .rte-img-wrap.img-right { justify-content: flex-end; }
+.rte-content .ProseMirror .rte-img-frame { position: relative; display: inline-block; line-height: 0; max-width: 100%; }
+.rte-content .ProseMirror .rte-img-wrap.is-selected .rte-img-frame img { outline: 2px solid var(--g3); outline-offset: 1px; }
+.rte-img-handle {
+  position: absolute; width: 12px; height: 12px; background: var(--g3);
+  border: 1px solid var(--bg1); border-radius: 2px; z-index: 2;
+  touch-action: none; /* dragging a handle must not scroll/select */
+}
+.rte-img-handle-l { left: -6px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
+.rte-img-handle-r { right: -6px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
+/* Upload-error banner: below the toolbar, above the editor content. */
+.rte-upload-error {
+  padding: 8px 14px; font-size: 13px; color: var(--red);
+  background: rgba(200, 64, 64, 0.08); border-bottom: 1px solid var(--rim2);
+}
 .rte-content .ProseMirror table { width: 100%; border-collapse: collapse; margin: 8px 0; table-layout: fixed; }
 .rte-content .ProseMirror th, .rte-content .ProseMirror td { border: 1px solid var(--rim2); padding: 8px 10px; vertical-align: top; }
 .rte-content .ProseMirror th { background: var(--glow2); color: var(--g2); font-family: var(--font-label); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; text-align: left; }
@@ -584,7 +603,11 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
 .prose a { color: var(--blue); }
 .prose code { font-family: var(--font-mono); font-size: 13px; background: rgba(255, 255, 255, 0.05); padding: 1px 6px; border-radius: 5px; color: var(--g3); }
 .prose blockquote { border-left: 3px solid var(--rim3); margin: 12px 0; padding: 4px 16px; color: var(--tx2); font-style: italic; }
-.prose img { max-width: 100%; border-radius: 8px; border: 1px solid var(--rim); }
+.prose img { max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--rim); }
+/* Image alignment (public render). Width is carried by the img's width attr. */
+.prose img.img-left { display: block; margin-right: auto; margin-left: 0; }
+.prose img.img-center { display: block; margin-left: auto; margin-right: auto; }
+.prose img.img-right { display: block; margin-left: auto; margin-right: 0; }
 .prose table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14.5px; }
 .prose th { font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--g2); padding: 10px 13px; border-bottom: 1px solid var(--rim2); background: var(--glow2); text-align: left; }
 .prose td { padding: 10px 13px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); color: var(--tx0); vertical-align: top; }

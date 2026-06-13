@@ -59,7 +59,11 @@ export function renderMarkdown(input: string): string {
   const isHtml = text.trimStart().startsWith('<');
   const raw = isHtml ? text : (marked.parse(text, { async: false }) as string);
   return DOMPurify.sanitize(raw, {
-    ADD_ATTR: ['id', 'target', 'rel'],
+    // width/height are already in DOMPurify's default allowlist; listing them is
+    // belt-and-suspenders for the resizable image (a width attribute), explicit
+    // across DOMPurify version bumps. This adds only two numeric HTML attributes
+    // — it does not permit any new tag, scheme, or the style attribute.
+    ADD_ATTR: ['id', 'target', 'rel', 'width', 'height'],
     FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed'],
   });
 }

@@ -551,11 +551,15 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
 .rte-sep { width: 1px; height: 20px; background: var(--rim2); margin: 0 4px; }
 .rte-select {
   height: 30px; padding: 0 8px; cursor: pointer;
-  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--rim2); border-radius: 6px;
-  color: var(--tx1); font-family: var(--font-label); font-size: 12px; line-height: 1;
+  /* Solid dark bg so the native option menu derives a dark, legible base. */
+  background: var(--bg2); border: 1px solid var(--rim2); border-radius: 6px;
+  color: var(--tx0); font-family: var(--font-label); font-size: 12px; line-height: 1;
 }
 .rte-select:hover { border-color: var(--rim3); color: var(--tx0); }
 .rte-select:focus { outline: none; border-color: var(--rim3); box-shadow: 0 0 0 3px var(--glow2); }
+/* Native <option> styling is limited cross-browser — set dark bg + light text
+   explicitly so the dropdown list is readable on the dark theme. */
+.rte-select option { background: var(--bg2); color: var(--tx0); }
 
 .rte-content { max-height: 62vh; overflow-y: auto; }
 .rte-content .ProseMirror {

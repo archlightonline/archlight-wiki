@@ -1,21 +1,18 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Mock the R2 storage layer so tests NEVER hit real Cloudflare R2 (no network,
-// no credentials). The fake returns a presigned-POST shape (url + fields) and
-// echoes the server-generated key + the content-length-range max so we can
-// assert the router built a safe key and requested the size cap.
+// no credentials). The fake returns a presigned-PUT shape (url + publicUrl) and
+// echoes the server-generated key + the signed content-length into the URL so
+// we can assert the router built a safe key and signed the size. Note:
+// content-length IS signed; content-type is NOT signed by the S3 presigner (so
+// the fake's SignedHeaders deliberately omit it).
 vi.mock('../server/lib/storage', () => ({
   createPresignedUpload: vi.fn(
-    async ({ key, contentType, maxBytes }: { key: string; contentType: string; maxBytes: number }) => ({
-      uploadUrl: 'https://r2-post.test/the-bucket',
-      fields: {
-        key,
-        'Content-Type': contentType,
-        Policy: 'base64-policy',
-        'X-Amz-Signature': 'fake-signature',
-        // not a real POST field — lets a test confirm the size cap was requested
-        __contentLengthRangeMax: String(maxBytes),
-      },
+    async ({ key, contentLength }: { key: string; contentType: string; contentLength: number }) => ({
+      uploadUrl:
+        `https://r2-presigned.test/${key}` +
+        `?X-Amz-SignedHeaders=content-length%3Bhost` +
+        `&len=${contentLength}`,
       publicUrl: `https://cdn.test/${key}`,
     }),
   ),
@@ -35,24 +32,29 @@ describe('uploads.createUploadUrl', () => {
 
   const valid = { filename: 'pic.png', contentType: 'image/png', size: 1024 };
 
-  it('returns a well-formed presigned POST (url + fields) for a valid image (editor)', async () => {
+  it('returns a well-formed presigned PUT URL for a valid image (editor)', async () => {
     const editor = await seedUser(dbh, { username: 'ed', role: 'editor' });
     const { caller } = callerFor(dbh, editor);
     const res = await caller.uploads.createUploadUrl(valid);
     expect(res.key).toMatch(/^uploads\/[0-9a-f-]{36}\.png$/);
     expect(res.publicUrl).toBe(`https://cdn.test/${res.key}`);
-    // Presigned POST: a bucket URL plus signed form fields (not a PUT URL).
-    expect(res.uploadUrl).toBe('https://r2-post.test/the-bucket');
-    expect(res.fields.key).toBe(res.key);
-    expect(res.fields['Content-Type']).toBe('image/png');
-    expect(res.fields.Policy).toBeTruthy();
+    // Presigned PUT: a single signed URL (no multipart form fields).
+    expect(res.uploadUrl).toContain(res.key);
+    expect(res).not.toHaveProperty('fields');
     expect(res.expiresInSeconds).toBe(300);
-    // The size cap is requested as a content-length-range (0..5MB), enforced by
-    // R2 on the actual body — not just the client-declared size.
+    // The router passes the validated content-type and the exact declared size
+    // to the signer. Only Content-Length is actually signed/enforced at R2;
+    // content-type is the server-side allowlist gate (below), NOT pinned on the
+    // PUT — see the accepted-residual-risk note in server/routers/uploads.ts.
     expect(createPresignedUpload).toHaveBeenCalledWith(
-      expect.objectContaining({ key: res.key, contentType: 'image/png', maxBytes: 5 * 1024 * 1024, expiresInSeconds: 300 }),
+      expect.objectContaining({
+        key: res.key,
+        contentType: 'image/png',
+        contentLength: valid.size,
+        expiresInSeconds: 300,
+      }),
     );
-    expect(res.fields.__contentLengthRangeMax).toBe(String(5 * 1024 * 1024));
+    expect(res.uploadUrl).toContain('content-length'); // size is signed
   });
 
   it('derives the extension from content-type, never the filename', async () => {
@@ -110,11 +112,14 @@ describe('uploads.createUploadUrl', () => {
     expect(createPresignedUpload).not.toHaveBeenCalled();
   });
 
-  it('allows a file exactly at the 5 MB limit', async () => {
+  it('allows a file exactly at the 5 MB limit and signs that exact length', async () => {
     const editor = await seedUser(dbh, { username: 'ed7', role: 'editor' });
     const { caller } = callerFor(dbh, editor);
     const res = await caller.uploads.createUploadUrl({ filename: 'edge.png', contentType: 'image/png', size: 5 * 1024 * 1024 });
     expect(res.publicUrl).toContain('/uploads/');
+    expect(createPresignedUpload).toHaveBeenCalledWith(
+      expect.objectContaining({ contentLength: 5 * 1024 * 1024 }),
+    );
   });
 
   it('allows an admin', async () => {

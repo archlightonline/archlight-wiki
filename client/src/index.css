@@ -549,6 +549,13 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
 .rte-btn.active { background: rgba(245, 204, 80, 0.14); border-color: var(--g1); color: var(--g3); }
 .rte-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .rte-sep { width: 1px; height: 20px; background: var(--rim2); margin: 0 4px; }
+.rte-select {
+  height: 30px; padding: 0 8px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--rim2); border-radius: 6px;
+  color: var(--tx1); font-family: var(--font-label); font-size: 12px; line-height: 1;
+}
+.rte-select:hover { border-color: var(--rim3); color: var(--tx0); }
+.rte-select:focus { outline: none; border-color: var(--rim3); box-shadow: 0 0 0 3px var(--glow2); }
 
 .rte-content { max-height: 62vh; overflow-y: auto; }
 .rte-content .ProseMirror {
@@ -612,6 +619,38 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
 .prose th { font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--g2); padding: 10px 13px; border-bottom: 1px solid var(--rim2); background: var(--glow2); text-align: left; }
 .prose td { padding: 10px 13px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); color: var(--tx0); vertical-align: top; }
 .prose mark { background: rgba(245, 204, 80, 0.25); color: var(--g4); padding: 0 2px; border-radius: 3px; }
+
+/* ===== Callouts (editor surface + public render) ======================== */
+/* One base rule + per-type accent var; tint derived from the token via
+   color-mix so there are no hardcoded hex values. */
+.callout {
+  --callout-accent: var(--blue);
+  border-left: 3px solid var(--callout-accent);
+  background: color-mix(in srgb, var(--callout-accent) 9%, transparent);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 16px;
+  margin: 14px 0;
+}
+.callout > :first-child { margin-top: 0; }
+.callout > :last-child { margin-bottom: 0; }
+.callout-note { --callout-accent: var(--blue); }
+.callout-tip { --callout-accent: var(--teal); }
+.callout-warning { --callout-accent: var(--amber); }
+.callout-important { --callout-accent: var(--red); }
+/* Uppercase label header per type (presentational only — not in saved HTML). */
+.callout::before {
+  display: block;
+  font-family: var(--font-label);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--callout-accent);
+  margin-bottom: 4px;
+}
+.callout-note::before { content: "ℹ Note"; }
+.callout-tip::before { content: "✦ Tip"; }
+.callout-warning::before { content: "⚠ Warning"; }
+.callout-important::before { content: "❗ Important"; }
 
 /* ===== Search results =================================================== */
 .result { padding: 16px 0; border-bottom: 1px solid var(--rim); }

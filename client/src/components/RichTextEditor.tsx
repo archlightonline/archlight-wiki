@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Image from '@tiptap/extension-image';
 import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table';
 import Placeholder from '@tiptap/extension-placeholder';
 import { renderMarkdown } from '../lib/markdown';
 import { trpc } from '../lib/trpc';
+import { ResizableImage } from './ResizableImage';
 
 // Mirrors the server gate (server/routers/uploads.ts) for fast client feedback.
 // The server remains the real authority — never trust these alone.
@@ -54,11 +54,11 @@ function Btn({
   );
 }
 
-function Toolbar({ editor }: { editor: Editor }) {
+function Toolbar({ editor, onUploadError }: { editor: Editor; onUploadError: (msg: string | null) => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
   const createUploadUrl = trpc.uploads.createUploadUrl.useMutation();
+  const imageSelected = editor.isActive('image');
 
   // Existing option: embed an image by pasting a URL. Kept available.
   const addImage = () => {
@@ -69,13 +69,13 @@ function Toolbar({ editor }: { editor: Editor }) {
   // New option: pick a file, get a presigned R2 URL, upload directly, embed the
   // resulting public URL. The server never receives the bytes.
   const handleFile = async (file: File) => {
-    setUploadError(null);
+    onUploadError(null);
     if (!ALLOWED_UPLOAD_TYPES.includes(file.type)) {
-      setUploadError('Unsupported image type. Use PNG, JPEG, WebP, or GIF.');
+      onUploadError('Unsupported image type. Use PNG, JPEG, WebP, or GIF.');
       return;
     }
     if (file.size > MAX_UPLOAD_BYTES) {
-      setUploadError('Image is too large (max 5 MB).');
+      onUploadError('Image is too large (max 5 MB).');
       return;
     }
     setUploading(true);
@@ -98,7 +98,7 @@ function Toolbar({ editor }: { editor: Editor }) {
       if (!res.ok) throw new Error(`Upload failed (${res.status}).`);
       editor.chain().focus().setImage({ src: publicUrl }).run();
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'Upload failed. Please try again.');
+      onUploadError(err instanceof Error ? err.message : 'Upload failed. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -152,12 +152,32 @@ function Toolbar({ editor }: { editor: Editor }) {
           style={{ display: 'none' }}
           onChange={onPick}
         />
+        <span className="rte-sep" aria-hidden="true" />
+        <Btn
+          title="Align image left"
+          disabled={!imageSelected}
+          active={editor.isActive('image', { align: 'left' })}
+          onClick={() => editor.chain().focus().updateAttributes('image', { align: 'left' }).run()}
+        >
+          ⬛⬜⬜
+        </Btn>
+        <Btn
+          title="Align image center"
+          disabled={!imageSelected}
+          active={editor.isActive('image', { align: 'center' })}
+          onClick={() => editor.chain().focus().updateAttributes('image', { align: 'center' }).run()}
+        >
+          ⬜⬛⬜
+        </Btn>
+        <Btn
+          title="Align image right"
+          disabled={!imageSelected}
+          active={editor.isActive('image', { align: 'right' })}
+          onClick={() => editor.chain().focus().updateAttributes('image', { align: 'right' }).run()}
+        >
+          ⬜⬜⬛
+        </Btn>
       </div>
-      {uploadError && (
-        <div className="rte-upload-error" role="alert">
-          {uploadError}
-        </div>
-      )}
     </>
   );
 }
@@ -173,12 +193,14 @@ export function RichTextEditor({
 }) {
   // Track our own emitted HTML so the external-sync effect ignores echoes.
   const lastEmitted = useRef<string>('');
+  // Upload errors render as a banner ABOVE the editor (not inside the content).
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({ heading: { levels: [2, 3] }, link: { openOnClick: false } }),
-      Image,
+      ResizableImage,
       Table.configure({ resizable: false }),
       TableRow,
       TableHeader,
@@ -214,7 +236,12 @@ export function RichTextEditor({
 
   return (
     <div className="rte">
-      <Toolbar editor={editor} />
+      <Toolbar editor={editor} onUploadError={setUploadError} />
+      {uploadError && (
+        <div className="rte-upload-error" role="alert">
+          {uploadError}
+        </div>
+      )}
       <EditorContent editor={editor} className="rte-content" />
     </div>
   );

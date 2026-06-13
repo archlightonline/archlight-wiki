@@ -85,9 +85,11 @@ function Toolbar({ editor }: { editor: Editor }) {
         contentType: file.type,
         size: file.size,
       });
-      // Direct PUT to R2. The Content-Type must match what was signed; the
-      // browser sets Content-Length to the file size, which R2 validates against
-      // the signed ContentLength (so an oversized body is rejected).
+      // Direct PUT to R2. Content-Type is sent to match the server-validated
+      // type (for cooperative uploads / object metadata) only — it is NOT
+      // signature-pinned. The browser sets Content-Length to the file size,
+      // which R2 validates against the signed ContentLength (the one signed,
+      // enforced control — so an oversized body is rejected).
       const res = await fetch(uploadUrl, {
         method: 'PUT',
         body: file,

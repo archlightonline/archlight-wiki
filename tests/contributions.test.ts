@@ -1,7 +1,21 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { eq } from 'drizzle-orm';
 import type { Database } from '../server/db';
-import type { User } from '../server/db/schema';
+import { pages as pagesTable, type User } from '../server/db/schema';
 import { makeTestDb, callerFor, seedUser } from './helpers';
+
+// Force a mid-approval failure deterministically: for the title 'Orphan Trigger'
+// (used by one test), uniqueSlug returns an already-taken slug so the page insert
+// hits the unique-slug index and the whole approval transaction rolls back. All
+// other titles use the real implementation.
+vi.mock('../server/lib/slug', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../server/lib/slug')>();
+  return {
+    ...actual,
+    uniqueSlug: (base: string, existing: Set<string>) =>
+      base === 'Orphan Trigger' ? 'taken-slug' : actual.uniqueSlug(base, existing),
+  };
+});
 
 describe('contributions', () => {
   let dbh: Database;
@@ -117,5 +131,42 @@ describe('contributions', () => {
     await vw.contributions.submitNewPage({ title: 'My Draft', proposedContent: 'content' });
     const mine = await vw.contributions.mine();
     expect(mine.some((m) => m.proposedTitle === 'My Draft' && m.pageSlug === null)).toBe(true);
+  });
+
+  it('double-approval of a pending new-page proposal creates exactly ONE page', async () => {
+    const vw = callerFor(dbh, viewer).caller;
+    const c = await vw.contributions.submitNewPage({ title: 'Race Page', proposedContent: 'x' });
+    const ed = callerFor(dbh, editor).caller;
+
+    const first = await ed.contributions.review({ id: c.id, decision: 'approved' });
+    expect(first.status).toBe('approved');
+    expect(first.pageId).not.toBeNull();
+
+    // The contribution is no longer pending — a second review is a guarded no-op.
+    await expect(ed.contributions.review({ id: c.id, decision: 'approved' })).rejects.toThrow(/already/i);
+
+    // Exactly one page exists for that title — no duplicate/orphan from the 2nd review.
+    const rows = await dbh.db.select().from(pagesTable).where(eq(pagesTable.title, 'Race Page'));
+    expect(rows.length).toBe(1);
+  });
+
+  it('a mid-approval failure rolls back — no orphan page/revision, contribution stays pending', async () => {
+    // Pre-create the page whose slug the mocked uniqueSlug will collide with.
+    await callerFor(dbh, admin).caller.pages.create({ title: 'Taken Slug', content: 'existing' }); // slug: taken-slug
+    const vw = callerFor(dbh, viewer).caller;
+    const c = await vw.contributions.submitNewPage({ title: 'Orphan Trigger', proposedContent: 'should not persist' });
+
+    const ed = callerFor(dbh, editor).caller;
+    // Approval forces a duplicate-slug insert inside the transaction → full rollback.
+    await expect(ed.contributions.review({ id: c.id, decision: 'approved' })).rejects.toThrow();
+
+    // No page was created for the proposal (rolled back).
+    const orphan = await dbh.db.select().from(pagesTable).where(eq(pagesTable.title, 'Orphan Trigger'));
+    expect(orphan.length).toBe(0);
+
+    // The contribution remains PENDING (the claim rolled back too) — re-reviewable.
+    const mine = await vw.contributions.mine();
+    const row = mine.find((m) => m.proposedTitle === 'Orphan Trigger')!;
+    expect(row.status).toBe('pending');
   });
 });

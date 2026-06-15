@@ -16,6 +16,9 @@ export function WikiLayout() {
   const [mobOpen, setMobOpen] = useState(false);
   const location = useLocation();
 
+  const utils = trpc.useUtils();
+  const logout = trpc.auth.logout.useMutation({ onSuccess: () => utils.auth.me.invalidate() });
+
   // DB-backed social link URLs (admin-editable) with safe fallbacks.
   const social = trpc.socialLinks.list.useQuery();
   const socialUrl = (key: string, fallback: string) =>
@@ -88,18 +91,29 @@ export function WikiLayout() {
         <div className="tb-right">
           <PlayMenu />
           {user ? (
-            <Link className="user-chip" to="/profile">
-              <span
-                className="uc-avi"
-                style={user.avatarUrl ? { backgroundImage: `url(${user.avatarUrl})` } : undefined}
+            <>
+              <Link className="user-chip" to="/profile">
+                <span
+                  className="uc-avi"
+                  style={user.avatarUrl ? { backgroundImage: `url(${user.avatarUrl})` } : undefined}
+                >
+                  {user.avatarUrl ? '' : '👤'}
+                </span>
+                <span className="uc-copy" style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
+                  <span className="uc-name">{user.displayName || user.username}</span>
+                  <span className="uc-role">{user.role}</span>
+                </span>
+              </Link>
+              <button
+                type="button"
+                className="tbtn"
+                onClick={() => logout.mutate()}
+                disabled={logout.isPending}
+                title="Log out"
               >
-                {user.avatarUrl ? '' : '👤'}
-              </span>
-              <span className="uc-copy" style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-                <span className="uc-name">{user.displayName || user.username}</span>
-                <span className="uc-role">{user.role}</span>
-              </span>
-            </Link>
+                ⏻ Log out
+              </button>
+            </>
           ) : (
             <button type="button" className="tbtn top-login" onClick={() => openAuth('login')}>
               🔐 Login

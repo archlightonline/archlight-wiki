@@ -65,4 +65,57 @@ describe('contributions', () => {
     await ed.contributions.review({ id: c.id, decision: 'approved' });
     await expect(ed.contributions.review({ id: c.id, decision: 'rejected' })).rejects.toThrow(/already/i);
   });
+
+  it('a viewer can propose a NEW page (null pageId, pending)', async () => {
+    const vw = callerFor(dbh, viewer).caller;
+    const c = await vw.contributions.submitNewPage({
+      title: 'Olympus Weapon Guide',
+      proposedContent: '<h2>Overview</h2><p>How to upgrade.</p>',
+      note: 'new guide',
+    });
+    expect(c.status).toBe('pending');
+    expect(c.pageId).toBeNull();
+    expect(c.proposedTitle).toBe('Olympus Weapon Guide');
+    expect(c.contributorId).toBe(viewer.id);
+  });
+
+  it('approving a new-page proposal creates a published page with a slug + revision', async () => {
+    const vw = callerFor(dbh, viewer).caller;
+    const c = await vw.contributions.submitNewPage({
+      title: 'Olympus Weapon Guide',
+      proposedContent: '<h2>Overview</h2><p>How to upgrade.</p>',
+    });
+
+    const ed = callerFor(dbh, editor).caller;
+    // It shows in the review queue as a new-page proposal (no slug yet).
+    const pending = await ed.contributions.list({ status: 'pending' });
+    const np = pending.find((p) => p.id === c.id)!;
+    expect(np.pageSlug).toBeNull();
+    expect(np.proposedTitle).toBe('Olympus Weapon Guide');
+
+    const reviewed = await ed.contributions.review({ id: c.id, decision: 'approved' });
+    expect(reviewed.status).toBe('approved');
+    expect(reviewed.pageId).not.toBeNull(); // contribution now linked to the created page
+
+    // The page exists, is published, and is fetchable by its generated slug.
+    const got = await callerFor(dbh, null).caller.pages.get({ slug: 'olympus-weapon-guide' });
+    expect(got.title).toBe('Olympus Weapon Guide');
+    expect(got.content).toBe('<h2>Overview</h2><p>How to upgrade.</p>');
+    expect(got.revisionCount).toBe(1); // creation-from-contribution revision
+  });
+
+  it('rejecting a new-page proposal creates no page', async () => {
+    const vw = callerFor(dbh, viewer).caller;
+    const c = await vw.contributions.submitNewPage({ title: 'Spam Page', proposedContent: 'junk' });
+    const ed = callerFor(dbh, editor).caller;
+    await ed.contributions.review({ id: c.id, decision: 'rejected', note: 'not useful' });
+    await expect(callerFor(dbh, null).caller.pages.get({ slug: 'spam-page' })).rejects.toThrow(/not found/i);
+  });
+
+  it('new-page proposals appear in the contributor’s own history', async () => {
+    const vw = callerFor(dbh, viewer).caller;
+    await vw.contributions.submitNewPage({ title: 'My Draft', proposedContent: 'content' });
+    const mine = await vw.contributions.mine();
+    expect(mine.some((m) => m.proposedTitle === 'My Draft' && m.pageSlug === null)).toBe(true);
+  });
 });

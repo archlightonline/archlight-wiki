@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
+import { trpc } from '../lib/trpc';
 import { SearchBar } from '../components/SearchBar';
 import { NavItem } from '../components/NavItem';
 import { BrandLogo } from '../components/BrandLogo';
@@ -13,6 +14,8 @@ export function DashboardLayout({ require = 'editor' }: { require?: 'editor' | '
   const { isLoading, isAuthed, isAdmin, isEditor, user } = useAuth();
   const location = useLocation();
   const [mobOpen, setMobOpen] = useState(false);
+  const utils = trpc.useUtils();
+  const logout = trpc.auth.logout.useMutation({ onSuccess: () => utils.auth.me.invalidate() });
 
   useEffect(() => {
     setMobOpen(false);
@@ -78,6 +81,9 @@ export function DashboardLayout({ require = 'editor' }: { require?: 'editor' | '
           <Link className="tbtn" to="/">
             View wiki
           </Link>
+          <button type="button" className="tbtn" onClick={() => logout.mutate()} disabled={logout.isPending} title="Log out">
+            ⏻ Log out
+          </button>
         </div>
       </header>
 

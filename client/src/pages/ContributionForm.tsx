@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { Loading, ErrorBox } from '../components/ui';
 import { Markdown } from '../components/Markdown';
+import { RichTextEditor } from '../components/RichTextEditor';
 import { NotFound } from './NotFound';
 
 export function ContributionForm() {
@@ -80,7 +81,11 @@ export function ContributionForm() {
         </div>
         <div>
           <h2>Your proposed version</h2>
-          <textarea className="textarea" value={content} onChange={(e) => setContent(e.target.value)} />
+          <RichTextEditor
+            value={content}
+            onChange={setContent}
+            placeholder="Edit the page content — use the toolbar for headings, lists, tables, callouts, and images…"
+          />
           <label className="field">
             <span style={{ display: 'block', fontFamily: 'var(--font-label)', fontSize: 10.5, letterSpacing: '.12em', color: 'var(--g2)', textTransform: 'uppercase', margin: '8px 0' }}>
               Note (optional)

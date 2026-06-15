@@ -117,7 +117,11 @@ export const contributions = pgTable(
   'contributions',
   {
     id: serial('id').primaryKey(),
+    // Null for a NEW-page proposal (no existing page yet). Set to the created
+    // page's id when such a proposal is approved.
     pageId: integer('page_id').references(() => pages.id, { onDelete: 'cascade' }),
+    // Proposed title for a NEW-page proposal (null for edits to existing pages).
+    proposedTitle: text('proposed_title'),
     contributorId: integer('contributor_id')
       .notNull()
       .references(() => users.id),

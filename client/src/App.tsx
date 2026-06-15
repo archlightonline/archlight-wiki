@@ -9,6 +9,7 @@ import { ClassesPage } from './pages/ClassesPage';
 import { DEDICATED_WIKI_ROUTES } from './pages/wiki/routes';
 import { SearchResults } from './pages/SearchResults';
 import { ContributionForm } from './pages/ContributionForm';
+import { ProposePage } from './pages/ProposePage';
 import { RevisionHistory } from './pages/RevisionHistory';
 import { Profile } from './pages/Profile';
 import { Login } from './pages/Login';
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/search" element={<SearchResults />} />
         <Route path="/contribute" element={<Contribute />} />
         <Route path="/contribute/:slug" element={<ContributionForm />} />
+        <Route path="/propose" element={<ProposePage />} />
         <Route path="/history/:slug" element={<RevisionHistory />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:username" element={<Profile />} />

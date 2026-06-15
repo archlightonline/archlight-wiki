@@ -106,7 +106,13 @@ export function Profile() {
       {mine.data?.map((c) => (
         <div className="card" key={c.id} style={{ marginBottom: 8, padding: '10px 14px' }}>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <Link to={`/wiki/${c.pageSlug}`}>{c.pageTitle ?? c.pageSlug}</Link>
+            {c.pageSlug ? (
+              <Link to={`/wiki/${c.pageSlug}`}>{c.pageTitle ?? c.pageSlug}</Link>
+            ) : (
+              <span style={{ color: 'var(--tx0)' }}>
+                {c.proposedTitle ?? 'Untitled'} <span className="badge">New page</span>
+              </span>
+            )}
             <span className="spacer" />
             <span className={`badge ${c.status}`}>{c.status}</span>
             <span className="muted" style={{ fontSize: 11.5 }}>{fmtDate(c.createdAt)}</span>

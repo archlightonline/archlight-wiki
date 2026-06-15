@@ -68,6 +68,7 @@ export const DDL_STATEMENTS: string[] = [
   `CREATE TABLE IF NOT EXISTS contributions (
     id               serial PRIMARY KEY,
     page_id          integer REFERENCES pages(id) ON DELETE CASCADE,
+    proposed_title   text,
     contributor_id   integer NOT NULL REFERENCES users(id),
     proposed_content text NOT NULL,
     status           text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
@@ -76,6 +77,9 @@ export const DDL_STATEMENTS: string[] = [
     created_at       timestamptz NOT NULL DEFAULT now(),
     reviewed_at      timestamptz
   )`,
+  // Idempotent add for databases created before proposed_title existed (new-page
+  // proposals). Safe to re-run; no-op once the column is present.
+  `ALTER TABLE contributions ADD COLUMN IF NOT EXISTS proposed_title text`,
   `CREATE INDEX IF NOT EXISTS contributions_status_idx ON contributions (status)`,
   `CREATE INDEX IF NOT EXISTS contributions_page_idx ON contributions (page_id)`,
 

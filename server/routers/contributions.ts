@@ -1,9 +1,10 @@
 import { z } from 'zod';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { router, protectedProcedure, editorProcedure } from '../trpc/trpc';
 import { contributions, pages, pageRevisions, users } from '../db/schema';
 import { sanitizeContent, sanitizeText } from '../lib/sanitize';
+import { slugify, uniqueSlug } from '../lib/slug';
 
 export const contributionsRouter = router({
   /** Any logged-in user (incl. viewers) proposes an edit to an existing page. */
@@ -27,6 +28,35 @@ export const contributionsRouter = router({
       return created;
     }),
 
+  /**
+   * Any logged-in user proposes a brand-NEW page (no existing page). Stored as a
+   * contribution with a null pageId + a proposedTitle; the page is created when
+   * an editor approves it (see `review`). Same sanitization as page content.
+   */
+  submitNewPage: protectedProcedure
+    .input(
+      z.object({
+        title: z.string().trim().min(1).max(200),
+        proposedContent: z.string().min(1).max(100_000),
+        note: z.string().max(500).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const note = input.note ? sanitizeText(input.note, 500) : null;
+      const [created] = await ctx.db
+        .insert(contributions)
+        .values({
+          pageId: null,
+          proposedTitle: sanitizeText(input.title, 200),
+          contributorId: ctx.user.id,
+          proposedContent: sanitizeContent(input.proposedContent),
+          status: 'pending',
+          reviewNote: note,
+        })
+        .returning();
+      return created;
+    }),
+
   /** The current user's own contribution history (for their profile). */
   mine: protectedProcedure.query(async ({ ctx }) => {
     const rows = await ctx.db
@@ -38,6 +68,7 @@ export const contributionsRouter = router({
         reviewedAt: contributions.reviewedAt,
         pageSlug: pages.slug,
         pageTitle: pages.title,
+        proposedTitle: contributions.proposedTitle,
       })
       .from(contributions)
       .leftJoin(pages, eq(pages.id, contributions.pageId))
@@ -56,6 +87,7 @@ export const contributionsRouter = router({
           id: contributions.id,
           status: contributions.status,
           proposedContent: contributions.proposedContent,
+          proposedTitle: contributions.proposedTitle,
           reviewNote: contributions.reviewNote,
           createdAt: contributions.createdAt,
           reviewedAt: contributions.reviewedAt,
@@ -74,8 +106,16 @@ export const contributionsRouter = router({
 
   /**
    * Approve or reject. Approving applies the proposed content to the page and
-   * records it as a new revision (so the contribution workflow is end-to-end).
+   * records it as a new revision; approving a NEW-page proposal creates the page.
    * admin/editor.
+   *
+   * Concurrency-safe & atomic: the whole operation runs in ONE transaction. It
+   * first atomically *claims* the contribution with an
+   * `UPDATE … WHERE id = ? AND status = 'pending'` — so if two reviewers race,
+   * only the first matches a row; the second sees zero rows and does nothing (no
+   * second page created). The page create + first revision + contribution link
+   * all happen in that same transaction, so any failure (incl. a unique-slug
+   * collision) rolls the entire thing back — never a half-created/orphaned page.
    */
   review: editorProcedure
     .input(
@@ -86,42 +126,96 @@ export const contributionsRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const [contribution] = await ctx.db
-        .select()
-        .from(contributions)
-        .where(eq(contributions.id, input.id))
-        .limit(1);
-      if (!contribution) throw new TRPCError({ code: 'NOT_FOUND', message: 'Contribution not found.' });
-      if (contribution.status !== 'pending') {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'This contribution has already been reviewed.' });
-      }
+      const editorName = ctx.user.displayName || ctx.user.username || 'unknown';
 
-      if (input.decision === 'approved' && contribution.pageId) {
-        const [page] = await ctx.db.select().from(pages).where(eq(pages.id, contribution.pageId)).limit(1);
-        if (page) {
-          await ctx.db.insert(pageRevisions).values({
-            pageId: page.id,
-            content: contribution.proposedContent,
-            editedBy: ctx.user.displayName || ctx.user.username || 'unknown',
-            summary: `Approved contribution #${contribution.id}`,
-          });
-          await ctx.db
-            .update(pages)
-            .set({ content: contribution.proposedContent, updatedAt: new Date(), updatedBy: ctx.user.id })
-            .where(eq(pages.id, page.id));
-        }
-      }
-
-      const [updated] = await ctx.db
-        .update(contributions)
-        .set({
+      return await ctx.db.transaction(async (tx) => {
+        // 1. Atomically claim the PENDING contribution. The status guard means a
+        //    racing second reviewer matches zero rows and never reaches the work
+        //    below — so no duplicate page is created.
+        const claimPatch: Record<string, unknown> = {
           status: input.decision,
           reviewedBy: ctx.user.id,
-          reviewNote: input.note ? sanitizeText(input.note, 500) : contribution.reviewNote,
           reviewedAt: new Date(),
-        })
-        .where(eq(contributions.id, contribution.id))
-        .returning();
-      return updated;
+        };
+        if (input.note) claimPatch.reviewNote = sanitizeText(input.note, 500);
+
+        const [claimed] = await tx
+          .update(contributions)
+          .set(claimPatch)
+          .where(and(eq(contributions.id, input.id), eq(contributions.status, 'pending')))
+          .returning();
+
+        if (!claimed) {
+          // Either the contribution doesn't exist, or it was already reviewed
+          // (the race loser / a repeat review). Distinguish for a clear message.
+          const [exists] = await tx
+            .select({ id: contributions.id })
+            .from(contributions)
+            .where(eq(contributions.id, input.id))
+            .limit(1);
+          throw new TRPCError({
+            code: exists ? 'BAD_REQUEST' : 'NOT_FOUND',
+            message: exists ? 'This contribution has already been reviewed.' : 'Contribution not found.',
+          });
+        }
+
+        if (input.decision !== 'approved') return claimed;
+
+        // 2a. Edit to an existing page — snapshot revision + apply content.
+        if (claimed.pageId) {
+          const [page] = await tx.select().from(pages).where(eq(pages.id, claimed.pageId)).limit(1);
+          if (page) {
+            await tx.insert(pageRevisions).values({
+              pageId: page.id,
+              content: claimed.proposedContent,
+              editedBy: editorName,
+              summary: `Approved contribution #${claimed.id}`,
+            });
+            await tx
+              .update(pages)
+              .set({ content: claimed.proposedContent, updatedAt: new Date(), updatedBy: ctx.user.id })
+              .where(eq(pages.id, page.id));
+          }
+          return claimed;
+        }
+
+        // 2b. New-page proposal — create the page (unique slug from the title),
+        //     record its first revision, and link the contribution to it. A
+        //     unique-slug collision throws here and rolls back the whole tx
+        //     (claim included), leaving no orphaned page.
+        if (claimed.proposedTitle) {
+          const base = slugify(claimed.proposedTitle);
+          const existing = await tx
+            .select({ slug: pages.slug })
+            .from(pages)
+            .where(sql`${pages.slug} = ${base} OR ${pages.slug} LIKE ${base + '-%'}`);
+          const slug = uniqueSlug(claimed.proposedTitle, new Set(existing.map((e) => e.slug)));
+          const [createdPage] = await tx
+            .insert(pages)
+            .values({
+              slug,
+              title: sanitizeText(claimed.proposedTitle, 200),
+              content: claimed.proposedContent,
+              createdBy: ctx.user.id,
+              updatedBy: ctx.user.id,
+              isPublished: true,
+            })
+            .returning();
+          await tx.insert(pageRevisions).values({
+            pageId: createdPage.id,
+            content: claimed.proposedContent,
+            editedBy: editorName,
+            summary: `Created from contribution #${claimed.id}`,
+          });
+          const [linked] = await tx
+            .update(contributions)
+            .set({ pageId: createdPage.id })
+            .where(eq(contributions.id, claimed.id))
+            .returning();
+          return linked;
+        }
+
+        return claimed;
+      });
     }),
 });

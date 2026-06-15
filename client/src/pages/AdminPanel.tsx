@@ -152,7 +152,13 @@ function ContributionsQueue() {
         <div className="card" key={c.id} style={{ marginBottom: 10 }}>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <span className={`badge ${c.status}`}>{c.status}</span>
-            <Link to={`/wiki/${c.pageSlug}`}>{c.pageTitle ?? c.pageSlug}</Link>
+            {c.pageSlug ? (
+              <Link to={`/wiki/${c.pageSlug}`}>{c.pageTitle ?? c.pageSlug}</Link>
+            ) : (
+              <span style={{ color: 'var(--tx0)' }}>
+                {c.proposedTitle ?? 'Untitled'} <span className="badge">New page</span>
+              </span>
+            )}
             <span className="muted">· by {c.contributor}</span>
             <span className="spacer" />
             <span className="muted" style={{ fontSize: 11.5 }}>{fmtDate(c.createdAt)}</span>

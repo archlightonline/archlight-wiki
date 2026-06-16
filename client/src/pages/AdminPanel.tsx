@@ -1,11 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import type { inferRouterOutputs } from '@trpc/server';
+import type { AppRouter } from '@server/routers';
 import { trpc } from '../lib/trpc';
 import { useAuth } from '../lib/auth';
 import { EmptyState, Loading, ErrorBox } from '../components/ui';
 import { Markdown } from '../components/Markdown';
 import { fmtDate } from '../lib/format';
 import type { Role } from '../lib/auth';
+
+type PageRow = inferRouterOutputs<AppRouter>['pages']['list']['items'][number];
 
 function SocialLinksAdmin() {
   const utils = trpc.useUtils();
@@ -263,67 +267,176 @@ function UsersAdmin() {
   );
 }
 
+const PAGE_SIZE = 25;
+type StatusFilter = 'all' | 'published' | 'archived';
+
 function PagesAdmin() {
   const utils = trpc.useUtils();
+  // The whole page set is loaded into memory (incl. archived/unpublished, via
+  // includeUnpublished) so search can find ANY page — archived pages are hidden
+  // from normal wiki search, so this table is the only place to restore them.
+  // pages.list is server-capped at 100/req, so we page through it once.
+  const [allPages, setAllPages] = useState<PageRow[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [page, setPage] = useState(1);
-  const list = trpc.pages.list.useQuery({ page, pageSize: 25, includeUnpublished: true });
-  const update = trpc.pages.update.useMutation({ onSuccess: () => utils.pages.list.invalidate() });
-  const totalPages = list.data ? Math.max(1, Math.ceil(list.data.total / list.data.pageSize)) : 1;
+
+  const loadAll = useCallback(async () => {
+    setLoadError(null);
+    try {
+      const acc: PageRow[] = [];
+      let p = 1;
+      // Always fetch fresh (staleTime 0) so it reflects the latest archive/restore.
+      for (;;) {
+        const res = await utils.pages.list.fetch({ page: p, pageSize: 100, includeUnpublished: true }, { staleTime: 0 });
+        acc.push(...res.items);
+        if (res.items.length === 0 || acc.length >= res.total) break;
+        p++;
+      }
+      setAllPages(acc);
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : 'Failed to load pages.');
+    }
+  }, [utils]);
+
+  useEffect(() => {
+    void loadAll();
+  }, [loadAll]);
+
+  const update = trpc.pages.update.useMutation({
+    onSuccess: () => {
+      void loadAll(); // refresh the in-memory set after archive/restore/protect
+    },
+  });
+
+  // Reset to the first page when the search/filter changes.
+  useEffect(() => {
+    setPage(1);
+  }, [query, statusFilter]);
+
+  const q = query.trim().toLowerCase();
+  const filtered = (allPages ?? []).filter((p) => {
+    if (statusFilter === 'published' && !p.isPublished) return false;
+    if (statusFilter === 'archived' && p.isPublished) return false;
+    if (!q) return true;
+    return p.title.toLowerCase().includes(q) || (p.category ?? '').toLowerCase().includes(q);
+  });
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const current = Math.min(page, totalPages);
+  const rows = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+  const loading = allPages === null && !loadError;
 
   return (
     <div>
-      {list.isLoading && <Loading />}
-      {update.error && <ErrorBox error={update.error} />}
-      {list.data?.items.length === 0 && <EmptyState icon="∅" title="No pages found" body="Published and unpublished wiki pages will appear here." />}
-      {list.data && list.data.items.length > 0 && (
-        <div className="table-wrap">
-          <table className="wtbl">
-            <thead>
-              <tr>
-                <th>Page</th>
-                <th>Category</th>
-                <th>Published</th>
-                <th>Protected</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.data.items.map((p) => (
-                <tr key={p.id}>
-                  <td>
-                    <Link to={`/wiki/${p.slug}`}>{p.title}</Link>
-                  </td>
-                  <td className="muted">{p.category}</td>
-                  <td>
-                    <button
-                      className={`btn sm ${p.isPublished ? 'ghost' : 'danger'}`}
-                      onClick={() => update.mutate({ slug: p.slug, isPublished: !p.isPublished })}
-                    >
-                      {p.isPublished ? 'Published' : 'Unpublished'}
-                    </button>
-                  </td>
-                  <td>
-                    <button className="btn sm ghost" onClick={() => update.mutate({ slug: p.slug, isProtected: true })}>
-                      Protect
-                    </button>{' '}
-                    <button className="btn sm ghost" onClick={() => update.mutate({ slug: p.slug, isProtected: false })}>
-                      Unprotect
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <p className="muted" style={{ marginBottom: 14 }}>
+        Archive hides a page from the wiki and search but keeps it and its full history — restore it any time. Pages are
+        never permanently deleted here.
+      </p>
+
+      <div className="toolbar" style={{ gap: 8, flexWrap: 'wrap' }}>
+        <input
+          className="input"
+          style={{ flex: 1, minWidth: 220, width: 'auto' }}
+          value={query}
+          placeholder="Search pages by title or category…"
+          aria-label="Search pages"
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <div className="toolbar" style={{ gap: 4 }}>
+          {(['all', 'published', 'archived'] as StatusFilter[]).map((s) => (
+            <button key={s} className={`tab${statusFilter === s ? ' active' : ''}`} onClick={() => setStatusFilter(s)}>
+              {s === 'all' ? 'All' : s === 'published' ? 'Published' : 'Archived'}
+            </button>
+          ))}
         </div>
+      </div>
+
+      {loading && <Loading />}
+      {loadError && <ErrorBox error={loadError} />}
+      {update.error && <ErrorBox error={update.error} />}
+
+      {allPages !== null && filtered.length === 0 && (
+        <EmptyState
+          icon="∅"
+          title="No pages match"
+          body={query || statusFilter !== 'all' ? 'Try a different search or filter.' : 'Wiki pages will appear here.'}
+        />
       )}
+
+      {filtered.length > 0 && (
+        <>
+          <p className="muted" style={{ fontSize: 12 }}>
+            {filtered.length} page{filtered.length === 1 ? '' : 's'}
+            {query || statusFilter !== 'all' ? ` matching${statusFilter !== 'all' ? ` ${statusFilter}` : ''}` : ''}
+          </p>
+          <div className="table-wrap">
+            <table className="wtbl">
+              <thead>
+                <tr>
+                  <th>Page</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th>Protected</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((p) => (
+                  <tr key={p.id}>
+                    <td>
+                      <Link to={`/wiki/${p.slug}`}>{p.title}</Link>
+                      {!p.isPublished && (
+                        <>
+                          {' '}
+                          <span className="badge">🗃 Archived</span>
+                        </>
+                      )}
+                    </td>
+                    <td className="muted">{p.category}</td>
+                    <td>
+                      {p.isPublished ? (
+                        <button
+                          className="btn sm ghost"
+                          title="Archive (unpublish) — hides from the wiki/search, kept & recoverable"
+                          onClick={() => update.mutate({ slug: p.slug, isPublished: false })}
+                        >
+                          🗃 Archive
+                        </button>
+                      ) : (
+                        <button
+                          className="btn sm primary"
+                          title="Restore (publish) — make this page visible again"
+                          onClick={() => update.mutate({ slug: p.slug, isPublished: true })}
+                        >
+                          ♻ Restore
+                        </button>
+                      )}
+                    </td>
+                    <td>
+                      <button className="btn sm ghost" onClick={() => update.mutate({ slug: p.slug, isProtected: true })}>
+                        Protect
+                      </button>{' '}
+                      <button className="btn sm ghost" onClick={() => update.mutate({ slug: p.slug, isProtected: false })}>
+                        Unprotect
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
       {totalPages > 1 && (
         <div className="toolbar">
-          <button className="btn sm" disabled={page <= 1} onClick={() => setPage((x) => x - 1)}>
+          <button className="btn sm" disabled={current <= 1} onClick={() => setPage(current - 1)}>
             ← Prev
           </button>
           <span className="muted">
-            Page {page} / {totalPages}
+            Page {current} / {totalPages}
           </span>
-          <button className="btn sm" disabled={page >= totalPages} onClick={() => setPage((x) => x + 1)}>
+          <button className="btn sm" disabled={current >= totalPages} onClick={() => setPage(current + 1)}>
             Next →
           </button>
         </div>

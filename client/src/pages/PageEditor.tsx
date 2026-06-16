@@ -86,8 +86,26 @@ export function PageEditor({ mode }: { mode: 'create' | 'edit' }) {
   };
   const create = trpc.pages.create.useMutation({ onSuccess: onDone });
   const update = trpc.pages.update.useMutation({ onSuccess: onDone });
+  // Archive = unpublish (admin-only, reversible). Hides the page from the wiki/
+  // search but keeps it + its history; restore from Admin → Page protection.
+  const archive = trpc.pages.update.useMutation({
+    onSuccess: () => {
+      utils.pages.list.invalidate();
+      if (slug) utils.pages.get.invalidate({ slug });
+      navigate('/admin/pages');
+    },
+  });
   const pending = create.isPending || update.isPending;
-  const error = create.error || update.error;
+  const error = create.error || update.error || archive.error;
+
+  const archivePage = () => {
+    if (!slug) return;
+    const ok = window.confirm(
+      'Archive this page? It will be hidden from the wiki and search but kept and recoverable. ' +
+        'You can restore it from Admin → Page protection.',
+    );
+    if (ok) archive.mutate({ slug, isPublished: false });
+  };
 
   if (mode === 'edit' && existing.isLoading) return <Loading />;
 
@@ -209,6 +227,11 @@ export function PageEditor({ mode }: { mode: 'create' | 'edit' }) {
         >
           Cancel
         </button>
+        {mode === 'edit' && isAdmin && slug && (
+          <button className="btn danger" type="button" disabled={archive.isPending} onClick={archivePage}>
+            {archive.isPending ? 'Archiving…' : '🗃 Archive page'}
+          </button>
+        )}
         {mode === 'edit' && <span className="muted">Saving creates a revision snapshot.</span>}
       </div>
     </div>

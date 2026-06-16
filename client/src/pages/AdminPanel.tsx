@@ -272,6 +272,10 @@ function PagesAdmin() {
 
   return (
     <div>
+      <p className="muted" style={{ marginBottom: 14 }}>
+        Archive hides a page from the wiki and search but keeps it and its full history — restore it any time. Pages are
+        never permanently deleted here.
+      </p>
       {list.isLoading && <Loading />}
       {update.error && <ErrorBox error={update.error} />}
       {list.data?.items.length === 0 && <EmptyState icon="∅" title="No pages found" body="Published and unpublished wiki pages will appear here." />}
@@ -282,7 +286,7 @@ function PagesAdmin() {
               <tr>
                 <th>Page</th>
                 <th>Category</th>
-                <th>Published</th>
+                <th>Status</th>
                 <th>Protected</th>
               </tr>
             </thead>
@@ -291,15 +295,32 @@ function PagesAdmin() {
                 <tr key={p.id}>
                   <td>
                     <Link to={`/wiki/${p.slug}`}>{p.title}</Link>
+                    {!p.isPublished && (
+                      <>
+                        {' '}
+                        <span className="badge">🗃 Archived</span>
+                      </>
+                    )}
                   </td>
                   <td className="muted">{p.category}</td>
                   <td>
-                    <button
-                      className={`btn sm ${p.isPublished ? 'ghost' : 'danger'}`}
-                      onClick={() => update.mutate({ slug: p.slug, isPublished: !p.isPublished })}
-                    >
-                      {p.isPublished ? 'Published' : 'Unpublished'}
-                    </button>
+                    {p.isPublished ? (
+                      <button
+                        className="btn sm ghost"
+                        title="Archive (unpublish) — hides from the wiki/search, kept & recoverable"
+                        onClick={() => update.mutate({ slug: p.slug, isPublished: false })}
+                      >
+                        🗃 Archive
+                      </button>
+                    ) : (
+                      <button
+                        className="btn sm primary"
+                        title="Restore (publish) — make this page visible again"
+                        onClick={() => update.mutate({ slug: p.slug, isPublished: true })}
+                      >
+                        ♻ Restore
+                      </button>
+                    )}
                   </td>
                   <td>
                     <button className="btn sm ghost" onClick={() => update.mutate({ slug: p.slug, isProtected: true })}>

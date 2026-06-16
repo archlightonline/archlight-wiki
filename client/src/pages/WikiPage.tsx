@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { trpc } from '../lib/trpc';
 import { Markdown } from '../components/Markdown';
 import { Breadcrumb } from '../components/Breadcrumb';
@@ -10,8 +10,19 @@ import { TableOfContents, parseTocEntries } from '../wiki-components/TableOfCont
 
 export function WikiPage() {
   const { slug } = useParams();
-  const { isEditor, isAuthed } = useAuth();
+  const navigate = useNavigate();
+  const { isEditor, isAdmin, isAuthed } = useAuth();
+  const utils = trpc.useUtils();
   const q = trpc.pages.get.useQuery({ slug: slug! }, { retry: false });
+  // Archive = unpublish (admin-only, reversible) — hides from wiki/search, keeps
+  // the page + history; restore from Admin → Page protection.
+  const archive = trpc.pages.update.useMutation({
+    onSuccess: () => {
+      utils.pages.list.invalidate();
+      if (slug) utils.pages.get.invalidate({ slug });
+      navigate('/admin/pages');
+    },
+  });
 
   if (q.isLoading) return <PageDetailSkeleton />;
   if (q.error || !q.data) return <NotFound />;
@@ -66,6 +77,23 @@ export function WikiPage() {
             🕑 History ({page.revisionCount})
           </Link>
         )}
+        {isAdmin && page.isPublished && (
+          <button
+            className="btn danger"
+            type="button"
+            disabled={archive.isPending}
+            onClick={() => {
+              const ok = window.confirm(
+                'Archive this page? It will be hidden from the wiki and search but kept and recoverable. ' +
+                  'You can restore it from Admin → Page protection.',
+              );
+              if (ok) archive.mutate({ slug: page.slug, isPublished: false });
+            }}
+          >
+            {archive.isPending ? 'Archiving…' : '🗃 Archive'}
+          </button>
+        )}
+        {isAdmin && !page.isPublished && <span className="badge">🗃 Archived</span>}
         <span className="spacer" />
         {page.tags?.map((t) => (
           <Link key={t} className="badge" style={{ textDecoration: 'none' }} to={`/browse?tag=${encodeURIComponent(t)}`}>

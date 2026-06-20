@@ -44,6 +44,9 @@ export const users = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
     lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
+    // When the user last viewed their contributions. Drives the unread-feedback
+    // badge: a contribution reviewed after this is "new" to them. Nullable.
+    contributionsSeenAt: timestamp('contributions_seen_at', { withTimezone: true }),
     isActive: boolean('is_active').notNull().default(true),
   },
   (t) => ({

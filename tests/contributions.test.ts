@@ -169,4 +169,46 @@ describe('contributions', () => {
     const row = mine.find((m) => m.proposedTitle === 'Orphan Trigger')!;
     expect(row.status).toBe('pending');
   });
+
+  it('unreadCount counts contributions reviewed since last seen; markContributionsSeen resets it', async () => {
+    const vw = callerFor(dbh, viewer).caller;
+    const ed = callerFor(dbh, editor).caller;
+
+    // Nothing reviewed yet → 0.
+    expect((await vw.contributions.unreadCount()).count).toBe(0);
+
+    // Submit + approve → 1 unread update for the contributor.
+    const c1 = await vw.contributions.submit({ slug: 'contrib-page', proposedContent: 'a' });
+    await ed.contributions.review({ id: c1.id, decision: 'approved' });
+    expect((await vw.contributions.unreadCount()).count).toBe(1);
+
+    // Marking seen clears it.
+    await vw.contributions.markContributionsSeen();
+    expect((await vw.contributions.unreadCount()).count).toBe(0);
+
+    // A contribution reviewed AFTER last-seen counts again.
+    const c2 = await vw.contributions.submit({ slug: 'contrib-page', proposedContent: 'b' });
+    await ed.contributions.review({ id: c2.id, decision: 'rejected', note: 'no' });
+    expect((await vw.contributions.unreadCount()).count).toBe(1);
+  });
+
+  it('a still-pending contribution does not count as unread', async () => {
+    const vw = callerFor(dbh, viewer).caller;
+    await vw.contributions.submit({ slug: 'contrib-page', proposedContent: 'pending one' });
+    expect((await vw.contributions.unreadCount()).count).toBe(0);
+  });
+
+  it('mine flags a newly-reviewed contribution as isNew until it is seen', async () => {
+    const vw = callerFor(dbh, viewer).caller;
+    const ed = callerFor(dbh, editor).caller;
+    const c = await vw.contributions.submit({ slug: 'contrib-page', proposedContent: 'x' });
+    await ed.contributions.review({ id: c.id, decision: 'approved' });
+
+    let mine = await vw.contributions.mine();
+    expect(mine.find((m) => m.id === c.id)!.isNew).toBe(true);
+
+    await vw.contributions.markContributionsSeen();
+    mine = await vw.contributions.mine();
+    expect(mine.find((m) => m.id === c.id)!.isNew).toBe(false);
+  });
 });

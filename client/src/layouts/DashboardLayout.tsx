@@ -16,6 +16,7 @@ export function DashboardLayout({ require = 'editor' }: { require?: 'editor' | '
   const [mobOpen, setMobOpen] = useState(false);
   const utils = trpc.useUtils();
   const logout = trpc.auth.logout.useMutation({ onSuccess: () => utils.auth.me.invalidate() });
+  const unread = trpc.contributions.unreadCount.useQuery(undefined, { enabled: isAuthed, staleTime: 30_000 }).data?.count ?? 0;
 
   useEffect(() => {
     setMobOpen(false);
@@ -77,6 +78,11 @@ export function DashboardLayout({ require = 'editor' }: { require?: 'editor' | '
         </Link>
         <SearchBar />
         <div className="tb-right">
+          {unread > 0 && (
+            <Link className="badge unread-badge" to="/profile" title={`${unread} contribution ${unread === 1 ? 'update' : 'updates'}`}>
+              ✦ {unread}
+            </Link>
+          )}
           <span className={`badge role-${user?.role}`}>{user?.role}</span>
           <Link className="tbtn" to="/">
             View wiki

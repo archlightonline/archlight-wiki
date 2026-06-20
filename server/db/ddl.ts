@@ -22,8 +22,12 @@ export const DDL_STATEMENTS: string[] = [
     created_at    timestamptz NOT NULL DEFAULT now(),
     updated_at    timestamptz NOT NULL DEFAULT now(),
     last_login_at timestamptz,
+    contributions_seen_at timestamptz,
     is_active     boolean NOT NULL DEFAULT true
   )`,
+  // Idempotent add for databases created before the contribution-feedback badge.
+  // Nullable/additive; safe to re-run; no-op once the column is present.
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS contributions_seen_at timestamptz`,
   `CREATE UNIQUE INDEX IF NOT EXISTS users_username_uq ON users (lower(username))`,
   `CREATE UNIQUE INDEX IF NOT EXISTS users_email_uq ON users (lower(email))`,
 

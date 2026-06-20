@@ -500,6 +500,11 @@ h1, h2, h3, h4 { color: var(--tx0); font-family: var(--font-label); font-weight:
 .badge.pending { color: var(--amber); border-color: rgba(224, 112, 32, 0.4); }
 .badge.approved { color: var(--teal); border-color: rgba(24, 192, 168, 0.4); }
 .badge.rejected { color: #f0a0a0; border-color: rgba(200, 64, 64, 0.4); }
+/* Unread contribution-feedback count (topbar chip + "New" row tag). */
+.badge.unread-badge { color: var(--g4); background: var(--red); border-color: transparent; font-weight: 700; }
+.user-chip .badge.unread-badge { margin-left: 4px; }
+/* Highlight a contribution that was reviewed since the user last looked. */
+.card.contribution-new { border-color: var(--rim3); box-shadow: inset 3px 0 0 var(--g2); }
 
 .meta-row { display: flex; gap: 18px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--tx3); margin: 14px 0; }
 .meta-row b { color: var(--tx1); font-weight: 400; }

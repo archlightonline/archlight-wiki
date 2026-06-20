@@ -59,6 +59,12 @@ export const contributionsRouter = router({
 
   /** The current user's own contribution history (for their profile). */
   mine: protectedProcedure.query(async ({ ctx }) => {
+    const [me] = await ctx.db
+      .select({ seenAt: users.contributionsSeenAt })
+      .from(users)
+      .where(eq(users.id, ctx.user.id))
+      .limit(1);
+    const seenAt = me?.seenAt ?? null;
     const rows = await ctx.db
       .select({
         id: contributions.id,
@@ -69,12 +75,47 @@ export const contributionsRouter = router({
         pageSlug: pages.slug,
         pageTitle: pages.title,
         proposedTitle: contributions.proposedTitle,
+        // Reviewed since the user last viewed their contributions → "new" to them.
+        isNew: sql<boolean>`(${contributions.reviewedAt} IS NOT NULL${
+          seenAt ? sql` AND ${contributions.reviewedAt} > ${seenAt}` : sql``
+        })`,
       })
       .from(contributions)
       .leftJoin(pages, eq(pages.id, contributions.pageId))
       .where(eq(contributions.contributorId, ctx.user.id))
       .orderBy(desc(contributions.createdAt));
     return rows;
+  }),
+
+  /**
+   * Count of the current user's contributions that were REVIEWED (approved or
+   * rejected) since they last viewed their contributions — drives the unread
+   * feedback badge. Aggregate "N since you last looked" (v1 scope).
+   */
+  unreadCount: protectedProcedure.query(async ({ ctx }) => {
+    const [me] = await ctx.db
+      .select({ seenAt: users.contributionsSeenAt })
+      .from(users)
+      .where(eq(users.id, ctx.user.id))
+      .limit(1);
+    const seenAt = me?.seenAt ?? null;
+    const [row] = await ctx.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(contributions)
+      .where(
+        and(
+          eq(contributions.contributorId, ctx.user.id),
+          sql`${contributions.reviewedAt} IS NOT NULL`,
+          ...(seenAt ? [sql`${contributions.reviewedAt} > ${seenAt}`] : []),
+        ),
+      );
+    return { count: Number(row?.count ?? 0) };
+  }),
+
+  /** Mark the current user's contribution feedback as seen — clears the badge. */
+  markContributionsSeen: protectedProcedure.mutation(async ({ ctx }) => {
+    await ctx.db.update(users).set({ contributionsSeenAt: new Date() }).where(eq(users.id, ctx.user.id));
+    return { ok: true };
   }),
 
   /** Pending (or any status) contributions for the review queue. admin/editor. */

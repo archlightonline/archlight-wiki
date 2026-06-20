@@ -1,14 +1,32 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { trpc } from '../lib/trpc';
 import { useAuth } from '../lib/auth';
 import { Loading, ErrorBox } from '../components/ui';
 import { fmtDate } from '../lib/format';
 
+const statusLabel = (s: string) =>
+  s === 'approved' ? '✅ Approved 🎉' : s === 'rejected' ? '⊘ Rejected' : 'Pending review';
+
 export function Profile() {
   const { user, isLoading, isAuthed, refetch } = useAuth();
   const utils = trpc.useUtils();
   const mine = trpc.contributions.mine.useQuery(undefined, { enabled: isAuthed });
+
+  // Mark contribution feedback as seen once the list has loaded (so the `isNew`
+  // flags reflect pre-seen state), then clear the topbar unread badge. We don't
+  // re-fetch `mine` here, so the "New" highlights persist for this visit.
+  const markSeen = trpc.contributions.markContributionsSeen.useMutation({
+    onSuccess: () => utils.contributions.unreadCount.invalidate(),
+  });
+  const markedRef = useRef(false);
+  useEffect(() => {
+    if (mine.isSuccess && !markedRef.current) {
+      markedRef.current = true;
+      markSeen.mutate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mine.isSuccess]);
 
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -104,8 +122,8 @@ export function Profile() {
       {mine.isLoading && <Loading />}
       {mine.data?.length === 0 && <p className="muted">No contributions yet. Find a page and suggest an edit!</p>}
       {mine.data?.map((c) => (
-        <div className="card" key={c.id} style={{ marginBottom: 8, padding: '10px 14px' }}>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <div className={`card${c.isNew ? ' contribution-new' : ''}`} key={c.id} style={{ marginBottom: 8, padding: '10px 14px' }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             {c.pageSlug ? (
               <Link to={`/wiki/${c.pageSlug}`}>{c.pageTitle ?? c.pageSlug}</Link>
             ) : (
@@ -113,10 +131,16 @@ export function Profile() {
                 {c.proposedTitle ?? 'Untitled'} <span className="badge">New page</span>
               </span>
             )}
+            {c.isNew && <span className="badge unread-badge">New</span>}
             <span className="spacer" />
-            <span className={`badge ${c.status}`}>{c.status}</span>
+            <span className={`badge ${c.status}`}>{statusLabel(c.status)}</span>
             <span className="muted" style={{ fontSize: 11.5 }}>{fmtDate(c.createdAt)}</span>
           </div>
+          {c.reviewedAt && (
+            <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+              {c.status === 'approved' ? 'Approved' : 'Reviewed'} {fmtDate(c.reviewedAt)}
+            </div>
+          )}
           {c.reviewNote && <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>Note: {c.reviewNote}</div>}
         </div>
       ))}

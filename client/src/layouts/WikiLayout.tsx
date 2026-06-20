@@ -19,6 +19,9 @@ export function WikiLayout() {
   const utils = trpc.useUtils();
   const logout = trpc.auth.logout.useMutation({ onSuccess: () => utils.auth.me.invalidate() });
 
+  // Unread contribution feedback (approved/rejected since last viewed) → chip badge.
+  const unread = trpc.contributions.unreadCount.useQuery(undefined, { enabled: !!user, staleTime: 30_000 }).data?.count ?? 0;
+
   // DB-backed social link URLs (admin-editable) with safe fallbacks.
   const social = trpc.socialLinks.list.useQuery();
   const socialUrl = (key: string, fallback: string) =>
@@ -103,6 +106,15 @@ export function WikiLayout() {
                   <span className="uc-name">{user.displayName || user.username}</span>
                   <span className="uc-role">{user.role}</span>
                 </span>
+                {unread > 0 && (
+                  <span
+                    className="badge unread-badge"
+                    title={`${unread} contribution ${unread === 1 ? 'update' : 'updates'}`}
+                    aria-label={`${unread} contribution updates`}
+                  >
+                    {unread}
+                  </span>
+                )}
               </Link>
               <button
                 type="button"

@@ -6,7 +6,7 @@ import { Loading, ErrorBox } from '../components/ui';
 import { fmtDate } from '../lib/format';
 
 const statusLabel = (s: string) =>
-  s === 'approved' ? '✅ Approved 🎉' : s === 'rejected' ? '⊘ Rejected' : 'Pending review';
+  s === 'approved' ? 'Approved' : s === 'rejected' ? 'Rejected' : 'Pending review';
 
 export function Profile() {
   const { user, isLoading, isAuthed, refetch } = useAuth();

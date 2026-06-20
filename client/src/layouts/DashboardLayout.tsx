@@ -16,7 +16,11 @@ export function DashboardLayout({ require = 'editor' }: { require?: 'editor' | '
   const [mobOpen, setMobOpen] = useState(false);
   const utils = trpc.useUtils();
   const logout = trpc.auth.logout.useMutation({ onSuccess: () => utils.auth.me.invalidate() });
-  const unread = trpc.contributions.unreadCount.useQuery(undefined, { enabled: isAuthed, staleTime: 30_000 }).data?.count ?? 0;
+  const unread = trpc.contributions.unreadCount.useQuery(undefined, {
+    enabled: isAuthed,
+    staleTime: 5_000,
+    refetchOnWindowFocus: true,
+  }).data?.count ?? 0;
 
   useEffect(() => {
     setMobOpen(false);

@@ -7,9 +7,13 @@ import { useAuth } from '../lib/auth';
 import { EmptyState, Loading, ErrorBox } from '../components/ui';
 import { Markdown } from '../components/Markdown';
 import { fmtDate } from '../lib/format';
+import { lineDiff } from '../lib/diff';
+import { toComparableText } from '../lib/contentText';
 import type { Role } from '../lib/auth';
 
 type PageRow = inferRouterOutputs<AppRouter>['pages']['list']['items'][number];
+type ContributionRow = inferRouterOutputs<AppRouter>['contributions']['list'][number];
+type ReviewMutation = ReturnType<typeof trpc.contributions.review.useMutation>;
 
 function SocialLinksAdmin() {
   const utils = trpc.useUtils();
@@ -131,7 +135,6 @@ function ContributionsQueue() {
   const review = trpc.contributions.review.useMutation({
     onSuccess: () => utils.contributions.list.invalidate(),
   });
-  const [open, setOpen] = useState<number | null>(null);
 
   return (
     <div>
@@ -153,54 +156,109 @@ function ContributionsQueue() {
         />
       )}
       {list.data?.map((c) => (
-        <div className="card" key={c.id} style={{ marginBottom: 10 }}>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <span className={`badge ${c.status}`}>{c.status}</span>
-            {c.pageSlug ? (
-              <Link to={`/wiki/${c.pageSlug}`}>{c.pageTitle ?? c.pageSlug}</Link>
-            ) : (
-              <span style={{ color: 'var(--tx0)' }}>
-                {c.proposedTitle ?? 'Untitled'} <span className="badge">New page</span>
-              </span>
-            )}
-            <span className="muted">· by {c.contributor}</span>
-            <span className="spacer" />
-            <span className="muted" style={{ fontSize: 11.5 }}>{fmtDate(c.createdAt)}</span>
-          </div>
-          {c.reviewNote && <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>Note: {c.reviewNote}</div>}
-          <div className="toolbar" style={{ marginTop: 8 }}>
-            <button className="btn sm ghost" onClick={() => setOpen(open === c.id ? null : c.id)}>
-              {open === c.id ? 'Hide proposed content' : 'View proposed content'}
-            </button>
-            {c.status === 'pending' && (
-              <>
-                <button
-                  className="btn sm primary"
-                  disabled={review.isPending}
-                  onClick={() => review.mutate({ id: c.id, decision: 'approved' })}
-                >
-                  Approve & apply
-                </button>
-                <button
-                  className="btn sm danger"
-                  disabled={review.isPending}
-                  onClick={() => {
-                    const note = prompt('Reason for rejection (optional):') ?? undefined;
-                    review.mutate({ id: c.id, decision: 'rejected', note });
-                  }}
-                >
-                  Reject
-                </button>
-              </>
-            )}
-          </div>
-          {open === c.id && (
-            <div className="review-preview">
-              <Markdown content={c.proposedContent} />
-            </div>
-          )}
-        </div>
+        <ContributionCard key={c.id} c={c} review={review} />
       ))}
+    </div>
+  );
+}
+
+/** Reuses the exact diff markup/CSS from RevisionHistory, fed normalized text. */
+function ContentDiff({ current, proposed }: { current: string; proposed: string }) {
+  const ops = lineDiff(toComparableText(current), toComparableText(proposed));
+  if (ops.every((op) => op.type === 'ctx')) {
+    return <p className="muted" style={{ margin: 0 }}>No textual changes vs the current page.</p>;
+  }
+  return (
+    <div className="diff">
+      {ops.map((op, i) => (
+        <span key={i} className={op.type}>
+          {op.type === 'add' ? '+ ' : op.type === 'del' ? '- ' : '  '}
+          {op.text || ' '}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function ContributionCard({ c, review }: { c: ContributionRow; review: ReviewMutation }) {
+  const isEdit = !!c.pageSlug;
+  const [open, setOpen] = useState(false);
+  // Existing-page edits default to the diff; new-page proposals only have "full".
+  const [mode, setMode] = useState<'diff' | 'full'>('diff');
+
+  // Lazily fetch the current page content (the diff baseline) only once a
+  // reviewer expands the diff on an existing-page edit. No server change —
+  // pages.get already returns content to editors/admins.
+  const baseline = trpc.pages.get.useQuery(
+    { slug: c.pageSlug ?? '' },
+    { enabled: open && isEdit && mode === 'diff', retry: false, staleTime: 30_000 },
+  );
+
+  return (
+    <div className="card" style={{ marginBottom: 10 }}>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <span className={`badge ${c.status}`}>{c.status}</span>
+        {c.pageSlug ? (
+          <Link to={`/wiki/${c.pageSlug}`}>{c.pageTitle ?? c.pageSlug}</Link>
+        ) : (
+          <span style={{ color: 'var(--tx0)' }}>
+            {c.proposedTitle ?? 'Untitled'} <span className="badge">New page</span>
+          </span>
+        )}
+        <span className="muted">· by {c.contributor}</span>
+        <span className="spacer" />
+        <span className="muted" style={{ fontSize: 11.5 }}>{fmtDate(c.createdAt)}</span>
+      </div>
+      {c.reviewNote && <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>Note: {c.reviewNote}</div>}
+      <div className="toolbar" style={{ marginTop: 8 }}>
+        <button className="btn sm ghost" onClick={() => setOpen((o) => !o)}>
+          {open ? 'Hide' : isEdit ? 'View changes' : 'View proposed content'}
+        </button>
+        {open && isEdit && (
+          <>
+            <button className={`tab${mode === 'diff' ? ' active' : ''}`} onClick={() => setMode('diff')}>
+              Diff
+            </button>
+            <button className={`tab${mode === 'full' ? ' active' : ''}`} onClick={() => setMode('full')}>
+              Full proposed content
+            </button>
+          </>
+        )}
+        {c.status === 'pending' && (
+          <>
+            <button
+              className="btn sm primary"
+              disabled={review.isPending}
+              onClick={() => review.mutate({ id: c.id, decision: 'approved' })}
+            >
+              Approve & apply
+            </button>
+            <button
+              className="btn sm danger"
+              disabled={review.isPending}
+              onClick={() => {
+                const note = prompt('Reason for rejection (optional):') ?? undefined;
+                review.mutate({ id: c.id, decision: 'rejected', note });
+              }}
+            >
+              Reject
+            </button>
+          </>
+        )}
+      </div>
+      {open && (
+        isEdit && mode === 'diff' ? (
+          <div className="review-preview">
+            {baseline.isLoading && <Loading />}
+            {baseline.error && <ErrorBox error={baseline.error} />}
+            {baseline.data && <ContentDiff current={baseline.data.content} proposed={c.proposedContent} />}
+          </div>
+        ) : (
+          <div className="review-preview">
+            <Markdown content={c.proposedContent} />
+          </div>
+        )
+      )}
     </div>
   );
 }

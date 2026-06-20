@@ -20,7 +20,11 @@ export function WikiLayout() {
   const logout = trpc.auth.logout.useMutation({ onSuccess: () => utils.auth.me.invalidate() });
 
   // Unread contribution feedback (approved/rejected since last viewed) → chip badge.
-  const unread = trpc.contributions.unreadCount.useQuery(undefined, { enabled: !!user, staleTime: 30_000 }).data?.count ?? 0;
+  const unread = trpc.contributions.unreadCount.useQuery(undefined, {
+    enabled: !!user,
+    staleTime: 5_000,
+    refetchOnWindowFocus: true,
+  }).data?.count ?? 0;
 
   // DB-backed social link URLs (admin-editable) with safe fallbacks.
   const social = trpc.socialLinks.list.useQuery();

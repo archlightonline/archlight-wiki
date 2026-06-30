@@ -19,7 +19,9 @@ vi.mock('../server/lib/storage', () => ({
   isR2Configured: () => true,
 }));
 
+import { eq } from 'drizzle-orm';
 import type { Database } from '../server/db';
+import { uploads as uploadsTable } from '../server/db/schema';
 import { makeTestDb, callerFor, seedUser } from './helpers';
 import { createPresignedUpload } from '../server/lib/storage';
 
@@ -129,14 +131,80 @@ describe('uploads.createUploadUrl', () => {
     expect(res.uploadUrl).toBeTruthy();
   });
 
-  it('rejects a viewer (editor/admin role gate)', async () => {
+  it('allows a viewer under the limit and records the upload', async () => {
     const viewer = await seedUser(dbh, { username: 'vw', role: 'viewer' });
     const { caller } = callerFor(dbh, viewer);
-    await expect(caller.uploads.createUploadUrl(valid)).rejects.toThrow(/role/i);
-    expect(createPresignedUpload).not.toHaveBeenCalled();
+    const res = await caller.uploads.createUploadUrl(valid);
+    expect(res.uploadUrl).toBeTruthy();
+    // A durable uploads row was recorded for this user.
+    const rows = await dbh.db.select().from(uploadsTable).where(eq(uploadsTable.userId, viewer.id));
+    expect(rows.length).toBe(1);
+    expect(rows[0].key).toBe(res.key);
+    expect(rows[0].contentType).toBe('image/png');
+    expect(rows[0].size).toBe(valid.size);
   });
 
-  it('rejects an anonymous caller (auth gate)', async () => {
+  it('rate-limits a viewer over the hourly cap (5/h) with TOO_MANY_REQUESTS', async () => {
+    const viewer = await seedUser(dbh, { username: 'vwh', role: 'viewer' });
+    const { caller } = callerFor(dbh, viewer);
+    // 5 succeed (the hourly cap), the 6th is rejected.
+    for (let i = 0; i < 5; i++) await caller.uploads.createUploadUrl(valid);
+    await expect(caller.uploads.createUploadUrl(valid)).rejects.toThrow(/upload limit reached.*hour/i);
+    const rows = await dbh.db.select().from(uploadsTable).where(eq(uploadsTable.userId, viewer.id));
+    expect(rows.length).toBe(5); // the rejected 6th recorded nothing
+  });
+
+  it('rate-limits a viewer over the daily cap (15/day) with TOO_MANY_REQUESTS', async () => {
+    const viewer = await seedUser(dbh, { username: 'vwd', role: 'viewer' });
+    // Seed 15 uploads spread over the past day (older than an hour, so the hourly
+    // cap doesn't trip first) — the next one must hit the daily cap.
+    const now = Date.now();
+    for (let i = 0; i < 15; i++) {
+      await dbh.db.insert(uploadsTable).values({
+        userId: viewer.id,
+        key: `uploads/seed-${i}.png`,
+        contentType: 'image/png',
+        size: 1024,
+        createdAt: new Date(now - (90 + i) * 60 * 1000), // 1.5h–~4h ago
+      });
+    }
+    const { caller } = callerFor(dbh, viewer);
+    await expect(caller.uploads.createUploadUrl(valid)).rejects.toThrow(/daily upload limit reached/i);
+  });
+
+  it('concurrent viewer uploads cannot exceed the cap (transactional check+insert)', async () => {
+    const viewer = await seedUser(dbh, { username: 'vwcc', role: 'viewer' });
+    const { caller } = callerFor(dbh, viewer);
+    // Fire more requests than the hourly cap "at once". The per-user advisory
+    // xact lock serializes the check+insert so the recorded count can never exceed
+    // the cap — no viewer bursts past it.
+    const results = await Promise.allSettled(
+      Array.from({ length: 8 }, () => caller.uploads.createUploadUrl(valid)),
+    );
+    const fulfilled = results.filter((r) => r.status === 'fulfilled').length;
+    const rows = await dbh.db.select().from(uploadsTable).where(eq(uploadsTable.userId, viewer.id));
+
+    // The invariant that matters: never more recorded uploads than the cap.
+    expect(rows.length).toBeLessThanOrEqual(5);
+    // Every success recorded exactly one row (no signed-but-unrecorded leaks).
+    expect(fulfilled).toBe(rows.length);
+    // NOTE: PGlite is single-connection, so this can't simulate TRUE parallel
+    // transactions (same caveat as the contribution double-approval test). It
+    // verifies the transactional check+insert holds the cap under overlapping
+    // calls; the pg_advisory_xact_lock is the correct serialization mechanism on
+    // production Postgres, where requests really are concurrent.
+  });
+
+  it('does NOT rate-limit an editor (trusted) even past the viewer caps, and records uploads', async () => {
+    const editor = await seedUser(dbh, { username: 'edrl', role: 'editor' });
+    const { caller } = callerFor(dbh, editor);
+    // Well beyond the viewer hourly cap of 5 — all succeed.
+    for (let i = 0; i < 8; i++) await caller.uploads.createUploadUrl(valid);
+    const rows = await dbh.db.select().from(uploadsTable).where(eq(uploadsTable.userId, editor.id));
+    expect(rows.length).toBe(8);
+  });
+
+  it('rejects an anonymous caller (auth gate) — no upload recorded', async () => {
     const { caller } = callerFor(dbh, null);
     await expect(caller.uploads.createUploadUrl(valid)).rejects.toThrow(/logged in/i);
     expect(createPresignedUpload).not.toHaveBeenCalled();

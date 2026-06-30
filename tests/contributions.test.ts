@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { Database } from '../server/db';
-import { pages as pagesTable, type User } from '../server/db/schema';
+import { pages as pagesTable, contributions as contributionsTable, type User } from '../server/db/schema';
 import { makeTestDb, callerFor, seedUser } from './helpers';
 
 // Force a mid-approval failure deterministically: for the title 'Orphan Trigger'
@@ -64,6 +64,70 @@ describe('contributions', () => {
     expect(reviewed.status).toBe('rejected');
     const got = await callerFor(dbh, null).caller.pages.get({ slug: 'contrib-page' });
     expect(got.content).toBe('original content');
+  });
+
+  it('splits notes: submit → contributorNote, review → reviewNote, review does not clobber the contributor note', async () => {
+    const vw = callerFor(dbh, viewer).caller;
+    const c = await vw.contributions.submit({ slug: 'contrib-page', proposedContent: 'improved content', note: 'typo fix' });
+    // The contributor's note lands in contributorNote; reviewNote is empty until review.
+    expect(c.contributorNote).toBe('typo fix');
+    expect(c.reviewNote).toBeNull();
+
+    const ed = callerFor(dbh, editor).caller;
+    const reviewed = await ed.contributions.review({ id: c.id, decision: 'rejected', note: 'not helpful' });
+    // The reviewer's reason lands in reviewNote — and the contributor's note survives.
+    expect(reviewed.reviewNote).toBe('not helpful');
+    expect(reviewed.contributorNote).toBe('typo fix');
+
+    // Both notes surface in the contributor's history and the review queue.
+    const mineRow = (await vw.contributions.mine()).find((m) => m.id === c.id)!;
+    expect(mineRow.contributorNote).toBe('typo fix');
+    expect(mineRow.reviewNote).toBe('not helpful');
+    const listRow = (await ed.contributions.list({ status: 'all' })).find((m) => m.id === c.id)!;
+    expect(listRow.contributorNote).toBe('typo fix');
+    expect(listRow.reviewNote).toBe('not helpful');
+  });
+
+  it('submitNewPage routes the note to contributorNote', async () => {
+    const vw = callerFor(dbh, viewer).caller;
+    const c = await vw.contributions.submitNewPage({ title: 'Guide X', proposedContent: '<p>hi</p>', note: 'fresh draft' });
+    expect(c.contributorNote).toBe('fresh draft');
+    expect(c.reviewNote).toBeNull();
+  });
+
+  it('backfill moves contributor notes out of review_note for PENDING rows only, idempotently', async () => {
+    // Simulate legacy pre-split rows where review_note held the contributor's note.
+    const [legacyPending] = await dbh.db
+      .insert(contributionsTable)
+      .values({ pageId: null, proposedTitle: 'Legacy Pending', contributorId: viewer.id, proposedContent: 'x', status: 'pending', reviewNote: 'my original note' })
+      .returning();
+    const [legacyReviewed] = await dbh.db
+      .insert(contributionsTable)
+      .values({ pageId: null, proposedTitle: 'Legacy Reviewed', contributorId: viewer.id, proposedContent: 'y', status: 'rejected', reviewNote: 'reviewer reason' })
+      .returning();
+
+    const backfill = sql`UPDATE contributions
+        SET contributor_note = review_note, review_note = NULL
+      WHERE status = 'pending' AND contributor_note IS NULL AND review_note IS NOT NULL`;
+    await dbh.db.execute(backfill);
+
+    const row = async (id: number) => (await dbh.db.select().from(contributionsTable).where(eq(contributionsTable.id, id)))[0];
+
+    // Pending row: note moved to contributor_note, review_note cleared.
+    const p = await row(legacyPending.id);
+    expect(p.contributorNote).toBe('my original note');
+    expect(p.reviewNote).toBeNull();
+
+    // Reviewed row: left exactly as-is (we don't guess on reviewed rows).
+    const r = await row(legacyReviewed.id);
+    expect(r.contributorNote).toBeNull();
+    expect(r.reviewNote).toBe('reviewer reason');
+
+    // Idempotent: re-running is a no-op (the contributor_note IS NULL guard).
+    await dbh.db.execute(backfill);
+    const p2 = await row(legacyPending.id);
+    expect(p2.contributorNote).toBe('my original note');
+    expect(p2.reviewNote).toBeNull();
   });
 
   it('a viewer cannot list or review contributions (editor role gate)', async () => {

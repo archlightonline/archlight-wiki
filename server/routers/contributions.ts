@@ -22,7 +22,7 @@ export const contributionsRouter = router({
           contributorId: ctx.user.id,
           proposedContent: sanitizeContent(input.proposedContent),
           status: 'pending',
-          reviewNote: note,
+          contributorNote: note,
         })
         .returning();
       return created;
@@ -51,7 +51,7 @@ export const contributionsRouter = router({
           contributorId: ctx.user.id,
           proposedContent: sanitizeContent(input.proposedContent),
           status: 'pending',
-          reviewNote: note,
+          contributorNote: note,
         })
         .returning();
       return created;
@@ -69,6 +69,7 @@ export const contributionsRouter = router({
       .select({
         id: contributions.id,
         status: contributions.status,
+        contributorNote: contributions.contributorNote,
         reviewNote: contributions.reviewNote,
         createdAt: contributions.createdAt,
         reviewedAt: contributions.reviewedAt,
@@ -129,6 +130,7 @@ export const contributionsRouter = router({
           status: contributions.status,
           proposedContent: contributions.proposedContent,
           proposedTitle: contributions.proposedTitle,
+          contributorNote: contributions.contributorNote,
           reviewNote: contributions.reviewNote,
           createdAt: contributions.createdAt,
           reviewedAt: contributions.reviewedAt,
@@ -173,12 +175,15 @@ export const contributionsRouter = router({
         // 1. Atomically claim the PENDING contribution. The status guard means a
         //    racing second reviewer matches zero rows and never reaches the work
         //    below — so no duplicate page is created.
+        // reviewNote is now the reviewer's note exclusively (the contributor's
+        // note lives in contributorNote), so it's safe to set unconditionally —
+        // it can no longer clobber the contributor's submission note.
         const claimPatch: Record<string, unknown> = {
           status: input.decision,
           reviewedBy: ctx.user.id,
           reviewedAt: new Date(),
+          reviewNote: input.note ? sanitizeText(input.note, 500) : null,
         };
-        if (input.note) claimPatch.reviewNote = sanitizeText(input.note, 500);
 
         const [claimed] = await tx
           .update(contributions)

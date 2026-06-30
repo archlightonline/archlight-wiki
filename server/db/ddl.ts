@@ -77,6 +77,7 @@ export const DDL_STATEMENTS: string[] = [
     proposed_content text NOT NULL,
     status           text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
     reviewed_by      integer REFERENCES users(id),
+    contributor_note text,
     review_note      text,
     created_at       timestamptz NOT NULL DEFAULT now(),
     reviewed_at      timestamptz
@@ -84,6 +85,18 @@ export const DDL_STATEMENTS: string[] = [
   // Idempotent add for databases created before proposed_title existed (new-page
   // proposals). Safe to re-run; no-op once the column is present.
   `ALTER TABLE contributions ADD COLUMN IF NOT EXISTS proposed_title text`,
+  // Idempotent add for databases created before contributor_note existed. Splits
+  // the formerly-overloaded review_note (which held BOTH the contributor's
+  // submission note and the reviewer's decision reason) into two columns.
+  `ALTER TABLE contributions ADD COLUMN IF NOT EXISTS contributor_note text`,
+  // One-time, idempotent backfill of the SAFE/unambiguous case only: for PENDING
+  // rows, review_note unambiguously holds the contributor's note (no reviewer has
+  // touched it yet), so move it to contributor_note. Reviewed rows are left
+  // untouched — their review_note is the reviewer's note (or ambiguous; we don't
+  // guess). The `contributor_note IS NULL` guard makes this a no-op once applied.
+  `UPDATE contributions
+      SET contributor_note = review_note, review_note = NULL
+    WHERE status = 'pending' AND contributor_note IS NULL AND review_note IS NOT NULL`,
   `CREATE INDEX IF NOT EXISTS contributions_status_idx ON contributions (status)`,
   `CREATE INDEX IF NOT EXISTS contributions_page_idx ON contributions (page_id)`,
 

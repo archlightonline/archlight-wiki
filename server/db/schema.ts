@@ -131,6 +131,9 @@ export const contributions = pgTable(
     proposedContent: text('proposed_content').notNull(),
     status: text('status', { enum: CONTRIBUTION_STATUSES }).notNull().default('pending'),
     reviewedBy: integer('reviewed_by').references(() => users.id),
+    // The contributor's own note submitted with the proposal (what/why).
+    contributorNote: text('contributor_note'),
+    // The reviewer's decision/rejection reason — set at review time only.
     reviewNote: text('review_note'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),

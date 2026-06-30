@@ -209,7 +209,8 @@ function ContributionCard({ c, review }: { c: ContributionRow; review: ReviewMut
         <span className="spacer" />
         <span className="muted" style={{ fontSize: 11.5 }}>{fmtDate(c.createdAt)}</span>
       </div>
-      {c.reviewNote && <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>Note: {c.reviewNote}</div>}
+      {c.contributorNote && <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>Contributor&apos;s note: {c.contributorNote}</div>}
+      {c.reviewNote && <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>Reviewer&apos;s note: {c.reviewNote}</div>}
       <div className="toolbar" style={{ marginTop: 8 }}>
         <button className="btn sm ghost" onClick={() => setOpen((o) => !o)}>
           {open ? 'Hide' : isEdit ? 'View changes' : 'View proposed content'}

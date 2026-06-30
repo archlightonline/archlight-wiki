@@ -141,7 +141,8 @@ export function Profile() {
               {c.status === 'approved' ? 'Approved' : 'Reviewed'} {fmtDate(c.reviewedAt)}
             </div>
           )}
-          {c.reviewNote && <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>Note: {c.reviewNote}</div>}
+          {c.contributorNote && <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>Your note: {c.contributorNote}</div>}
+          {c.reviewNote && <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>Reviewer&apos;s note: {c.reviewNote}</div>}
         </div>
       ))}
     </div>

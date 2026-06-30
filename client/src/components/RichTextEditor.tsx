@@ -10,12 +10,14 @@ import { Callout } from './Callout';
 import { cleanPastedHtml } from './pasteCleanup';
 import { CALLOUT_TYPES, CALLOUT_LABELS, type CalloutType } from './calloutTypes';
 import { WIDTH_PRESETS, presetWidth } from './imageAttrs';
-
-// Mirrors the server gate (server/routers/uploads.ts) for fast client feedback.
-// The server remains the real authority — never trust these alone.
-const UPLOAD_ACCEPT = 'image/png,image/jpeg,image/webp,image/gif';
-const ALLOWED_UPLOAD_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
+import {
+  UPLOAD_ACCEPT,
+  uploadImageFile,
+  imageFilesFrom,
+  dataUrlToImageFile,
+  DATA_URI_IMAGE_RE,
+  type UploadHandlers,
+} from './imageUpload';
 
 /**
  * Tiptap block editor. Emits HTML via `onChange`. Existing pages may still be
@@ -72,41 +74,14 @@ function Toolbar({ editor, onUploadError }: { editor: Editor; onUploadError: (ms
   };
 
   // New option: pick a file, get a presigned R2 URL, upload directly, embed the
-  // resulting public URL. The server never receives the bytes.
+  // resulting public URL — via the shared uploader (same flow paste/drop use).
   const handleFile = async (file: File) => {
-    onUploadError(null);
-    if (!ALLOWED_UPLOAD_TYPES.includes(file.type)) {
-      onUploadError('Unsupported image type. Use PNG, JPEG, WebP, or GIF.');
-      return;
-    }
-    if (file.size > MAX_UPLOAD_BYTES) {
-      onUploadError('Image is too large (max 5 MB).');
-      return;
-    }
-    setUploading(true);
-    try {
-      const { uploadUrl, publicUrl } = await createUploadUrl.mutateAsync({
-        filename: file.name,
-        contentType: file.type,
-        size: file.size,
-      });
-      // Direct PUT to R2. Content-Type is sent to match the server-validated
-      // type (for cooperative uploads / object metadata) only — it is NOT
-      // signature-pinned. The browser sets Content-Length to the file size,
-      // which R2 validates against the signed ContentLength (the one signed,
-      // enforced control — so an oversized body is rejected).
-      const res = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type },
-      });
-      if (!res.ok) throw new Error(`Upload failed (${res.status}).`);
-      editor.chain().focus().setImage({ src: publicUrl }).run();
-    } catch (err) {
-      onUploadError(err instanceof Error ? err.message : 'Upload failed. Please try again.');
-    } finally {
-      setUploading(false);
-    }
+    const publicUrl = await uploadImageFile(file, {
+      mutateAsync: createUploadUrl.mutateAsync,
+      onError: onUploadError,
+      onUploading: setUploading,
+    });
+    if (publicUrl) editor.chain().focus().setImage({ src: publicUrl }).run();
   };
 
   const onPick = (e: ChangeEvent<HTMLInputElement>) => {
@@ -263,6 +238,68 @@ export function RichTextEditor({
   const lastEmitted = useRef<string>('');
   // Upload errors render as a banner ABOVE the editor (not inside the content).
   const [uploadError, setUploadError] = useState<string | null>(null);
+  // Busy indicator for paste/drop uploads (the toolbar button has its own).
+  const [pasteUploading, setPasteUploading] = useState(false);
+
+  // The editorProps paste/drop handlers below are captured ONCE at useEditor time,
+  // so they must NOT close over the mutation/editor/callbacks directly (they'd go
+  // stale). Instead they call through these refs, refreshed every render — so they
+  // always use the current uploader and editor.
+  const createUploadUrl = trpc.uploads.createUploadUrl.useMutation();
+  const editorRef = useRef<Editor | null>(null);
+  const uploaderRef = useRef<((file: File) => Promise<string | null>) | null>(null);
+  useEffect(() => {
+    const handlers: UploadHandlers = {
+      mutateAsync: createUploadUrl.mutateAsync,
+      onError: setUploadError,
+      onUploading: setPasteUploading,
+    };
+    uploaderRef.current = (file) => uploadImageFile(file, handlers);
+  });
+
+  // Upload image files, then insert each at `pos` (or the current selection when
+  // null). Sequential so multiple images keep their order.
+  const uploadAndInsert = async (files: File[], pos: number | null) => {
+    const ed = editorRef.current;
+    const upload = uploaderRef.current;
+    if (!ed || !upload) return;
+    if (pos !== null) ed.chain().focus().setTextSelection(pos).run();
+    for (const file of files) {
+      const url = await upload(file);
+      if (url) ed.chain().focus().setImage({ src: url }).run();
+    }
+  };
+
+  // After a normal paste, rehost inline data: images (base64 carried in the HTML)
+  // to R2, replacing each data: src with the public URL so saved content isn't
+  // bloated with giant base64 strings. The bytes are already in hand — no network
+  // fetch, so no CORS/SSRF surface (external http(s) images are left untouched).
+  const rehostDataUriImages = async () => {
+    const ed = editorRef.current;
+    const upload = uploaderRef.current;
+    if (!ed || !upload) return;
+    const srcs = new Set<string>();
+    ed.state.doc.descendants((node) => {
+      const src = node.attrs?.src;
+      if (node.type.name === 'image' && typeof src === 'string' && src.startsWith('data:image/')) srcs.add(src);
+    });
+    for (const src of srcs) {
+      const file = dataUrlToImageFile(src);
+      if (!file) continue;
+      const url = await upload(file);
+      if (!url) continue;
+      // Re-scan the CURRENT doc and repoint every node still on this data: src.
+      const tr = ed.state.tr;
+      let changed = false;
+      ed.state.doc.descendants((node, nodePos) => {
+        if (node.type.name === 'image' && node.attrs?.src === src) {
+          tr.setNodeMarkup(nodePos, undefined, { ...node.attrs, src: url });
+          changed = true;
+        }
+      });
+      if (changed) ed.view.dispatch(tr);
+    }
+  };
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -281,6 +318,31 @@ export function RichTextEditor({
       // pasted content conforms to the clean schema. The schema still drops
       // unknown nodes/marks; this handles allowed tags arriving with messy styling.
       transformPastedHTML: (html) => cleanPastedHtml(html),
+      // Paste image BYTES (e.g. a screenshot) → upload to R2, insert the URL.
+      handlePaste: (_view, event) => {
+        const files = imageFilesFrom(event.clipboardData?.files);
+        if (files.length > 0) {
+          void uploadAndInsert(files, null);
+          return true; // handled — don't also paste the raw bytes
+        }
+        // a′: inline data: image(s) in pasted HTML → let the default paste run,
+        // then rehost them to R2 (replacing the base64 src). External http(s)
+        // <img> and everything else fall through to default handling untouched.
+        const html = event.clipboardData?.getData('text/html') ?? '';
+        if (DATA_URI_IMAGE_RE.test(html)) {
+          queueMicrotask(() => void rehostDataUriImages());
+        }
+        return false;
+      },
+      // Drop image BYTES (drag from the desktop) → upload, insert at the drop point.
+      handleDrop: (view, event) => {
+        const files = imageFilesFrom(event.dataTransfer?.files);
+        if (files.length === 0) return false; // let ProseMirror handle non-image drops
+        event.preventDefault();
+        const at = view.posAtCoords({ left: event.clientX, top: event.clientY });
+        void uploadAndInsert(files, at?.pos ?? null);
+        return true;
+      },
     },
     content: toInitialHtml(value),
     onUpdate: ({ editor }) => {
@@ -289,6 +351,11 @@ export function RichTextEditor({
       onChange(html);
     },
   });
+
+  // Keep the editor ref current for the (once-captured) paste/drop handlers.
+  useEffect(() => {
+    editorRef.current = editor;
+  }, [editor]);
 
   // Sync externally-provided content (e.g. async-loaded page content) once.
   useEffect(() => {
@@ -315,6 +382,11 @@ export function RichTextEditor({
       {uploadError && (
         <div className="rte-upload-error" role="alert">
           {uploadError}
+        </div>
+      )}
+      {pasteUploading && (
+        <div className="muted" role="status" aria-live="polite" style={{ padding: '6px 0', fontSize: 13 }}>
+          Uploading image…
         </div>
       )}
       <EditorContent editor={editor} className="rte-content" />

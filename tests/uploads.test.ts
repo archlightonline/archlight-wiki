@@ -172,6 +172,29 @@ describe('uploads.createUploadUrl', () => {
     await expect(caller.uploads.createUploadUrl(valid)).rejects.toThrow(/daily upload limit reached/i);
   });
 
+  it('concurrent viewer uploads cannot exceed the cap (transactional check+insert)', async () => {
+    const viewer = await seedUser(dbh, { username: 'vwcc', role: 'viewer' });
+    const { caller } = callerFor(dbh, viewer);
+    // Fire more requests than the hourly cap "at once". The per-user advisory
+    // xact lock serializes the check+insert so the recorded count can never exceed
+    // the cap — no viewer bursts past it.
+    const results = await Promise.allSettled(
+      Array.from({ length: 8 }, () => caller.uploads.createUploadUrl(valid)),
+    );
+    const fulfilled = results.filter((r) => r.status === 'fulfilled').length;
+    const rows = await dbh.db.select().from(uploadsTable).where(eq(uploadsTable.userId, viewer.id));
+
+    // The invariant that matters: never more recorded uploads than the cap.
+    expect(rows.length).toBeLessThanOrEqual(5);
+    // Every success recorded exactly one row (no signed-but-unrecorded leaks).
+    expect(fulfilled).toBe(rows.length);
+    // NOTE: PGlite is single-connection, so this can't simulate TRUE parallel
+    // transactions (same caveat as the contribution double-approval test). It
+    // verifies the transactional check+insert holds the cap under overlapping
+    // calls; the pg_advisory_xact_lock is the correct serialization mechanism on
+    // production Postgres, where requests really are concurrent.
+  });
+
   it('does NOT rate-limit an editor (trusted) even past the viewer caps, and records uploads', async () => {
     const editor = await seedUser(dbh, { username: 'edrl', role: 'editor' });
     const { caller } = callerFor(dbh, editor);

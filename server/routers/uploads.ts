@@ -3,7 +3,6 @@ import { randomUUID } from 'node:crypto';
 import { and, eq, gte, sql } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { router, protectedProcedure } from '../trpc/trpc';
-import type { DB } from '../db';
 import { uploads } from '../db/schema';
 import { createPresignedUpload } from '../lib/storage';
 
@@ -65,60 +64,24 @@ const VIEWER_BYTES_PER_DAY = 100 * 1024 * 1024; // ~100 MB/day
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 
-/**
- * Enforce the per-viewer sliding-window rate limit. No-op for editors/admins.
- * Throws TOO_MANY_REQUESTS with a clear, user-facing message when a viewer is at
- * or over any cap (hourly count, daily count, or daily total bytes). Counts come
- * from the durable `uploads` table, so limits hold across restarts/redeploys.
- */
-async function enforceViewerRateLimit(
-  db: DB,
-  userId: number,
-  role: string,
-  incomingSize: number,
-): Promise<void> {
-  if (role !== 'viewer') return; // editors/admins are trusted — unlimited
-
-  const now = Date.now();
-  const hourAgo = new Date(now - HOUR_MS);
-  const dayAgo = new Date(now - DAY_MS);
-
-  const [{ c: hourCount }] = await db
-    .select({ c: sql<number>`count(*)::int` })
-    .from(uploads)
-    .where(and(eq(uploads.userId, userId), gte(uploads.createdAt, hourAgo)));
-  if (hourCount >= VIEWER_UPLOADS_PER_HOUR) {
-    throw new TRPCError({
-      code: 'TOO_MANY_REQUESTS',
-      message: `Upload limit reached (${VIEWER_UPLOADS_PER_HOUR} per hour). Please try again later.`,
-    });
-  }
-
-  const [day] = await db
-    .select({
-      c: sql<number>`count(*)::int`,
-      bytes: sql<number>`coalesce(sum(${uploads.size}), 0)::bigint`,
-    })
-    .from(uploads)
-    .where(and(eq(uploads.userId, userId), gte(uploads.createdAt, dayAgo)));
-  if (day.c >= VIEWER_UPLOADS_PER_DAY) {
-    throw new TRPCError({
-      code: 'TOO_MANY_REQUESTS',
-      message: `Daily upload limit reached (${VIEWER_UPLOADS_PER_DAY} per day). Please try again tomorrow.`,
-    });
-  }
-  if (Number(day.bytes) + incomingSize > VIEWER_BYTES_PER_DAY) {
-    throw new TRPCError({
-      code: 'TOO_MANY_REQUESTS',
-      message: 'Daily upload size limit reached. Please try again tomorrow.',
-    });
-  }
-}
+// Arbitrary namespace for this subsystem's Postgres advisory locks. The viewer
+// rate-limit lock is pg_advisory_xact_lock(UPLOAD_LOCK_NS, userId) — the two-int
+// form keeps upload locks from colliding with any future advisory lock keyed by
+// userId alone.
+const UPLOAD_LOCK_NS = 4271;
 
 export const uploadsRouter = router({
   /**
    * Issue a short-lived presigned PUT URL for a validated image. Any authenticated
    * user; viewers are rate-limited (editors/admins are not). Records the upload.
+   *
+   * CONCURRENCY: the viewer limit is a count-then-insert, which would race if two
+   * same-user requests both read the pre-limit count before either inserts. The
+   * whole check+sign+record runs in ONE transaction that first takes a Postgres
+   * advisory xact lock keyed by userId — so concurrent same-user requests
+   * serialize, each seeing the prior one's committed row, and a viewer cannot
+   * burst past the caps. Different users hash to different lock keys and never
+   * block each other. The lock auto-releases at transaction end.
    */
   createUploadUrl: protectedProcedure
     .input(
@@ -143,42 +106,83 @@ export const uploadsRouter = router({
         });
       }
 
-      // Gate viewers BEFORE signing/recording — an over-limit viewer issues no URL
-      // and records no row. Editors/admins skip this entirely.
-      await enforceViewerRateLimit(ctx.db, ctx.user.id, ctx.user.role, input.size);
-
+      const userId = ctx.user.id;
+      const role = ctx.user.role;
       // Unique, safe key — never uses the raw user filename.
       const key = `uploads/${randomUUID()}.${ext}`;
 
-      let signed: { uploadUrl: string; publicUrl: string };
-      try {
-        // The declared-size check above gates the value we SIGN. ContentLength is
-        // signed into the PUT, so R2 rejects the upload unless the actual body
-        // length matches this server-capped (<= 5 MB) value — real enforcement,
-        // not just the client's claim.
-        signed = await createPresignedUpload({
-          key,
-          contentType: input.contentType,
-          contentLength: input.size,
-          expiresInSeconds: PRESIGN_TTL_SECONDS,
-        });
-      } catch {
-        // Misconfiguration / signing failure — do not leak internals.
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Image uploads are not available right now.',
-        });
-      }
+      return await ctx.db.transaction(async (tx) => {
+        // Serialize concurrent same-user requests so the count below already
+        // reflects any concurrently-committed upload. (PGlite is single-connection
+        // so this is uncontended in tests/dev; the serialization matters on real
+        // Postgres in production. Both support pg_advisory_xact_lock — PGlite is
+        // real PostgreSQL compiled to WASM.)
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(${UPLOAD_LOCK_NS}, ${userId})`);
 
-      // Record the issued upload — durable backing for the rate-limit windows
-      // (all roles, so the table is also a complete object inventory for cleanup).
-      await ctx.db.insert(uploads).values({
-        userId: ctx.user.id,
-        key,
-        contentType: input.contentType,
-        size: input.size,
+        // Viewer rate limit (editors/admins are trusted — skipped). Over any cap →
+        // throw, which rolls back the tx: no URL signed, no row recorded.
+        if (role === 'viewer') {
+          const now = Date.now();
+          const hourAgo = new Date(now - HOUR_MS);
+          const dayAgo = new Date(now - DAY_MS);
+
+          const [{ c: hourCount }] = await tx
+            .select({ c: sql<number>`count(*)::int` })
+            .from(uploads)
+            .where(and(eq(uploads.userId, userId), gte(uploads.createdAt, hourAgo)));
+          if (hourCount >= VIEWER_UPLOADS_PER_HOUR) {
+            throw new TRPCError({
+              code: 'TOO_MANY_REQUESTS',
+              message: `Upload limit reached (${VIEWER_UPLOADS_PER_HOUR} per hour). Please try again later.`,
+            });
+          }
+
+          const [day] = await tx
+            .select({
+              c: sql<number>`count(*)::int`,
+              bytes: sql<number>`coalesce(sum(${uploads.size}), 0)::bigint`,
+            })
+            .from(uploads)
+            .where(and(eq(uploads.userId, userId), gte(uploads.createdAt, dayAgo)));
+          if (day.c >= VIEWER_UPLOADS_PER_DAY) {
+            throw new TRPCError({
+              code: 'TOO_MANY_REQUESTS',
+              message: `Daily upload limit reached (${VIEWER_UPLOADS_PER_DAY} per day). Please try again tomorrow.`,
+            });
+          }
+          if (Number(day.bytes) + input.size > VIEWER_BYTES_PER_DAY) {
+            throw new TRPCError({
+              code: 'TOO_MANY_REQUESTS',
+              message: 'Daily upload size limit reached. Please try again tomorrow.',
+            });
+          }
+        }
+
+        // Sign the presigned PUT. Local crypto (no network / no R2 state), so it's
+        // fine to hold the lock across it. ContentLength is signed, so R2 rejects a
+        // body that doesn't match the server-capped (<= 5 MB) size. A signing
+        // failure throws → tx rolls back → no row recorded.
+        let signed: { uploadUrl: string; publicUrl: string };
+        try {
+          signed = await createPresignedUpload({
+            key,
+            contentType: input.contentType,
+            contentLength: input.size,
+            expiresInSeconds: PRESIGN_TTL_SECONDS,
+          });
+        } catch {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Image uploads are not available right now.',
+          });
+        }
+
+        // Record the issued upload INSIDE the tx, so it commits before the lock is
+        // released and the next serialized same-user request counts it. All roles
+        // recorded (durable rate-limit backing + object inventory for cleanup).
+        await tx.insert(uploads).values({ userId, key, contentType: input.contentType, size: input.size });
+
+        return { uploadUrl: signed.uploadUrl, publicUrl: signed.publicUrl, key, expiresInSeconds: PRESIGN_TTL_SECONDS };
       });
-
-      return { uploadUrl: signed.uploadUrl, publicUrl: signed.publicUrl, key, expiresInSeconds: PRESIGN_TTL_SECONDS };
     }),
 });

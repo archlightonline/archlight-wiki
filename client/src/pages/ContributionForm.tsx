@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { trpc } from '../lib/trpc';
 import { useAuth } from '../lib/auth';
 import { Breadcrumb } from '../components/Breadcrumb';
@@ -10,6 +10,10 @@ import { NotFound } from './NotFound';
 
 export function ContributionForm() {
   const { slug } = useParams();
+  const location = useLocation();
+  // Edit-and-resubmit pre-fills the editor with the contributor's prior proposed
+  // content (via route state) instead of the page's current content.
+  const prefillContent = (location.state as { prefillContent?: string } | null)?.prefillContent;
   const { isAuthed, isLoading } = useAuth();
   const page = trpc.pages.get.useQuery({ slug: slug! }, { retry: false });
   const [content, setContent] = useState('');
@@ -17,9 +21,19 @@ export function ContributionForm() {
   const [done, setDone] = useState(false);
   const submit = trpc.contributions.submit.useMutation({ onSuccess: () => setDone(true) });
 
+  // Seed the editor exactly once: from the resubmit prefill if present, otherwise
+  // from the page's current content (the normal "start fresh from current" flow).
+  const seeded = useRef(false);
   useEffect(() => {
-    if (page.data) setContent(page.data.content);
-  }, [page.data?.slug]);
+    if (seeded.current) return;
+    if (prefillContent !== undefined) {
+      setContent(prefillContent);
+      seeded.current = true;
+    } else if (page.data) {
+      setContent(page.data.content);
+      seeded.current = true;
+    }
+  }, [page.data?.slug, prefillContent]);
 
   if (isLoading || page.isLoading) return <Loading />;
   if (!page.data) return <NotFound />;

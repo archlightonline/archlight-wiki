@@ -88,6 +88,36 @@ describe('contributions', () => {
     expect(listRow.reviewNote).toBe('not helpful');
   });
 
+  it('mine returns the contributor’s own proposedContent (for view + resubmit)', async () => {
+    const vw = callerFor(dbh, viewer).caller;
+    await vw.contributions.submit({ slug: 'contrib-page', proposedContent: 'my proposed body' });
+    const mine = await vw.contributions.mine();
+    expect(mine[0].proposedContent).toBe('my proposed body');
+  });
+
+  it('resubmitting a rejected contribution creates a NEW pending one and leaves the original untouched', async () => {
+    const vw = callerFor(dbh, viewer).caller;
+    const ed = callerFor(dbh, editor).caller;
+
+    // Original submission, then rejected.
+    const original = await vw.contributions.submit({ slug: 'contrib-page', proposedContent: 'first attempt', note: 'try 1' });
+    await ed.contributions.review({ id: original.id, decision: 'rejected', note: 'needs work' });
+
+    // Resubmit = a brand-new contribution via the same submit path (edited content).
+    const resubmitted = await vw.contributions.submit({ slug: 'contrib-page', proposedContent: 'second attempt', note: 'try 2' });
+    expect(resubmitted.id).not.toBe(original.id);
+    expect(resubmitted.status).toBe('pending');
+    expect(resubmitted.proposedContent).toBe('second attempt');
+
+    // The original rejected record is unchanged (status, content, notes preserved).
+    const mine = await vw.contributions.mine();
+    const orig = mine.find((m) => m.id === original.id)!;
+    expect(orig.status).toBe('rejected');
+    expect(orig.proposedContent).toBe('first attempt');
+    expect(orig.reviewNote).toBe('needs work');
+    expect(mine.filter((m) => m.status === 'pending').length).toBe(1);
+  });
+
   it('submitNewPage routes the note to contributorNote', async () => {
     const vw = callerFor(dbh, viewer).caller;
     const c = await vw.contributions.submitNewPage({ title: 'Guide X', proposedContent: '<p>hi</p>', note: 'fresh draft' });

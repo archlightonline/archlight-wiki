@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { trpc } from '../lib/trpc';
 import { useAuth } from '../lib/auth';
 import { Loading, ErrorBox } from '../components/ui';
+import { Markdown } from '../components/Markdown';
 import { fmtDate } from '../lib/format';
 
 const statusLabel = (s: string) =>
@@ -30,6 +31,8 @@ export function Profile() {
 
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  // Which contribution's submitted content is expanded for review.
+  const [openId, setOpenId] = useState<number | null>(null);
   const update = trpc.auth.updateProfile.useMutation({
     onSuccess: () => {
       utils.auth.me.invalidate();
@@ -143,6 +146,39 @@ export function Profile() {
           )}
           {c.contributorNote && <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>Your note: {c.contributorNote}</div>}
           {c.reviewNote && <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>Reviewer&apos;s note: {c.reviewNote}</div>}
+          <div className="toolbar" style={{ marginTop: 8 }}>
+            <button className="btn sm ghost" onClick={() => setOpenId(openId === c.id ? null : c.id)}>
+              {openId === c.id ? 'Hide my submission' : 'View my submission'}
+            </button>
+            {/* Edit & resubmit: pre-fill the matching form with this prior content
+                via route state. Submitting creates a NEW contribution; this one
+                is untouched. Useful especially for rejected ones. */}
+            {c.pageSlug ? (
+              <Link
+                className="btn sm"
+                to={`/contribute/${c.pageSlug}`}
+                state={{ prefillContent: c.proposedContent }}
+              >
+                Edit &amp; resubmit
+              </Link>
+            ) : (
+              <Link
+                className="btn sm"
+                to="/propose"
+                state={{ prefillTitle: c.proposedTitle, prefillContent: c.proposedContent }}
+              >
+                Edit &amp; resubmit
+              </Link>
+            )}
+          </div>
+          {openId === c.id && (
+            <div className="review-preview" style={{ marginTop: 8 }}>
+              {!c.pageSlug && c.proposedTitle && (
+                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Proposed title: {c.proposedTitle}</div>
+              )}
+              <Markdown content={c.proposedContent} />
+            </div>
+          )}
         </div>
       ))}
     </div>

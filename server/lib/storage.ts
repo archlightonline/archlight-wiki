@@ -30,7 +30,7 @@
  * actually generated, so importing the app without R2 configured (local dev /
  * tests) never throws.
  */
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
@@ -104,4 +104,18 @@ export async function createPresignedUpload(opts: {
   const base = (R2_PUBLIC_BASE_URL as string).replace(/\/+$/, '');
   const publicUrl = `${base}/${opts.key}`;
   return { uploadUrl, publicUrl };
+}
+
+/**
+ * Delete an object from R2 by key. Unlike upload (which the browser performs
+ * against a presigned PUT URL), this is a DIRECT server-side call using the R2
+ * credentials — so the R2 API token MUST have Object Read & Write permission. An
+ * upload-only / read-only token will fail this with an AccessDenied (403).
+ *
+ * Used only by the manual orphan-cleanup script (scripts/cleanup-orphan-uploads.mjs)
+ * in --execute mode. Makes a real network call to R2.
+ */
+export async function deleteObject(key: string): Promise<void> {
+  const client = r2Client();
+  await client.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: key }));
 }

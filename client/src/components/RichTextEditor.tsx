@@ -14,7 +14,7 @@ import {
   UPLOAD_ACCEPT,
   uploadImageFile,
   imageFilesFrom,
-  dataUrlToImageFile,
+  rehostDataUri,
   DATA_URI_IMAGE_RE,
   type UploadHandlers,
 } from './imageUpload';
@@ -270,10 +270,39 @@ export function RichTextEditor({
     }
   };
 
+  // Repoint every image node currently on `src` to the rehosted R2 `url`.
+  const repointDataUriNodes = (ed: Editor, src: string, url: string) => {
+    const tr = ed.state.tr;
+    let changed = false;
+    ed.state.doc.descendants((node, pos) => {
+      if (node.type.name === 'image' && node.attrs?.src === src) {
+        tr.setNodeMarkup(pos, undefined, { ...node.attrs, src: url });
+        changed = true;
+      }
+    });
+    if (changed) ed.view.dispatch(tr);
+  };
+
+  // Remove every image node currently on `src` — used when rehosting fails so the
+  // base64 blob is never left in the document. Delete back-to-front so earlier
+  // positions stay valid as nodes are removed.
+  const removeDataUriNodes = (ed: Editor, src: string) => {
+    const ranges: { from: number; to: number }[] = [];
+    ed.state.doc.descendants((node, pos) => {
+      if (node.type.name === 'image' && node.attrs?.src === src) ranges.push({ from: pos, to: pos + node.nodeSize });
+    });
+    if (ranges.length === 0) return;
+    const tr = ed.state.tr;
+    for (const r of ranges.reverse()) tr.delete(r.from, r.to);
+    ed.view.dispatch(tr);
+  };
+
   // After a normal paste, rehost inline data: images (base64 carried in the HTML)
   // to R2, replacing each data: src with the public URL so saved content isn't
   // bloated with giant base64 strings. The bytes are already in hand — no network
   // fetch, so no CORS/SSRF surface (external http(s) images are left untouched).
+  // On ANY failure (decode/type/oversize/permission/upload) the node is REMOVED
+  // and the error surfaced — we never leave the base64 blob behind.
   const rehostDataUriImages = async () => {
     const ed = editorRef.current;
     const upload = uploaderRef.current;
@@ -284,20 +313,13 @@ export function RichTextEditor({
       if (node.type.name === 'image' && typeof src === 'string' && src.startsWith('data:image/')) srcs.add(src);
     });
     for (const src of srcs) {
-      const file = dataUrlToImageFile(src);
-      if (!file) continue;
-      const url = await upload(file);
-      if (!url) continue;
-      // Re-scan the CURRENT doc and repoint every node still on this data: src.
-      const tr = ed.state.tr;
-      let changed = false;
-      ed.state.doc.descendants((node, nodePos) => {
-        if (node.type.name === 'image' && node.attrs?.src === src) {
-          tr.setNodeMarkup(nodePos, undefined, { ...node.attrs, src: url });
-          changed = true;
-        }
-      });
-      if (changed) ed.view.dispatch(tr);
+      const outcome = await rehostDataUri(src, upload);
+      if (outcome.ok) {
+        repointDataUriNodes(ed, src, outcome.url);
+      } else {
+        removeDataUriNodes(ed, src);
+        setUploadError(outcome.reason);
+      }
     }
   };
 

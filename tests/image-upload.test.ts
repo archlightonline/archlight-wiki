@@ -4,6 +4,7 @@ import {
   imageFilesFrom,
   parseDataUrl,
   dataUrlToImageFile,
+  rehostDataUri,
   DATA_URI_IMAGE_RE,
   ALLOWED_UPLOAD_TYPES,
   MAX_UPLOAD_BYTES,
@@ -117,5 +118,51 @@ describe('parseDataUrl / dataUrlToImageFile / DATA_URI_IMAGE_RE', () => {
   it('detects inline data: images in pasted HTML, but not external http images', () => {
     expect(DATA_URI_IMAGE_RE.test(`<p><img src="${png}"></p>`)).toBe(true);
     expect(DATA_URI_IMAGE_RE.test('<p><img src="https://other-site.com/x.png"></p>')).toBe(false);
+  });
+});
+
+describe('rehostDataUri (failure paths must not leave a base64 blob)', () => {
+  const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M8AAAMBAQDJ/pLvAAAAAElFTkSuQmCC';
+
+  it('returns the R2 url on success (node will be repointed)', async () => {
+    const upload = vi.fn().mockResolvedValue('https://cdn/x.png');
+    const outcome = await rehostDataUri(png, upload);
+    expect(outcome).toEqual({ ok: true, url: 'https://cdn/x.png' });
+    expect(upload).toHaveBeenCalledOnce();
+  });
+
+  it('fails an oversized data URI fast — before attempting upload (node will be removed)', async () => {
+    // ~5.25 MB decoded (over the 5 MB cap). 'A'×4 → 3 zero bytes via atob.
+    const oversized = 'data:image/png;base64,' + 'A'.repeat(7_000_000);
+    expect(7_000_000 * (3 / 4)).toBeGreaterThan(MAX_UPLOAD_BYTES);
+    const upload = vi.fn();
+    const outcome = await rehostDataUri(oversized, upload);
+    expect(outcome.ok).toBe(false);
+    expect(outcome.ok === false && outcome.reason).toMatch(/too large/i);
+    expect(upload).not.toHaveBeenCalled(); // failed fast, no upload attempt
+  });
+
+  it('rejects an unsupported image type without uploading (node will be removed)', async () => {
+    const upload = vi.fn();
+    const outcome = await rehostDataUri('data:image/bmp;base64,Qk0=', upload);
+    expect(outcome.ok).toBe(false);
+    expect(outcome.ok === false && outcome.reason).toMatch(/unsupported type/i);
+    expect(upload).not.toHaveBeenCalled();
+  });
+
+  it('removes (fails) when it is not a decodable image', async () => {
+    const upload = vi.fn();
+    const outcome = await rehostDataUri('data:text/plain;base64,aGk=', upload);
+    expect(outcome.ok).toBe(false);
+    expect(outcome.ok === false && outcome.reason).toMatch(/decoded|processed/i);
+    expect(upload).not.toHaveBeenCalled();
+  });
+
+  it('fails when the upload itself fails (e.g. PUT error or viewer gate) — node will be removed', async () => {
+    const upload = vi.fn().mockResolvedValue(null); // uploadImageFile already surfaced its own error
+    const outcome = await rehostDataUri(png, upload);
+    expect(outcome.ok).toBe(false);
+    expect(outcome.ok === false && outcome.reason).toMatch(/could not be uploaded/i);
+    expect(upload).toHaveBeenCalledOnce();
   });
 });

@@ -126,3 +126,37 @@ export function dataUrlToImageFile(dataUrl: string, nameHint = 'image'): File | 
   const ext = parsed.mime.split('/')[1] || 'png';
   return new File([parsed.bytes as BlobPart], `pasted-${nameHint}.${ext}`, { type: parsed.mime });
 }
+
+export type RehostOutcome = { ok: true; url: string } | { ok: false; reason: string };
+
+/**
+ * Decide what to do with one inline `data:` image: decode it, fail fast on a
+ * non-image / undecodable / oversized blob (the size pre-check runs BEFORE
+ * building the File or attempting an upload), then upload via `upload`.
+ *
+ * Pure decision logic (no DOM/editor) so it's unit-testable. The caller applies
+ * the result to the document: on `ok` repoint the node's src to the R2 URL; on
+ * failure REMOVE the node — never leave the base64 blob in the editor. `reason`
+ * is a user-facing message for the error banner.
+ */
+export async function rehostDataUri(
+  src: string,
+  upload: (file: File) => Promise<string | null>,
+): Promise<RehostOutcome> {
+  const parsed = parseDataUrl(src);
+  if (!parsed || !parsed.mime.startsWith('image/')) {
+    return { ok: false, reason: 'A pasted image could not be decoded and was removed.' };
+  }
+  // Fail fast on size using the decoded byte length, before building the File.
+  if (parsed.bytes.length > MAX_UPLOAD_BYTES) {
+    return { ok: false, reason: 'A pasted image was too large (max 5 MB) and was removed.' };
+  }
+  if (!ALLOWED_UPLOAD_TYPES.includes(parsed.mime)) {
+    return { ok: false, reason: 'A pasted image had an unsupported type and was removed.' };
+  }
+  const file = dataUrlToImageFile(src);
+  if (!file) return { ok: false, reason: 'A pasted image could not be processed and was removed.' };
+  const url = await upload(file);
+  if (!url) return { ok: false, reason: 'A pasted image could not be uploaded and was removed.' };
+  return { ok: true, url };
+}

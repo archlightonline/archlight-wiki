@@ -152,24 +152,27 @@ export function Profile() {
             </button>
             {/* Edit & resubmit: pre-fill the matching form with this prior content
                 via route state. Submitting creates a NEW contribution; this one
-                is untouched. Useful especially for rejected ones. */}
-            {c.pageSlug ? (
-              <Link
-                className="btn sm"
-                to={`/contribute/${c.pageSlug}`}
-                state={{ prefillContent: c.proposedContent }}
-              >
-                Edit &amp; resubmit
-              </Link>
-            ) : (
-              <Link
-                className="btn sm"
-                to="/propose"
-                state={{ prefillTitle: c.proposedTitle, prefillContent: c.proposedContent }}
-              >
-                Edit &amp; resubmit
-              </Link>
-            )}
+                is untouched. Only offered on REJECTED contributions — resubmitting
+                an approved one could revert newer page changes, and a pending one
+                would just create a confusing duplicate. */}
+            {c.status === 'rejected' &&
+              (c.pageSlug ? (
+                <Link
+                  className="btn sm"
+                  to={`/contribute/${c.pageSlug}`}
+                  state={{ prefillContent: c.proposedContent }}
+                >
+                  Edit &amp; resubmit
+                </Link>
+              ) : (
+                <Link
+                  className="btn sm"
+                  to="/propose"
+                  state={{ prefillTitle: c.proposedTitle, prefillContent: c.proposedContent }}
+                >
+                  Edit &amp; resubmit
+                </Link>
+              ))}
           </div>
           {openId === c.id && (
             <div className="review-preview" style={{ marginTop: 8 }}>

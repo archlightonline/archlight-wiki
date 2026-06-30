@@ -100,6 +100,20 @@ export const DDL_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS contributions_status_idx ON contributions (status)`,
   `CREATE INDEX IF NOT EXISTS contributions_page_idx ON contributions (page_id)`,
 
+  // Image-upload records — durable backing for per-viewer upload rate-limits
+  // (survives restarts/redeploys) and groundwork for orphan-file cleanup.
+  `CREATE TABLE IF NOT EXISTS uploads (
+    id           serial PRIMARY KEY,
+    user_id      integer NOT NULL REFERENCES users(id),
+    key          text NOT NULL,
+    content_type text NOT NULL,
+    size         integer NOT NULL,
+    created_at   timestamptz NOT NULL DEFAULT now()
+  )`,
+  // Indexed on (user_id, created_at) — the exact shape of the sliding-window
+  // rate-limit count (recent uploads for one user).
+  `CREATE INDEX IF NOT EXISTS uploads_user_created_idx ON uploads (user_id, created_at)`,
+
   `CREATE TABLE IF NOT EXISTS social_links (
     id         serial PRIMARY KEY,
     key        text NOT NULL,

@@ -144,6 +144,29 @@ export const contributions = pgTable(
   }),
 );
 
+/**
+ * Image-upload records — one row per presigned URL issued (R2 object key + who +
+ * size). Durable so per-viewer upload rate-limits survive restarts/redeploys, and
+ * groundwork for a future orphan-file cleanup job. ALL uploads are recorded
+ * (editors/admins too), even though only viewers are rate-limited.
+ */
+export const uploads = pgTable(
+  'uploads',
+  {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id),
+    key: text('key').notNull(), // the R2 object key (uploads/<uuid>.<ext>)
+    contentType: text('content_type').notNull(),
+    size: integer('size').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    userCreatedIdx: index('uploads_user_created_idx').on(t.userId, t.createdAt),
+  }),
+);
+
 /** Editable social links shown in the topbar (DB-backed so admins can change URLs). */
 export const socialLinks = pgTable(
   'social_links',
@@ -182,5 +205,6 @@ export type Page = typeof pages.$inferSelect;
 export type NewPage = typeof pages.$inferInsert;
 export type PageRevision = typeof pageRevisions.$inferSelect;
 export type Contribution = typeof contributions.$inferSelect;
+export type Upload = typeof uploads.$inferSelect;
 export type SocialLink = typeof socialLinks.$inferSelect;
 export type WorldStatus = typeof worldStatus.$inferSelect;

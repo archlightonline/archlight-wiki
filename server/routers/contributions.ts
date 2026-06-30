@@ -76,6 +76,9 @@ export const contributionsRouter = router({
         pageSlug: pages.slug,
         pageTitle: pages.title,
         proposedTitle: contributions.proposedTitle,
+        // The contributor's own submitted content — so Profile can show it and
+        // pre-fill an edit-and-resubmit. Scoped to ctx.user.id below (own data).
+        proposedContent: contributions.proposedContent,
         // Reviewed since the user last viewed their contributions → "new" to them.
         isNew: sql<boolean>`(${contributions.reviewedAt} IS NOT NULL${
           seenAt ? sql` AND ${contributions.reviewedAt} > ${seenAt}` : sql``

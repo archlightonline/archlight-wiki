@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { trpc } from '../lib/trpc';
 import { useAuth } from '../lib/auth';
 import { Breadcrumb } from '../components/Breadcrumb';
@@ -16,8 +16,12 @@ import { useAuthModal } from '../wiki-components/AuthModal';
 export function ProposePage() {
   const { isAuthed, isLoading } = useAuth();
   const { open: openAuth } = useAuthModal();
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const location = useLocation();
+  // Edit-and-resubmit pre-fills the title + content from a prior new-page proposal
+  // (via route state). Normal entry has no state → both start empty ("start fresh").
+  const prefill = (location.state as { prefillTitle?: string; prefillContent?: string } | null) ?? null;
+  const [title, setTitle] = useState(prefill?.prefillTitle ?? '');
+  const [content, setContent] = useState(prefill?.prefillContent ?? '');
   const [note, setNote] = useState('');
   const [done, setDone] = useState(false);
   const submit = trpc.contributions.submitNewPage.useMutation({ onSuccess: () => setDone(true) });

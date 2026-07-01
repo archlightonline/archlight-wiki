@@ -123,25 +123,58 @@ export function Profile() {
           <span>Display name</span>
           <input className="input" value={displayName} maxLength={60} onChange={(e) => setDisplayName(e.target.value)} />
         </label>
-        <label className="field">
-          <span>Avatar URL (https only)</span>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input
-              className="input"
-              style={{ flex: 1 }}
-              value={avatarUrl}
-              placeholder="https://…"
-              onChange={(e) => setAvatarUrl(e.target.value)}
-            />
-            <button
-              type="button"
-              className="btn"
-              disabled={avatarUploading}
-              onClick={() => avatarFileRef.current?.click()}
-              title="Upload an image (PNG, JPEG, WebP, GIF — max 5 MB)"
+        <div className="field">
+          <span>Avatar</span>
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+            {/* Live preview of the working avatar value (existing avatar on load,
+                the uploaded image after upload, or the fallback glyph when unset).
+                Reuses the circular cover styling from the profile card / topbar. */}
+            <div
+              aria-label="Avatar preview"
+              style={{
+                width: 64,
+                height: 64,
+                flexShrink: 0,
+                borderRadius: '50%',
+                background: 'var(--bg4)',
+                border: '1px solid var(--rim2)',
+                backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                display: 'grid',
+                placeItems: 'center',
+                fontSize: 26,
+              }}
             >
-              {avatarUploading ? '⏳ Uploading…' : '⬆ Upload'}
-            </button>
+              {!avatarUrl && '👤'}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={avatarUploading}
+                  onClick={() => avatarFileRef.current?.click()}
+                  title="Upload an image (PNG, JPEG, WebP, GIF — max 5 MB)"
+                >
+                  {avatarUploading ? '⏳ Uploading…' : avatarUrl ? '⬆ Change' : '⬆ Upload'}
+                </button>
+                {avatarUrl && !avatarUploading && (
+                  <button
+                    type="button"
+                    className="btn ghost"
+                    onClick={() => {
+                      setAvatarUrl('');
+                      setAvatarError(null);
+                    }}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              <span className="form-hint">PNG, JPEG, WebP, or GIF — max 5 MB. Save to apply.</span>
+              {avatarError && <span className="field-error">{avatarError}</span>}
+            </div>
             <input
               ref={avatarFileRef}
               type="file"
@@ -150,15 +183,13 @@ export function Profile() {
               onChange={onAvatarPick}
             />
           </div>
-          <span className="form-hint">Paste an https:// image URL, or upload one — it fills the field, then Save.</span>
-          {avatarError && <span className="field-error">{avatarError}</span>}
-        </label>
+        </div>
         {update.error && <ErrorBox error={update.error} />}
         {update.isSuccess && <p className="muted">Saved.</p>}
         <button
           className="btn primary"
           disabled={update.isPending}
-          onClick={() => update.mutate({ displayName, avatarUrl: avatarUrl || undefined })}
+          onClick={() => update.mutate({ displayName, avatarUrl })}
         >
           {update.isPending ? 'Saving…' : 'Save profile'}
         </button>

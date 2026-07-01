@@ -38,9 +38,10 @@ export interface UploadHandlers {
  * URL — or null on any failure (with onError already called). Mirrors the
  * client-side type/size pre-checks for fast feedback; the server re-validates.
  *
- * A non-editor (viewer) hits the editorProcedure gate inside mutateAsync, which
- * rejects — the error surfaces through onError exactly like the button, so
- * paste/drop fails gracefully with a clear message rather than silently.
+ * createUploadUrl is protectedProcedure (any logged-in user can upload); viewers
+ * are rate-limited server-side. A failure — unauthenticated, over the rate limit
+ * (TOO_MANY_REQUESTS), or a rejected type/size — surfaces through onError with a
+ * clear message rather than failing silently.
  */
 export async function uploadImageFile(file: File, h: UploadHandlers): Promise<string | null> {
   h.onError(null);

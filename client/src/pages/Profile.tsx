@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { trpc } from '../lib/trpc';
 import { useAuth } from '../lib/auth';
 import { Loading, ErrorBox } from '../components/ui';
 import { Markdown } from '../components/Markdown';
 import { useAuthModal } from '../wiki-components/AuthModal';
+import { uploadImageFile, UPLOAD_ACCEPT } from '../components/imageUpload';
 import { fmtDate } from '../lib/format';
 
 const statusLabel = (s: string) =>
@@ -41,6 +42,26 @@ export function Profile() {
       refetch();
     },
   });
+
+  // Avatar upload — reuses the shared R2 upload flow (uploadImageFile →
+  // uploads.createUploadUrl → direct PUT). On success the returned public R2 URL
+  // (https) fills the avatar field; the existing Save persists it via
+  // updateProfile (no server change). Same viewer rate limit as any upload.
+  const createUploadUrl = trpc.uploads.createUploadUrl.useMutation();
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const avatarFileRef = useRef<HTMLInputElement>(null);
+  const onAvatarPick = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // reset so the same file can be re-picked
+    if (!file) return;
+    const url = await uploadImageFile(file, {
+      mutateAsync: createUploadUrl.mutateAsync,
+      onError: setAvatarError,
+      onUploading: setAvatarUploading,
+    });
+    if (url) setAvatarUrl(url);
+  };
 
   useEffect(() => {
     if (user) {
@@ -104,13 +125,33 @@ export function Profile() {
         </label>
         <label className="field">
           <span>Avatar URL (https only)</span>
-          <input
-            className="input"
-            value={avatarUrl}
-            placeholder="https://…"
-            onChange={(e) => setAvatarUrl(e.target.value)}
-          />
-          <span className="form-hint">Must start with https:// — other schemes are rejected.</span>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              className="input"
+              style={{ flex: 1 }}
+              value={avatarUrl}
+              placeholder="https://…"
+              onChange={(e) => setAvatarUrl(e.target.value)}
+            />
+            <button
+              type="button"
+              className="btn"
+              disabled={avatarUploading}
+              onClick={() => avatarFileRef.current?.click()}
+              title="Upload an image (PNG, JPEG, WebP, GIF — max 5 MB)"
+            >
+              {avatarUploading ? '⏳ Uploading…' : '⬆ Upload'}
+            </button>
+            <input
+              ref={avatarFileRef}
+              type="file"
+              accept={UPLOAD_ACCEPT}
+              style={{ display: 'none' }}
+              onChange={onAvatarPick}
+            />
+          </div>
+          <span className="form-hint">Paste an https:// image URL, or upload one — it fills the field, then Save.</span>
+          {avatarError && <span className="field-error">{avatarError}</span>}
         </label>
         {update.error && <ErrorBox error={update.error} />}
         {update.isSuccess && <p className="muted">Saved.</p>}

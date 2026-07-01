@@ -17,7 +17,13 @@ export function DashboardLayout({ require = 'editor' }: { require?: 'editor' | '
   const location = useLocation();
   const [mobOpen, setMobOpen] = useState(false);
   const utils = trpc.useUtils();
-  const logout = trpc.auth.logout.useMutation({ onSuccess: () => utils.auth.me.invalidate() });
+  const logout = trpc.auth.logout.useMutation({
+    onSuccess: () => {
+      utils.auth.me.invalidate();
+      // Drop the unread cache so no in-flight refetch 401s as the cookie clears.
+      utils.contributions.unreadCount.reset();
+    },
+  });
   const unread = trpc.contributions.unreadCount.useQuery(undefined, {
     enabled: isAuthed,
     staleTime: 5_000,

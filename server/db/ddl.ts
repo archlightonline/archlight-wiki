@@ -114,6 +114,14 @@ export const DDL_STATEMENTS: string[] = [
   // rate-limit count (recent uploads for one user).
   `CREATE INDEX IF NOT EXISTS uploads_user_created_idx ON uploads (user_id, created_at)`,
 
+  // Durable server-only key/value config. Holds the fallback session-signing
+  // secret when SESSION_SECRET is unset, so it survives restarts/redeploys.
+  `CREATE TABLE IF NOT EXISTS app_config (
+    key        text PRIMARY KEY,
+    value      text NOT NULL,
+    updated_at timestamptz NOT NULL DEFAULT now()
+  )`,
+
   `CREATE TABLE IF NOT EXISTS social_links (
     id         serial PRIMARY KEY,
     key        text NOT NULL,

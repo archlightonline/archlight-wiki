@@ -18,16 +18,16 @@ const SOURCE_DIR = path.resolve(process.cwd(), 'archlight_wiki_v534_concepts_sta
 const CLIENT_DIST = path.resolve(process.cwd(), 'dist');
 
 /**
- * CSP enforcement switch. We currently SHIP REPORT-ONLY: the
- * Content-Security-Policy-Report-Only header logs violations to the browser
- * console but blocks nothing — so we can verify the policy doesn't break the real
- * app (Google Fonts, R2 images/uploads, external hotlinks, editor styles) before
- * enforcing.
+ * CSP enforcement switch. NOW ENFORCING: the blocking Content-Security-Policy
+ * header is sent (not the report-only variant). The policy was validated in
+ * report-only on production first — no real app resources (Google Fonts, R2
+ * images/uploads, external hotlinks, editor styles) are blocked; only dead legacy
+ * images and old http: references are, which is intended. Enforcing also activates
+ * `upgrade-insecure-requests`, auto-upgrading any http: reference to https:.
  *
- * >>> TO ENFORCE LATER: change this single constant to `false`. <<<
- * That swaps the report-only header for the blocking Content-Security-Policy.
+ * To revert to report-only (log-but-don't-block), set this back to `true`.
  */
-const CSP_REPORT_ONLY = true;
+const CSP_REPORT_ONLY = false;
 
 /**
  * Content-Security-Policy directives. Every non-'self' allowance is required by

@@ -50,29 +50,29 @@ describe('security headers', () => {
     expect(res.headers.get('cross-origin-resource-policy')).toBeNull();
   });
 
-  it('in production, ships the CSP as REPORT-ONLY (never the enforcing header)', async () => {
+  it('in production, ENFORCES the CSP (blocking header, not report-only)', async () => {
     process.env.NODE_ENV = 'production';
     const started = await startApp(dbh);
     server = started.server;
     const res = await fetch(`${started.base}/api/health`);
 
-    const ro = res.headers.get('content-security-policy-report-only');
-    expect(ro).toBeTruthy();
-    // Enforcing header must be ABSENT — we only report, we do not block (yet).
-    expect(res.headers.get('content-security-policy')).toBeNull();
+    const csp = res.headers.get('content-security-policy');
+    expect(csp).toBeTruthy();
+    // Report-only header must be ABSENT — we now block, not just report.
+    expect(res.headers.get('content-security-policy-report-only')).toBeNull();
 
     // Spot-check the directives that keep the app working.
-    expect(ro).toContain("default-src 'self'");
-    expect(ro).toContain("script-src 'self'");
-    expect(ro).toContain('connect-src');
-    expect(ro).toContain('https://*.r2.cloudflarestorage.com');
-    expect(ro).toContain('img-src');
-    expect(ro).toContain('data:');
-    expect(ro).toContain('https://fonts.gstatic.com');
-    expect(ro).toContain('https://fonts.googleapis.com');
-    expect(ro).toContain("'unsafe-inline'"); // style-src only
-    expect(ro).toContain("frame-ancestors 'none'");
-    expect(ro).toContain('upgrade-insecure-requests');
+    expect(csp).toContain("default-src 'self'");
+    expect(csp).toContain("script-src 'self'");
+    expect(csp).toContain('connect-src');
+    expect(csp).toContain('https://*.r2.cloudflarestorage.com');
+    expect(csp).toContain('img-src');
+    expect(csp).toContain('data:');
+    expect(csp).toContain('https://fonts.gstatic.com');
+    expect(csp).toContain('https://fonts.googleapis.com');
+    expect(csp).toContain("'unsafe-inline'"); // style-src only
+    expect(csp).toContain("frame-ancestors 'none'");
+    expect(csp).toContain('upgrade-insecure-requests');
   });
 
   it('does NOT apply any CSP in development (so Vite HMR is not constrained)', async () => {

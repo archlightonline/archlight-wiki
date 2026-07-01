@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { trpc } from '../lib/trpc';
 import { SearchBar } from '../components/SearchBar';
 import { NavItem } from '../components/NavItem';
 import { BrandLogo } from '../components/BrandLogo';
+import { useAuthModal } from '../wiki-components/AuthModal';
 
 /**
  * Authenticated shell for admin/editor tools (page editor, admin panel).
@@ -12,6 +13,7 @@ import { BrandLogo } from '../components/BrandLogo';
  */
 export function DashboardLayout({ require = 'editor' }: { require?: 'editor' | 'admin' }) {
   const { isLoading, isAuthed, isAdmin, isEditor, user } = useAuth();
+  const { open: openAuth } = useAuthModal();
   const location = useLocation();
   const [mobOpen, setMobOpen] = useState(false);
   const utils = trpc.useUtils();
@@ -42,8 +44,24 @@ export function DashboardLayout({ require = 'editor' }: { require?: 'editor' | '
       </div>
     );
   }
+  // Not signed in → show an in-place sign-in prompt at this same URL and open the
+  // auth modal. On successful login, useAuth (auth.me query, invalidated by the
+  // modal) re-renders this layout as authed, which then falls through to the role
+  // check below and renders the requested tool — so the user "returns to what they
+  // were doing" without any redirect/?next= plumbing.
   if (!isAuthed) {
-    return <Navigate to={`/login?next=${encodeURIComponent(location.pathname)}`} replace />;
+    return (
+      <div className="container narrow">
+        <div className="empty-state">
+          <div className="big">🔐</div>
+          <h2>Sign in to continue</h2>
+          <p className="muted">This area requires an account. Sign in and you’ll land right back here.</p>
+          <button className="btn primary" onClick={() => openAuth('login')}>
+            Sign in
+          </button>
+        </div>
+      </div>
+    );
   }
   const allowed = require === 'admin' ? isAdmin : isEditor;
   if (!allowed) {

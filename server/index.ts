@@ -3,6 +3,7 @@ import { pathToFileURL } from 'node:url';
 import { createApp } from './app';
 import { getDatabase, type Database } from './db';
 import { ensureSystemAdmin, ensureSocialLinks, ensureWorldStatus } from './lib/bootstrap';
+import { ensureSessionSecret } from './lib/sessionSecret';
 
 const PORT = Number(process.env.PORT ?? 3001);
 
@@ -22,6 +23,19 @@ async function main() {
   const database = await getDatabase();
   await database.ensureSchema();
   await seedDefaults(database);
+
+  // Resolve the session-signing secret once: SESSION_SECRET env, else a durable
+  // DB-persisted secret (so restarts/redeploys don't rotate the key and log
+  // everyone out). Loud-but-not-fatal nudge when falling back.
+  const { source } = await ensureSessionSecret(database.db);
+  if (source === 'db') {
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[session] SESSION_SECRET is not set — using a durable secret persisted in the database. ' +
+        'Sessions now survive restarts/redeploys. For production, setting SESSION_SECRET explicitly is still recommended.',
+    );
+  }
+
   const app = createApp(database);
   app.listen(PORT, () => {
     // eslint-disable-next-line no-console

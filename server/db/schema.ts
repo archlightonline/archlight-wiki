@@ -167,6 +167,18 @@ export const uploads = pgTable(
   }),
 );
 
+/**
+ * Small server-only key/value store for durable app configuration. Currently
+ * holds the fallback session-signing secret (used only when SESSION_SECRET is
+ * unset) so it persists across restarts/redeploys instead of rotating per
+ * process. Values are stored server-side ONLY and are never sent to the client.
+ */
+export const appConfig = pgTable('app_config', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 /** Editable social links shown in the topbar (DB-backed so admins can change URLs). */
 export const socialLinks = pgTable(
   'social_links',
@@ -206,5 +218,6 @@ export type NewPage = typeof pages.$inferInsert;
 export type PageRevision = typeof pageRevisions.$inferSelect;
 export type Contribution = typeof contributions.$inferSelect;
 export type Upload = typeof uploads.$inferSelect;
+export type AppConfig = typeof appConfig.$inferSelect;
 export type SocialLink = typeof socialLinks.$inferSelect;
 export type WorldStatus = typeof worldStatus.$inferSelect;

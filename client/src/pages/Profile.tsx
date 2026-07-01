@@ -4,6 +4,7 @@ import { trpc } from '../lib/trpc';
 import { useAuth } from '../lib/auth';
 import { Loading, ErrorBox } from '../components/ui';
 import { Markdown } from '../components/Markdown';
+import { useAuthModal } from '../wiki-components/AuthModal';
 import { fmtDate } from '../lib/format';
 
 const statusLabel = (s: string) =>
@@ -11,6 +12,7 @@ const statusLabel = (s: string) =>
 
 export function Profile() {
   const { user, isLoading, isAuthed, refetch } = useAuth();
+  const { open: openAuth } = useAuthModal();
   const utils = trpc.useUtils();
   const mine = trpc.contributions.mine.useQuery(undefined, { enabled: isAuthed });
 
@@ -53,9 +55,9 @@ export function Profile() {
       <div className="container narrow">
         <div className="empty-state">
           <h2>Not signed in</h2>
-          <Link className="btn primary" to="/login">
+          <button className="btn primary" onClick={() => openAuth('login')}>
             Sign in
-          </Link>
+          </button>
         </div>
       </div>
     );

@@ -14,6 +14,12 @@ import { ErrorBox } from '../components/ui';
 
 type Mode = 'login' | 'register';
 
+// Client-side register validation, ported from the (now-removed) standalone
+// Register page so the modal's register tab keeps the same up-front checks. The
+// server (auth.register / usernameSchema) remains the real authority.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME_RE = /^[A-Za-z0-9_-]+$/;
+
 /**
  * Full-screen auth modal with a two-column layout (brand panel + form) and
  * login / create-account tabs. Uses the existing trpc.auth mutations; on success
@@ -75,6 +81,14 @@ export function AuthModal({ mode, onClose }: { mode: Mode; onClose: () => void }
     const mail = email.trim();
     if (!u || !mail || !password) {
       setLocalError('All fields are required.');
+      return;
+    }
+    if (u.length < 3 || !USERNAME_RE.test(u)) {
+      setLocalError('Username must be at least 3 characters: letters, numbers, underscore, and dash.');
+      return;
+    }
+    if (!EMAIL_RE.test(mail)) {
+      setLocalError('Enter a valid email address.');
       return;
     }
     if (password.length < 8) {

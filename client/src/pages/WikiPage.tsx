@@ -7,11 +7,13 @@ import { fmtDateTime } from '../lib/format';
 import { EmptyState, PageDetailSkeleton } from '../components/ui';
 import { NotFound } from './NotFound';
 import { TableOfContents, parseTocEntries } from '../wiki-components/TableOfContents';
+import { useAuthModal } from '../wiki-components/AuthModal';
 
 export function WikiPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { isEditor, isAdmin, isAuthed } = useAuth();
+  const { open: openAuth } = useAuthModal();
   const utils = trpc.useUtils();
   const q = trpc.pages.get.useQuery({ slug: slug! }, { retry: false });
   // Archive = unpublish (admin-only, reversible) — hides from wiki/search, keeps
@@ -68,9 +70,9 @@ export function WikiPage() {
           </Link>
         )}
         {!isAuthed && (
-          <Link className="btn ghost" to="/login">
+          <button className="btn ghost" onClick={() => openAuth('login')}>
             Sign in to contribute
-          </Link>
+          </button>
         )}
         {isEditor && (
           <Link className="btn ghost" to={`/history/${page.slug}`}>

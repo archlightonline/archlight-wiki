@@ -6,6 +6,7 @@ import { Breadcrumb } from '../components/Breadcrumb';
 import { Loading, ErrorBox } from '../components/ui';
 import { Markdown } from '../components/Markdown';
 import { RichTextEditor } from '../components/RichTextEditor';
+import { useAuthModal } from '../wiki-components/AuthModal';
 import { NotFound } from './NotFound';
 
 export function ContributionForm() {
@@ -15,6 +16,7 @@ export function ContributionForm() {
   // content (via route state) instead of the page's current content.
   const prefillContent = (location.state as { prefillContent?: string } | null)?.prefillContent;
   const { isAuthed, isLoading } = useAuth();
+  const { open: openAuth } = useAuthModal();
   const page = trpc.pages.get.useQuery({ slug: slug! }, { retry: false });
   const [content, setContent] = useState('');
   const [note, setNote] = useState('');
@@ -44,9 +46,9 @@ export function ContributionForm() {
         <div className="empty-state">
           <h2>Sign in to contribute</h2>
           <p className="muted">You need an account to suggest edits.</p>
-          <Link className="btn primary" to={`/login?next=/contribute/${slug}`}>
+          <button className="btn primary" onClick={() => openAuth('login')}>
             Sign in
-          </Link>
+          </button>
         </div>
       </div>
     );

@@ -17,7 +17,13 @@ export function WikiLayout() {
   const location = useLocation();
 
   const utils = trpc.useUtils();
-  const logout = trpc.auth.logout.useMutation({ onSuccess: () => utils.auth.me.invalidate() });
+  const logout = trpc.auth.logout.useMutation({
+    onSuccess: () => {
+      utils.auth.me.invalidate();
+      // Drop the unread cache so no in-flight refetch 401s as the cookie clears.
+      utils.contributions.unreadCount.reset();
+    },
+  });
 
   // Unread contribution feedback (approved/rejected since last viewed) → chip badge.
   const unread = trpc.contributions.unreadCount.useQuery(undefined, {

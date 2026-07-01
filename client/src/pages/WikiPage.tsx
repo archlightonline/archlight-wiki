@@ -8,6 +8,7 @@ import { EmptyState, PageDetailSkeleton } from '../components/ui';
 import { NotFound } from './NotFound';
 import { TableOfContents, parseTocEntries } from '../wiki-components/TableOfContents';
 import { useAuthModal } from '../wiki-components/AuthModal';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 export function WikiPage() {
   const { slug } = useParams();
@@ -16,6 +17,8 @@ export function WikiPage() {
   const { open: openAuth } = useAuthModal();
   const utils = trpc.useUtils();
   const q = trpc.pages.get.useQuery({ slug: slug! }, { retry: false });
+  // Browser-tab title for the current page (client-side; complements server OG).
+  useDocumentTitle(q.data?.title);
   // Archive = unpublish (admin-only, reversible) — hides from wiki/search, keeps
   // the page + history; restore from Admin → Page protection.
   const archive = trpc.pages.update.useMutation({

@@ -9,13 +9,32 @@ import express from 'express';
 import helmet from 'helmet';
 import path from 'node:path';
 import fs from 'node:fs';
+import type { Request } from 'express';
 import { createExpressMiddleware } from '@trpc/server/adapters/express';
 import { appRouter } from './routers';
 import { createExpressContextFactory } from './trpc/context';
+import { resolvePageMeta } from './lib/pageMeta';
+import { injectMeta } from './lib/ogMeta';
 import type { Database } from './db';
 
 const SOURCE_DIR = path.resolve(process.cwd(), 'archlight_wiki_v534_concepts_static_hosts_fixed');
 const CLIENT_DIST = path.resolve(process.cwd(), 'dist');
+
+// The DB-backed page route we inject per-page OG/meta for. Other routes (/,
+// /category/…, /browse, dedicated concept pages) fall through to default tags.
+const WIKI_SLUG_RE = /^\/wiki\/([^/]+)\/?$/;
+
+/**
+ * Absolute https origin for og:url / og:image. Prefer PUBLIC_BASE_URL (each fork
+ * sets its own); else derive from the request — requires app.set('trust proxy')
+ * so req.protocol reflects X-Forwarded-Proto behind Railway's proxy (otherwise it
+ * reads http).
+ */
+function resolveOrigin(req: Request): string {
+  const env = process.env.PUBLIC_BASE_URL;
+  if (env) return env.replace(/\/+$/, '');
+  return `${req.protocol}://${req.get('host')}`;
+}
 
 /**
  * CSP enforcement switch. NOW ENFORCING: the blocking Content-Security-Policy
@@ -59,6 +78,9 @@ const CSP_DIRECTIVES = {
 
 export function createApp(database: Database): express.Express {
   const app = express();
+  // Trust the Railway proxy so req.protocol / req.get('host') reflect the real
+  // external https origin (used to build absolute og:url / og:image).
+  app.set('trust proxy', true);
 
   // Security headers (helmet), mounted FIRST so they cover the API, static
   // assets, and every SPA response.
@@ -111,10 +133,34 @@ export function createApp(database: Database): express.Express {
   }
 
   // In production, serve the built SPA from dist/ with a history-API fallback.
+  // Static assets (JS/CSS/images incl. /og-default.png) are served by
+  // express.static FIRST — they never reach the fallback, so meta injection only
+  // ever touches HTML navigations.
   if (process.env.NODE_ENV === 'production' && fs.existsSync(CLIENT_DIST)) {
     app.use(express.static(CLIENT_DIST));
-    app.get(/^(?!\/(trpc|api|assets|media)).*/, (_req, res) => {
-      res.sendFile(path.join(CLIENT_DIST, 'index.html'));
+
+    // Cache the built index.html once at boot; the fallback rewrites a copy.
+    const indexHtml = fs.readFileSync(path.join(CLIENT_DIST, 'index.html'), 'utf8');
+
+    app.get(/^(?!\/(trpc|api|assets|media)).*/, async (req, res) => {
+      // For a published /wiki/:slug page, inject per-page OG/meta (escaped) so
+      // crawlers show a rich preview. Everything else — unknown/unpublished slug,
+      // home, category, etc. — serves the default shell tags. Any lookup failure
+      // falls through to the default rather than erroring the page.
+      const match = WIKI_SLUG_RE.exec(req.path);
+      if (match) {
+        try {
+          const slug = decodeURIComponent(match[1]);
+          const meta = await resolvePageMeta(database.db, slug, resolveOrigin(req));
+          if (meta) {
+            res.type('html').send(injectMeta(indexHtml, meta));
+            return;
+          }
+        } catch {
+          // fall through to the default shell
+        }
+      }
+      res.type('html').send(indexHtml);
     });
   }
 
